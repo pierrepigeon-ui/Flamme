@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FLAMME — console 1.5</title>
+<title>FLAMME — console 1.6</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
@@ -107,6 +107,19 @@ dialog h2{font:600 22px var(--serif);margin:0 0 16px}
 .sans-role{color:var(--warn)}
 @media (max-width:760px){ .ajout{grid-template-columns:1fr} }
 
+/* résultats */
+#resultats-pane{grid-column:1 / -1;overflow:auto;padding:20px 28px}
+#resultats-pane h2{font:600 22px var(--serif);margin:0 0 10px}
+.res-outils{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.res-outils select{padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+table.j tr.res{cursor:pointer}
+table.j tr.res:hover{background:var(--hover)}
+.mini{display:flex;gap:2px;align-items:flex-end;height:26px}
+.mini span{width:9px;border-radius:2px 2px 0 0;border:1px solid rgba(128,128,128,.5)}
+.detail-res{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 16px;margin:6px 0}
+.detail-res ol{columns:2;margin:6px 0 10px;padding-left:22px;font-size:14px}
+@media (max-width:760px){ .detail-res ol{columns:1} }
+
 /* journal */
 #journal-pane{grid-column:1 / -1;overflow:auto;padding:20px 28px}
 table.j{border-collapse:collapse;width:100%;font-size:14px}
@@ -166,6 +179,7 @@ table.j td{border-bottom:1px solid var(--line);padding:8px 10px;vertical-align:t
       <button role="tab" aria-selected="true" data-tab="elements">Éléments</button>
       <button role="tab" aria-selected="false" data-tab="journal" id="tab-journal">Journal</button>
       <button role="tab" aria-selected="false" data-tab="personnes" id="tab-personnes">Personnes</button>
+      <button role="tab" aria-selected="false" data-tab="resultats" id="tab-resultats">Résultats</button>
       <a class="navlink" href="autotest.html">Autotest</a>
     </nav>
     <div class="who"><span id="backup-info"></span><button class="btn ghost hidden" id="backup" type="button">Sauvegarder la base</button><span id="who"></span><button class="btn ghost" id="mdp" type="button">Mon mot de passe</button><button class="btn ghost" id="logout" type="button">Se déconnecter</button></div>
@@ -198,12 +212,15 @@ table.j td{border-bottom:1px solid var(--line);padding:8px 10px;vertical-align:t
   <main id="view-personnes" class="hidden">
     <section id="personnes-pane"></section>
   </main>
+  <main id="view-resultats" class="hidden">
+    <section id="resultats-pane"></section>
+  </main>
   <footer><span class="version" data-version></span></footer>
 </section>
 
 <script>
 /* ================= configuration ================= */
-const VERSION = { numero:"1.5", date:"2026-09-30 14:09" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"1.6", date:"2026-09-30 14:18" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 
@@ -294,6 +311,7 @@ async function demarrer(){
   $("#tab-journal").classList.toggle("hidden", role !== "proprietaire");
   $("#backup").classList.toggle("hidden", role !== "proprietaire");
   $("#tab-personnes").classList.toggle("hidden", role !== "proprietaire");
+  $("#tab-resultats").classList.toggle("hidden", role !== "proprietaire");
   if (role === "proprietaire") infoSauvegarde();
   if (!role){
     $("#editor-host").innerHTML = `<p class="empty">Ton compte est bien connecté, mais aucun rôle ne lui est attribué dans FLAMME. Le propriétaire doit te déclarer dans la table des rôles.</p>`;
@@ -572,11 +590,77 @@ async function attribuer(email, role, nom){
   afficherPersonnes(error ? { cls:"err", txt:"Refusé : " + error.message } : { cls:"ok", txt:`${email.trim()} : ${ROLES[role]}, accès enregistré.` });
 }
 
+/* ================= résultats d'autotest (propriétaire) ================= */
+let resCache = [], resNoms = {};
+async function afficherResultats(filtre = ""){
+  const host = $("#resultats-pane");
+  host.innerHTML = '<p class="count">Chargement…</p>';
+  const [{ data, error }, { data: pers }] = await Promise.all([
+    sb.from("resultats").select("*").order("passe_le", { ascending:false }).limit(1000),
+    sb.rpc("personnes")
+  ]);
+  if (error){ host.innerHTML = `<p class="msg err">Lecture des résultats impossible : ${esc(error.message)}. As-tu exécuté la migration 05 ?</p>`; return; }
+  resNoms = {}; (pers || []).forEach(p => resNoms[p.user_id] = p.nom || p.email);
+  resCache = data;
+  const gens = [...new Set(data.map(r => r.user_id))];
+  const lignes = filtre ? data.filter(r => r.user_id === filtre) : data;
+  const nom = id => esc(resNoms[id] || "compte supprimé");
+  host.innerHTML = `
+    <h2>Résultats d'autotest</h2>
+    <div class="res-outils">
+      <select id="res-filtre" aria-label="Personne"><option value="">Toutes les personnes (${data.length})</option>
+        ${gens.map(g => `<option value="${esc(g)}"${g === filtre ? " selected" : ""}>${nom(g)} (${data.filter(r => r.user_id === g).length})</option>`).join("")}</select>
+      <button class="btn ghost" id="res-csv" type="button"${lignes.length ? "" : " disabled"}>Exporter en CSV</button>
+      <span class="count">Clique sur une ligne pour voir le classement des 20 tempéraments.</span>
+    </div>
+    ${lignes.length ? `<table class="j"><thead><tr><th>Date</th><th>Personne</th><th>Profil</th><th>Scores W U B R G</th><th>Versions</th></tr></thead>
+    <tbody>${lignes.map(r => `<tr class="res" data-id="${r.id}">
+      <td>${new Date(r.passe_le).toLocaleString("fr-FR")}</td><td>${nom(r.user_id)}</td>
+      <td>${r.codes.map(c => `${pips(c)} ${esc(c)} <span class="count">${esc(state.elements.find(e => e.code === c)?.nom || "")}</span>`).join("<br>")}${r.frontiere ? '<br><span class="draft">frontière</span>' : ""}</td>
+      <td><div class="mini" title="${M_ORDRE.map(c => c + " " + fmt1(r.scores[c])).join(" · ")}">${M_ORDRE.map(c => `<span style="height:${Math.max(2, (r.scores[c] || 0) * .26)}px;background:${state.couleurs[c]?.couleur || "#999"}"></span>`).join("")}</div></td>
+      <td class="count">moteur ${esc(r.version_moteur || "?")}, test ${esc(r.version_autotest || "?")}</td></tr>`).join("")}</tbody></table>`
+    : '<p class="empty">Aucun résultat enregistré. Ils apparaîtront ici dès qu\'une personne connectée enregistrera son autotest.</p>'}`;
+  $("#res-filtre").addEventListener("change", e => afficherResultats(e.target.value));
+  $("#res-csv")?.addEventListener("click", () => exporterResultats(lignes));
+  host.querySelectorAll("tr.res").forEach(tr => tr.addEventListener("click", () => detailResultat(tr)));
+}
+const M_ORDRE = ["W","U","B","R","G"];
+const fmt1 = v => (v ?? 0).toFixed(1).replace(".", ",");
+function detailResultat(tr){
+  const suivant = tr.nextElementSibling;
+  if (suivant?.classList.contains("ligne-detail")){ suivant.remove(); return; }
+  const r = resCache.find(x => String(x.id) === tr.dataset.id);
+  const d = document.createElement("tr"); d.className = "ligne-detail";
+  d.innerHTML = `<td colspan="5"><div class="detail-res">
+    <b>Scores</b> : ${M_ORDRE.map(c => `${c} ${fmt1(r.scores[c])} %`).join(", ")}
+    <ol>${r.classement.map(c => `<li>${pips(c)} ${esc(c)} ${esc(state.elements.find(e => e.code === c)?.nom || "")}</li>`).join("")}</ol>
+    <button class="btn ghost" type="button" data-suppr="${r.id}">Effacer ce résultat</button></div></td>`;
+  tr.after(d);
+  d.querySelector("[data-suppr]").addEventListener("click", async e => {
+    e.stopPropagation();
+    if (!confirm(`Effacer définitivement le résultat de ${resNoms[r.user_id] || "cette personne"} du ${new Date(r.passe_le).toLocaleDateString("fr-FR")} ?`)) return;
+    const { error } = await sb.from("resultats").delete().eq("id", r.id);
+    if (error) alert("Effacement refusé : " + error.message);
+    afficherResultats($("#res-filtre")?.value || "");
+  });
+}
+function exporterResultats(lignes){
+  const plat = lignes.map(r => ({
+    date: new Date(r.passe_le).toLocaleString("fr-FR"), personne: resNoms[r.user_id] || "", profils: r.codes.join(" / "),
+    frontiere: r.frontiere ? "oui" : "non",
+    ...Object.fromEntries(M_ORDRE.map(c => [c, fmt1(r.scores[c])])),
+    classement: r.classement.join(" "), version_moteur: r.version_moteur, version_autotest: r.version_autotest
+  }));
+  const maintenant = new Date();
+  telecharger(`flamme_resultats_${maintenant.toLocaleDateString("sv-SE")}.csv`, versCSV(plat), "text/csv");
+}
+
 /* ================= onglets ================= */
 document.querySelectorAll("nav button").forEach(b => b.addEventListener("click", () => {
   document.querySelectorAll("nav button").forEach(x => x.setAttribute("aria-selected", x === b));
   const t = b.dataset.tab;
-  ["elements","journal","personnes"].forEach(v => $("#view-" + v).classList.toggle("hidden", v !== t));
+  ["elements","journal","personnes","resultats"].forEach(v => $("#view-" + v).classList.toggle("hidden", v !== t));
+  if (t === "resultats") afficherResultats();
   if (t === "journal") afficherJournal();
   if (t === "personnes") afficherPersonnes();
 }));
