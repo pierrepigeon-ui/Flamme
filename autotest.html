@@ -120,7 +120,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px}
 
 <section class="intro">
   <h1>Autotest</h1>
-  <p>Classez les 20 tempéraments, du plus proche de vous (1) au plus éloigné (20). Faites glisser une carte sur une autre place, ou touchez une carte puis la place voulue. Survolez ou touchez une carte pour lire sa description. Vous pouvez aussi réordonner les cinq valeurs : les tempéraments se rangent alors selon cet ordre.</p>
+  <p>Classez les 20 tempéraments, du plus proche de vous (1) au plus éloigné (20). Faites glisser une carte sur une autre place, ou touchez une carte puis la place voulue. Survolez ou touchez une carte pour lire sa description. Vous pouvez aussi réordonner les cinq valeurs : les tempéraments se rangent alors selon cet ordre. Une fois connecté, vous retrouvez votre dernier résultat enregistré.</p>
   <div class="actions">
     <button class="btn" id="btn-save" type="button" disabled>Enregistrer mon résultat</button>
     <button class="btn ghost" id="btn-copy" type="button">Copier les scores</button>
@@ -160,7 +160,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px}
 </dialog>
 
 <script>
-const VERSION = { numero:"1.0", date:"2026-09-30 14:09" };
+const VERSION = { numero:"1.1", date:"2026-09-30 14:23" };
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";
 const M = window.FLAMME_MOTEUR;
@@ -213,7 +213,7 @@ sb.auth.onAuthStateChange(async (_e, session) => {
   user = u; role = null; textesComplets = false;
   if (user){
     const { data } = await sb.rpc("mon_role"); role = data || null;
-    if (role) await chargerTextesComplets();
+    if (role){ await chargerTextesComplets(); await reprendreDernier(); }
   } else {
     Object.values(E).forEach(e => { delete e.texte1; delete e.texte2; delete e.texte3; });
   }
@@ -348,10 +348,30 @@ function afficherResultats(){
     (textesComplets ? "" : `<p class="verrou">${user ? "Votre compte n'a pas encore accès aux portraits complets." : "Connectez-vous pour lire le portrait complet et enregistrer votre résultat."}</p>`);
 }
 
+/* ---------- reprise du dernier résultat enregistré ---------- */
+let dernierEnregistre = null;
+const dateFr = d => new Date(d).toLocaleDateString("fr-FR");
+function restaurer(r){
+  // le classement enregistré doit contenir exactement les 20 tempéraments actuels
+  const ok = r.classement.length === 20 && [...r.classement].sort().join() === [...temperamentsInitiaux].sort().join();
+  if (!ok){ msg(`Le résultat du ${dateFr(r.passe_le)} ne correspond plus aux tempéraments actuels : il n'a pas pu être repris.`, "warn"); return false; }
+  liste = r.classement.slice(); choisie = null; afficherGrille(); afficherResultats();
+  msg(`Votre résultat du ${dateFr(r.passe_le)} a été repris. Vous pouvez le modifier et l'enregistrer à nouveau.`, "ok");
+  return true;
+}
+async function reprendreDernier(){
+  const { data } = await sb.from("resultats").select("passe_le,classement").eq("user_id", user.id).order("passe_le", { ascending:false }).limit(1);
+  const r = data?.[0]; dernierEnregistre = r ? r.classement.join() : null;
+  if (!r) return;
+  const pasEncoreTouche = liste.join() === temperamentsInitiaux.join();
+  if (pasEncoreTouche || confirm(`Reprendre votre dernier résultat enregistré (${dateFr(r.passe_le)}) ? Votre classement en cours serait remplacé.`)) restaurer(r);
+}
+
 /* ---------- enregistrer, copier, recommencer ---------- */
 const msg = (t, cls = "") => { const m = $("#msg"); m.className = "msg " + cls; m.textContent = t; };
 $("#btn-save").addEventListener("click", async () => {
   if (!role || !dernier) return;
+  if (dernierEnregistre === dernier.classement.join()){ msg("Ce classement est déjà enregistré : modifiez-le avant d'enregistrer un nouveau résultat.", "warn"); return; }
   $("#btn-save").disabled = true;
   const { error } = await sb.from("resultats").insert({
     classement: dernier.classement, scores: dernier.p, codes: dernier.r.codes, frontiere: dernier.r.frontiere,
@@ -359,6 +379,7 @@ $("#btn-save").addEventListener("click", async () => {
   });
   $("#btn-save").disabled = false;
   if (error){ msg("Enregistrement refusé : " + error.message, "err"); return; }
+  dernierEnregistre = dernier.classement.join();
   msg(`Résultat enregistré : ${dernier.r.codes.join(" / ")}.`, "ok"); historique();
 });
 $("#btn-copy").addEventListener("click", async () => {
@@ -375,14 +396,21 @@ $("#btn-reset").addEventListener("click", () => {
 async function historique(){
   const bloc = $("#bloc-historique");
   if (!role){ bloc.classList.add("hidden"); return; }
-  const { data, error } = await sb.from("resultats").select("id,passe_le,codes,frontiere").eq("user_id", user.id).order("passe_le", { ascending:false }).limit(20);
+  const { data, error } = await sb.from("resultats").select("id,passe_le,codes,frontiere,classement").eq("user_id", user.id).order("passe_le", { ascending:false }).limit(20);
   if (error){ bloc.classList.add("hidden"); return; }
   bloc.classList.remove("hidden");
   $("#historique").innerHTML = data.length
     ? `<ul>${data.map(r => `<li>${new Date(r.passe_le).toLocaleDateString("fr-FR")} — <b>${esc(r.codes.join(" / "))}</b>${r.frontiere ? " (frontière)" : ""}
-        <button class="lien" data-id="${r.id}" type="button">effacer</button></li>`).join("")}</ul>`
+        <button class="lien reprendre" data-id="${r.id}" type="button">reprendre</button>
+        <button class="lien effacer" data-id="${r.id}" type="button">effacer</button></li>`).join("")}</ul>`
     : `<p class="verrou">Aucun résultat enregistré pour l'instant.</p>`;
-  $("#historique").querySelectorAll(".lien").forEach(b => b.addEventListener("click", async e => {
+  $("#historique").querySelectorAll(".reprendre").forEach(b => b.addEventListener("click", e => {
+    e.stopPropagation();
+    const r = data.find(x => String(x.id) === b.dataset.id);
+    if (liste.join() === r.classement.join()){ msg("Ce résultat est déjà affiché.", "ok"); return; }
+    if (confirm(`Reprendre le résultat du ${dateFr(r.passe_le)} ? Votre classement en cours sera remplacé.`)) restaurer(r);
+  }));
+  $("#historique").querySelectorAll(".effacer").forEach(b => b.addEventListener("click", async e => {
     e.stopPropagation();
     if (!confirm("Effacer définitivement ce résultat ?")) return;
     const { error } = await sb.from("resultats").delete().eq("id", b.dataset.id);
