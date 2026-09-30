@@ -82,6 +82,7 @@ dialog h2{border:0} .field{display:block;margin-bottom:12px} .field span{display
 <p class="bloque" id="bloque">Chargement…</p>
 <div class="outils hidden" id="outils">
   <button class="btn" type="button" onclick="window.print()">Imprimer ou enregistrer en PDF</button>
+  <a class="btn ghost" id="lien-ecusson" href="#">Voir l'écusson</a>
   <a class="btn ghost hidden" id="lien-detail" href="#">Voir le détail</a>
 </div>
 <article class="feuille hidden" id="feuille"></article>
@@ -92,7 +93,7 @@ dialog h2{border:0} .field{display:block;margin-bottom:12px} .field span{display
   <div style="display:flex;gap:10px"><button class="btn" type="submit">Se connecter</button><button class="btn ghost" type="button" id="login-fermer">Fermer</button></div>
   <p class="msg" id="login-msg" role="status"></p></form></dialog>
 <script>
-const VERSION = { numero:"1.1", date:"2026-09-30 15:25" };
+const VERSION = { numero:"1.2", date:"2026-09-30 15:56" };
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";
 const M = window.FLAMME_MOTEUR;
@@ -179,6 +180,7 @@ function rendre(src){
     </div>
     <div class="pied"><span>FLAMME — fiche ${VERSION.numero}, moteur ${M.VERSION.numero}</span><span>↑ ↗ → ↘ ↓ : du plus présent au moins présent</span></div>`;
   document.title = `FLAMME — fiche ${codes.join(" / ")}`;
+  $("#lien-ecusson").href = "ecusson.html" + location.search;
   if (role === "proprietaire"){ const l = $("#lien-detail"); l.href = "detail.html" + location.search; l.classList.remove("hidden"); }
 }
 

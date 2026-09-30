@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FLAMME — console 1.11</title>
+<title>FLAMME — console 1.12</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
@@ -224,19 +224,19 @@ table.j td{border-bottom:1px solid var(--line);padding:8px 10px;vertical-align:t
 
 <script>
 /* ================= configuration ================= */
-const VERSION = { numero:"1.11", date:"2026-09-30 15:11" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"1.12", date:"2026-09-30 15:56" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 
 const LANGUE = "fr";   // langue du vocabulaire du modèle (table vocabulaire)
-const CHAMPS = ["nom","devise","titre","texte1","texte2","texte3","texte_plus","texte_moins","nom_interne","notes","date_revision","statut"];
+const CHAMPS = ["nom","devise","devise_heraldique","titre","texte1","texte2","texte3","texte_plus","texte_moins","nom_interne","notes","date_revision","statut"];
 // libellés des textes « plus / moins » selon la couche
 const LIB_PLUS_MOINS = {
   motivation: ["Impacts si dominante", "Impacts si peu présente"],
   projet:     ["Rôles associés (1re colonne)", "Rôles associés (2e colonne)"]
 };
 const LIBELLES = {nom:"Nom",devise:"Devise",titre:"Titre",texte1:"Texte 1",texte2:"Texte 2",texte3:"Texte 3",
-                  texte_plus:"Texte plus",texte_moins:"Texte moins",nom_interne:"Nom interne",notes:"Notes",date_revision:"Date de révision",statut:"Statut",
+                  devise_heraldique:"Devise héraldique",texte_plus:"Texte plus",texte_moins:"Texte moins",nom_interne:"Nom interne",notes:"Notes",date_revision:"Date de révision",statut:"Statut",
                   couche:"Couche",famille:"Famille",code:"Code",ordre:"Ordre",couleur:"Couleur",couleur_texte:"Couleur du texte",langue:"Langue"};
 
 document.querySelectorAll("[data-version]").forEach(el =>
@@ -383,6 +383,7 @@ async function ouvrir(code){
       <h2 id="titre-fiche">${esc(data.nom)}</h2>
       ${peutEcrire() ? "" : '<p class="readonly-note">Lecture seule : ton rôle ne permet pas de modifier le contenu.</p>'}
       <div class="grid2">${i("nom")}${i("devise")}</div>
+      ${data.couche === "profil" || data.devise_heraldique ? i("devise_heraldique") : ""}
       ${t("titre",2)}${t("texte1",4)}${t("texte2",4)}${t("texte3",4)}
       ${(() => { const lb = LIB_PLUS_MOINS[data.couche]; if (!lb && !data.texte_plus && !data.texte_moins) return "";
         const [a, b] = lb || ["Texte plus", "Texte moins"];
@@ -638,6 +639,7 @@ async function afficherProduction(userId, msg){
         <td>${r.codes.map(c => `${pips(c)} ${esc(c)} <span class="count">${nomEl(c)}</span>`).join("<br>")}${r.frontiere ? '<br><span class="draft">frontière</span>' : ""}</td>
         <td><div class="mini" title="${M_ORDRE.map(c => c + " " + fmt1(r.scores[c])).join(" · ")}">${M_ORDRE.map(c => `<span style="height:${Math.max(2, (r.scores[c] || 0) * .26)}px;background:${state.couleurs[c]?.couleur || "#999"}"></span>`).join("")}</div></td>
         <td class="row-btn"><a class="btn ghost" href="fiche.html?resultat=${r.id}" target="_blank">Fiche</a>
+          <a class="btn ghost" href="ecusson.html?resultat=${r.id}" target="_blank">Écusson</a>
           <a class="btn ghost" href="detail.html?resultat=${r.id}" target="_blank">Détail</a>
           <button class="btn ghost prod-suppr" type="button" data-id="${r.id}">Effacer</button></td></tr>`).join("")}
       </tbody></table>` : '<p class="empty">Aucun autotest enregistré.</p>'}
@@ -709,6 +711,7 @@ function detailResultat(tr){
     <b>Scores</b> : ${M_ORDRE.map(c => `${c} ${fmt1(r.scores[c])} %`).join(", ")}
     <ol>${r.classement.map(c => `<li>${pips(c)} ${esc(c)} ${esc(state.elements.find(e => e.code === c)?.nom || "")}</li>`).join("")}</ol>
     <div class="row-btn"><a class="btn ghost" href="fiche.html?resultat=${r.id}" target="_blank">Fiche</a>
+    <a class="btn ghost" href="ecusson.html?resultat=${r.id}" target="_blank">Écusson</a>
     <a class="btn ghost" href="detail.html?resultat=${r.id}" target="_blank">Détail</a>
     <button class="btn ghost" type="button" data-suppr="${r.id}">Effacer ce résultat</button></div></div></td>`;
   tr.after(d);

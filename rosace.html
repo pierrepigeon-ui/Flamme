@@ -58,6 +58,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px} .field{display:block;margi
     <label for="profil">Mettre en lumière un profil :</label>
     <select id="profil"><option value="">aucun</option></select>
     <a class="btn ghost hidden" id="lien-fiche" href="#" target="_blank">Voir sa fiche</a>
+    <a class="btn ghost hidden" id="lien-ecusson" href="#" target="_blank">Voir son écusson</a>
     <a class="btn ghost hidden" id="lien-detail" href="#" target="_blank">Voir le détail</a>
     <button class="btn ghost" id="dl-svg" type="button">Télécharger en SVG</button>
     <button class="btn ghost" id="dl-png" type="button">Télécharger en PNG</button>
@@ -75,7 +76,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px} .field{display:block;margi
   <div style="display:flex;gap:10px"><button class="btn" type="submit">Se connecter</button><button class="btn ghost" type="button" id="login-fermer">Fermer</button></div>
   <p class="msg" id="login-msg" role="status"></p></form></dialog>
 <script>
-const VERSION = { numero:"1.1", date:"2026-09-30 15:25" };
+const VERSION = { numero:"1.2", date:"2026-09-30 15:56" };
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";
 const ACCES = ["proprietaire"];   // rôles autorisés (en attendant la table des droits d'accès)
@@ -153,8 +154,8 @@ ${parts}
 }
 function dessiner(){
   const p = $("#profil").value;
-  ["#lien-fiche", "#lien-detail"].forEach(s => $(s).classList.toggle("hidden", !p));
-  if (p){ $("#lien-fiche").href = "fiche.html?type=" + encodeURIComponent(p); $("#lien-detail").href = "detail.html?type=" + encodeURIComponent(p); }
+  ["#lien-fiche", "#lien-ecusson", "#lien-detail"].forEach(s => $(s).classList.toggle("hidden", !p));
+  if (p){ $("#lien-fiche").href = "fiche.html?type=" + encodeURIComponent(p); $("#lien-detail").href = "detail.html?type=" + encodeURIComponent(p); $("#lien-ecusson").href = "ecusson.html?type=" + encodeURIComponent(p); }
   svgCourant = construireSVG(p);
   $("#scene").innerHTML = svgCourant;
   $("#msg").textContent = p ? `En lumière : les éléments compatibles avec ${p} (${E[p]?.nom || ""}) — couleurs présentes et absentes du profil.` : "";
