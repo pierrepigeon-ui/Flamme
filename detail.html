@@ -81,7 +81,7 @@ dialog{border:1px solid var(--line);border-radius:10px;background:var(--panel);c
   <div style="display:flex;gap:10px"><button class="btn" type="submit">Se connecter</button><button class="btn ghost" type="button" id="login-fermer">Fermer</button></div>
   <p class="msg" id="login-msg" role="status"></p></form></dialog>
 <script>
-const VERSION = { numero:"1.0", date:"2026-09-30 14:50" };
+const VERSION = { numero:"1.1", date:"2026-09-30 15:25" };
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";
 const ACCES = ["proprietaire"];
@@ -126,6 +126,11 @@ const BANDES = [["naturel","100 – 75 %"],["accessible","75 – 60 %"],["situat
 
 async function lireScores(){
   const q = new URLSearchParams(location.search);
+  if (q.get("type")){
+    const code = q.get("type");
+    if (!M.analyser(code).famille) throw new Error(`« ${code} » n'est pas un code de profil.`);
+    return { scores: M.scoresTypes(code), date: null, qui: "", type: code };
+  }
   if (q.get("resultat")){
     const { data, error } = await sb.from("resultats").select("*").eq("id", q.get("resultat")).maybeSingle();
     if (error || !data) throw new Error("Ce résultat est introuvable.");
@@ -146,7 +151,7 @@ function rendre(src){
   $("#page").innerHTML = `
     <section class="carte-entete">
       <h1>Statistiques du profil ${st.profil.codes.map(c => `${pips(c)} ${esc(c)} ${esc(libelle(c))}`).join(" / ")}</h1>
-      <div class="meta">${src.qui ? esc(src.qui) + " — " : ""}${dateFr(src.date)} — scores : ${M.ORDRE.map(c => `${c} ${pct(s01[c])}`).join(", ")}${st.profil.frontiere ? " — profil frontière" : ""}</div>
+      <div class="meta">${src.type ? "Profil type (scores types de la famille)" : (src.qui ? esc(src.qui) + " — " : "") + dateFr(src.date)} — scores : ${M.ORDRE.map(c => `${c} ${pct(s01[c])}`).join(", ")}${st.profil.frontiere ? " — profil frontière" : ""}</div>
       <div class="familles">
         ${fam("Meilleur radical (1.23)", st.parFamille.radical)}
         ${fam("Meilleur spécialiste (12.3)", st.parFamille.specialiste)}

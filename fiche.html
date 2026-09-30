@@ -92,7 +92,7 @@ dialog h2{border:0} .field{display:block;margin-bottom:12px} .field span{display
   <div style="display:flex;gap:10px"><button class="btn" type="submit">Se connecter</button><button class="btn ghost" type="button" id="login-fermer">Fermer</button></div>
   <p class="msg" id="login-msg" role="status"></p></form></dialog>
 <script>
-const VERSION = { numero:"1.0", date:"2026-09-30 14:50" };
+const VERSION = { numero:"1.1", date:"2026-09-30 15:25" };
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";
 const M = window.FLAMME_MOTEUR;
@@ -119,6 +119,11 @@ const nomMaj = code => esc((E[code]?.nom || code).toLocaleUpperCase("fr-FR"));
 /* ---------- source des scores : ?resultat=ID ou ?W=..&U=..&B=..&R=..&G=.. (en %) ---------- */
 async function lireScores(){
   const q = new URLSearchParams(location.search);
+  if (q.get("type")){
+    const code = q.get("type");
+    if (!M.analyser(code).famille) throw new Error(`« ${code} » n'est pas un code de profil.`);
+    return { scores: M.scoresTypes(code), date: null, qui: "", type: code };
+  }
   if (q.get("resultat")){
     const { data, error } = await sb.from("resultats").select("*").eq("id", q.get("resultat")).maybeSingle();
     if (error || !data) throw new Error("Ce résultat est introuvable, ou tu n'as pas le droit de le consulter.");
@@ -153,7 +158,7 @@ function rendre(src){
   const roles = liste => liste.map(x => `<div class="roles"><div>${esc(E[x.code]?.texte_plus || "")}</div><div>${esc(E[x.code]?.texte_moins || "")}</div></div>`).join("");
   $("#feuille").innerHTML = `
     <div class="entete"><div class="marque">FLAMME<i>Cartographiez votre énergie</i></div>
-      <div class="qui">Fiche de profil${src.qui ? " — " + esc(src.qui) : ""}<br>${dateFr(src.date)}</div></div>
+      <div class="qui">${src.type ? "Fiche du profil type<br>scores types de la famille" : `Fiche de profil${src.qui ? " — " + esc(src.qui) : ""}<br>${dateFr(src.date)}`}</div></div>
     ${f.profil.frontiere ? `<p class="frontiere">Profil frontière : les scores placent à égalité entre ${codes.length} profils, présentés l'un après l'autre.</p>` : ""}
     <div class="cols">
       <div>
