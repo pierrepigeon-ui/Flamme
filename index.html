@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FLAMME — console 1.10</title>
+<title>FLAMME — console 1.11</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
@@ -106,6 +106,9 @@ dialog h2{font:600 22px var(--serif);margin:0 0 16px}
 .ajout .field{margin:0}
 .sans-role{color:var(--warn)}
 @media (max-width:760px){ .ajout{grid-template-columns:1fr} }
+
+/* production d'une personne */
+.sous-titre{font:600 17px var(--serif);margin:22px 0 8px}
 
 /* résultats */
 #resultats-pane{grid-column:1 / -1;overflow:auto;padding:20px 28px}
@@ -221,7 +224,7 @@ table.j td{border-bottom:1px solid var(--line);padding:8px 10px;vertical-align:t
 
 <script>
 /* ================= configuration ================= */
-const VERSION = { numero:"1.10", date:"2026-09-30 15:04" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"1.11", date:"2026-09-30 15:11" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 
@@ -564,6 +567,9 @@ async function afficherPersonnes(msg){
   }
   (data || []).forEach(p => { if (p.role) state.noms[p.user_id] = p.nom || p.role; });
   const date = d => d ? new Date(d).toLocaleString("fr-FR") : "jamais";
+  const { data: tousRes } = await sb.from("resultats").select("user_id");
+  const nbRes = {}; (tousRes || []).forEach(r => nbRes[r.user_id] = (nbRes[r.user_id] || 0) + 1);
+  personnesCache = data || [];
   host.innerHTML = `
     <h2>Personnes</h2>
     <p class="aide">Pour donner accès à quelqu'un : crée d'abord son compte dans Supabase (Authentication, Users, Add user) avec son e-mail et un mot de passe provisoire, puis attribue-lui ici un rôle et un nom. Il changera son mot de passe à sa première connexion, avec « Mon mot de passe ».</p>
@@ -582,13 +588,15 @@ async function afficherPersonnes(msg){
         <td>${esc(p.email)}${p.role ? "" : ' <span class="sans-role">(aucun accès)</span>'}</td>
         <td>${selRole(p.role || "invite", `class="p-role"${moi ? " disabled" : ""}`)}</td>
         <td>${date(p.derniere_connexion)}</td>
-        <td class="row-btn"><button class="btn ghost p-ok" type="button">${p.role ? "Enregistrer" : "Donner l'accès"}</button>
+        <td class="row-btn"><button class="btn ghost p-prod" type="button">Production (${nbRes[p.user_id] || 0})</button>
+          <button class="btn ghost p-ok" type="button">${p.role ? "Enregistrer" : "Donner l'accès"}</button>
           ${p.role && !moi ? '<button class="btn ghost p-retirer" type="button">Retirer l\'accès</button>' : ""}
           ${!moi ? '<button class="btn ghost p-mdp" type="button">Réinitialiser le mot de passe</button>' : ""}</td></tr>`;}).join("")}</tbody></table>`;
   $("#aj-ok").addEventListener("click", () => attribuer($("#aj-email").value, $("#aj-role").value, $("#aj-nom").value));
   host.querySelectorAll("tbody tr").forEach(tr => {
     tr.querySelector(".p-ok").addEventListener("click", () =>
       attribuer(tr.dataset.email, tr.querySelector(".p-role").value, tr.querySelector(".p-nom").value));
+    tr.querySelector(".p-prod").addEventListener("click", () => afficherProduction(tr.dataset.id));
     tr.querySelector(".p-mdp")?.addEventListener("click", async () => {
       const propose = motDePasseProvisoire();
       const mdp = prompt(`Nouveau mot de passe provisoire pour ${tr.dataset.email} (8 caractères au moins).\nTu peux garder celui qui est proposé :`, propose);
@@ -605,6 +613,46 @@ async function afficherPersonnes(msg){
     });
   });
 }
+/* ---------- sous-écran : production d'une personne ---------- */
+let personnesCache = [];
+async function afficherProduction(userId, msg){
+  const host = $("#personnes-pane");
+  const p = personnesCache.find(x => x.user_id === userId) || { email: "?" };
+  const nom = p.nom || p.email;
+  host.innerHTML = '<p class="count">Chargement…</p>';
+  const [{ data: res, error: e1 }, { data: jr, error: e2 }] = await Promise.all([
+    sb.from("resultats").select("*").eq("user_id", userId).order("passe_le", { ascending:false }),
+    sb.from("journal").select("*").eq("par", userId).order("id", { ascending:false }).limit(200)
+  ]);
+  if (e1 || e2){ host.innerHTML = `<p class="msg err">Lecture impossible : ${esc((e1 || e2).message)}</p>`; return; }
+  const date = d => d ? new Date(d).toLocaleString("fr-FR") : "jamais";
+  const nomEl = c => esc(state.elements.find(e => e.code === c)?.nom || "");
+  host.innerHTML = `
+    <p><button class="btn ghost" id="prod-retour" type="button">Retour aux personnes</button></p>
+    <h2>Production de ${esc(nom)}</h2>
+    <p class="aide">${esc(p.email)} — ${esc(ROLES[p.role] || "aucun accès")} — dernière connexion : ${date(p.derniere_connexion)}</p>
+    <p class="msg ${msg?.cls || ""}" id="prod-msg" role="status">${esc(msg?.txt || "")}</p>
+    <h3 class="sous-titre">Autotests enregistrés (${res.length})</h3>
+    ${res.length ? `<table class="j"><thead><tr><th>Date</th><th>Profil</th><th>Scores W U B R G</th><th></th></tr></thead><tbody>
+      ${res.map(r => `<tr><td>${date(r.passe_le)}</td>
+        <td>${r.codes.map(c => `${pips(c)} ${esc(c)} <span class="count">${nomEl(c)}</span>`).join("<br>")}${r.frontiere ? '<br><span class="draft">frontière</span>' : ""}</td>
+        <td><div class="mini" title="${M_ORDRE.map(c => c + " " + fmt1(r.scores[c])).join(" · ")}">${M_ORDRE.map(c => `<span style="height:${Math.max(2, (r.scores[c] || 0) * .26)}px;background:${state.couleurs[c]?.couleur || "#999"}"></span>`).join("")}</div></td>
+        <td class="row-btn"><a class="btn ghost" href="fiche.html?resultat=${r.id}" target="_blank">Fiche</a>
+          <a class="btn ghost" href="detail.html?resultat=${r.id}" target="_blank">Détail</a>
+          <button class="btn ghost prod-suppr" type="button" data-id="${r.id}">Effacer</button></td></tr>`).join("")}
+      </tbody></table>` : '<p class="empty">Aucun autotest enregistré.</p>'}
+    <h3 class="sous-titre">Modifications dans la base (${jr.length}${jr.length === 200 ? " dernières" : ""})</h3>
+    ${jr.length ? `<table class="j"><thead><tr><th>Date</th><th>Par</th><th>Élément</th><th>Changements</th></tr></thead>
+      <tbody>${jr.map(j => ligneJournal(j, true)).join("")}</tbody></table>` : '<p class="empty">Aucune modification du contenu.</p>'}`;
+  $("#prod-retour").addEventListener("click", () => afficherPersonnes());
+  host.querySelectorAll(".prod-suppr").forEach(b => b.addEventListener("click", async () => {
+    const r = res.find(x => String(x.id) === b.dataset.id);
+    if (!confirm(`Effacer définitivement le résultat de ${nom} du ${new Date(r.passe_le).toLocaleDateString("fr-FR")} ?`)) return;
+    const { error } = await sb.from("resultats").delete().eq("id", r.id);
+    afficherProduction(userId, error ? { cls:"err", txt:"Effacement refusé : " + error.message } : { cls:"ok", txt:"Résultat effacé." });
+  }));
+}
+
 function motDePasseProvisoire(){
   const a = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";   // sans caractères ambigus (l, 1, O, 0…)
   const v = crypto.getRandomValues(new Uint32Array(12));
