@@ -123,6 +123,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px}
   <p>Classez les 20 tempéraments, du plus proche de vous (1) au plus éloigné (20). Faites glisser une carte sur une autre place, ou touchez une carte puis la place voulue. Survolez ou touchez une carte pour lire sa description. Vous pouvez aussi réordonner les cinq valeurs : les tempéraments se rangent alors selon cet ordre. Une fois connecté, vous retrouvez votre dernier résultat enregistré.</p>
   <div class="actions">
     <button class="btn" id="btn-save" type="button" disabled>Enregistrer mon résultat</button>
+    <button class="btn ghost" id="btn-fiche" type="button" disabled>Voir ma fiche</button>
     <button class="btn ghost" id="btn-copy" type="button">Copier les scores</button>
     <button class="btn ghost" id="btn-reset" type="button">Recommencer</button>
   </div>
@@ -160,7 +161,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px}
 </dialog>
 
 <script>
-const VERSION = { numero:"1.1", date:"2026-09-30 14:23" };
+const VERSION = { numero:"1.2", date:"2026-09-30 14:50" };
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";
 const M = window.FLAMME_MOTEUR;
@@ -224,6 +225,8 @@ function majSession(){
   $("#btn-login").classList.toggle("hidden", !!user);
   $("#btn-logout").classList.toggle("hidden", !user);
   $("#btn-save").disabled = !role;
+  $("#btn-fiche").disabled = !role;
+  $("#btn-fiche").title = role ? "" : "Connectez-vous pour afficher votre fiche de profil";
   $("#btn-save").title = role ? "" : "Connectez-vous pour enregistrer votre résultat";
 }
 $("#btn-login").addEventListener("click", () => { $("#login-msg").textContent = ""; $("#dlg-login").showModal(); $("#email").focus(); });
@@ -382,6 +385,11 @@ $("#btn-save").addEventListener("click", async () => {
   dernierEnregistre = dernier.classement.join();
   msg(`Résultat enregistré : ${dernier.r.codes.join(" / ")}.`, "ok"); historique();
 });
+$("#btn-fiche").addEventListener("click", () => {
+  if (!role || !dernier) return;
+  const q = M.ORDRE.map(c => `${c}=${dernier.p[c].toFixed(4)}`).join("&");
+  window.open("fiche.html?" + q, "_blank");
+});
 $("#btn-copy").addEventListener("click", async () => {
   if (!dernier) return;
   const t = M.ORDRE.map(c => c + "\t" + dernier.p[c].toFixed(3).replace(".", ",")).join("\r\n");
@@ -401,6 +409,7 @@ async function historique(){
   bloc.classList.remove("hidden");
   $("#historique").innerHTML = data.length
     ? `<ul>${data.map(r => `<li>${new Date(r.passe_le).toLocaleDateString("fr-FR")} — <b>${esc(r.codes.join(" / "))}</b>${r.frontiere ? " (frontière)" : ""}
+        <a class="lien" href="fiche.html?resultat=${r.id}" target="_blank">fiche</a>
         <button class="lien reprendre" data-id="${r.id}" type="button">reprendre</button>
         <button class="lien effacer" data-id="${r.id}" type="button">effacer</button></li>`).join("")}</ul>`
     : `<p class="verrou">Aucun résultat enregistré pour l'instant.</p>`;

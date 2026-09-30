@@ -14,7 +14,7 @@
 })(typeof self !== "undefined" ? self : this, function () {
   "use strict";
 
-  const VERSION = { numero: "1.1", date: "2026-09-30 13:36" };
+  const VERSION = { numero: "1.2", date: "2026-09-30 14:48" };
   const ORDRE = ["W", "U", "B", "R", "G"];
 
   /* ---------- ordre canonique des combinaisons (usrSortCode) ---------- */
@@ -244,5 +244,98 @@
     return { bruts, pourcentages };
   }
 
-  return { VERSION, ORDRE, ordonner, codeCanonique, analyser, profil, profilClasseur, scoresTypes, oppose, scoresDepuisTemperaments, PARAMETRES_TYPES };
+  /* =================================================================
+     Fiche (prPRINT) et statistiques (prDétail)
+     Entrée : scores des 5 couleurs sur 0–1 (diviser par 100 les pourcentages de l'autotest).
+     ================================================================= */
+  const r5 = x => Math.round(x * 1e5) / 1e5;                 // ROUND(…;5) du classeur
+  const MOTIVATIONS = ["WU","WB","UB","UR","BR","BG","RG","RW","GW","GU"];
+  const PROJETS = ["GWU","WUB","UBR","BRG","RGW","URW","BGU","RWB","GUR","WBG"];
+  const moy = a => a.reduce((x, y) => x + y, 0) / a.length;
+  // allié = voisin sur la roue ; ennemi = à deux pas
+  const voisins = (a, b) => { const d = Math.abs(ORDRE.indexOf(a) - ORDRE.indexOf(b)); return d === 1 || d === 4; };
+
+  /** Classement avec égalités conservées : rang « olympique » (1, 2, 2, 4…). */
+  function classer(liste){
+    const t = liste.slice().sort((a, b) => b.score - a.score || (a.ordre ?? 0) - (b.ordre ?? 0));
+    t.forEach((x, i) => { x.rang = i > 0 && Math.abs(x.score - t[i - 1].score) < 1e-9 ? t[i - 1].rang : i + 1; });
+    return t;
+  }
+  // niveaux (flèches Wingdings é ä à æ ê de prPRINT) : ↑ ↗ → ↘ ↓
+  const FLECHES = ["↑", "↗", "→", "↘", "↓"];
+  const NIVEAU_5  = [0, 1, 2, 3, 4];
+  const NIVEAU_10 = [0, 1, 1, 1, 2, 2, 3, 3, 4, 4];
+  function avecNiveaux(t, table){ t.forEach(x => { x.niveau = table[x.rang - 1]; x.fleche = FLECHES[x.niveau]; }); return t; }
+  /** Les k premiers, en gardant ceux qui sont à égalité avec le k-ième. */
+  function premiers(t, k){ if (!t.length) return []; const lim = t[Math.min(k, t.length) - 1].score; return t.filter(x => x.score >= lim - 1e-9); }
+  function derniers(t, k){ const r = t.slice().reverse(); const lim = r[Math.min(k, r.length) - 1].score; return r.filter(x => x.score <= lim + 1e-9); }
+
+  function verifier(s){ ORDRE.forEach(c => { if (typeof s[c] !== "number" || !isFinite(s[c])) throw new Error(`score manquant ou invalide pour ${c}`); }); }
+
+  /**
+   * Fiche (prPRINT). Scores nets = part de chaque couleur dans le total.
+   * Projets : moyenne des 3 couleurs (correction de la formule AVERAGE(v1;v2*v3) du classeur).
+   */
+  function fiche(s){
+    verifier(s);
+    const somme = ORDRE.reduce((a, c) => a + s[c], 0);
+    const net = Object.fromEntries(ORDRE.map(c => [c, somme === 0 ? 0.2 : s[c] / somme]));
+    const valeurs = avecNiveaux(classer(ORDRE.map((c, i) => ({ code: c, score: net[c], ordre: i }))), NIVEAU_5);
+    const motivations = avecNiveaux(classer(MOTIVATIONS.map((c, i) => ({ code: c, score: moy([...c].map(x => net[x])), ordre: i }))), NIVEAU_10);
+    const projets = avecNiveaux(classer(PROJETS.map((c, i) => ({ code: c, score: moy([...c].map(x => net[x])), ordre: i }))), NIVEAU_10);
+    return {
+      profil: profil(s), net, valeurs, motivations, projets,
+      motivationsDominantes: premiers(motivations, 2),
+      motivationsFaibles: derniers(motivations, 2),
+      projetFort: premiers(projets, 1),
+      projetFaible: derniers(projets, 1)
+    };
+  }
+
+  /* bandes d'accessibilité des profils (prDétail) */
+  const BANDES = [[0.75, "naturel"], [0.60, "accessible"], [0.40, "situationnel"], [0.25, "difficile"], [-Infinity, "inaccessible"]];
+  const bande = x => BANDES.find(([seuil]) => x >= seuil - 1e-12)[1];
+  const POIDS = { radical: [20, 9, 9], generaliste: [12, 12, 14], specialiste: [14, 14, 10] };
+
+  /**
+   * Statistiques (prDétail) : dix classements, sur les scores bruts 0–1.
+   * @param {Object} s scores des 5 couleurs (0–1)
+   * @param {string[]} codesProfils les 90 codes de profils (ordre de la base)
+   */
+  function statistiques(s, codesProfils){
+    verifier(s);
+    const v = c => s[c.toUpperCase()];
+    const L = (codes, f) => classer(codes.map((c, i) => Object.assign({ ordre: i }, f(c))));
+    const polar = x => Math.abs(x - 0.5) + 0.5;
+    const sections = {
+      valeurs: L(ORDRE, c => ({ code: c, score: r5(v(c)) })),
+      valeursPolarisees: L(ORDRE, c => ({ code: v(c) > 0.5 ? c : "/" + c.toLowerCase(), score: r5(polar(v(c))) })),
+      motivations: L(MOTIVATIONS, c => ({ code: c, score: (r5(moy([...c].map(v))) - 0.125) / 0.75 })),
+      motivationsPolarisees: L(MOTIVATIONS, c => ({ code: v(c[0]) + v(c[1]) > 1 ? c : "/" + c.toLowerCase(), score: (r5(polar(moy([...c].map(v)))) - 0.125) / 0.75 })),
+      projets: L(PROJETS, c => ({ code: c, score: (r5(moy([...c].map(v))) - 0.25) / 0.5 })),
+      projetsRedresses: L(PROJETS, c => ({ code: [...c].reduce((a, x) => a + v(x), 0) > 1.5 ? c : "/" + c.toLowerCase(), score: (r5(polar(moy([...c].map(v)))) - 0.25) / 0.5 })),
+      directions: L(ORDRE.flatMap(a => ORDRE.filter(b => b !== a).map(b => a + "." + b.toLowerCase())),
+                    c => ({ code: c, score: (r5(moy([v(c[0]) * 4 / 3, v(c[2]) * 2 / 3])) - 0.08333) / 0.83333 })),
+      temperaments: L(ORDRE.flatMap(a => ORDRE.filter(b => b !== a).map(b => a + "/" + b.toLowerCase())),
+                      c => ({ code: c, score: r5(moy([v(c[0]), 1 - v(c[2])])) })),
+      polariteMotivations: L(MOTIVATIONS, c => {
+        const t = ORDRE.find(x => !c.includes(x) && voisins(x, c[0]) === voisins(x, c[1]));
+        return { code: c, tiers: t, score: r5(moy([moy([v(c[0]), v(c[1])]), v(t)])) };
+      }),
+      profils: L(codesProfils, c => {
+        const a = analyser(c), w = POIDS[a.famille];
+        const x = a.famille === "radical" ? [v(c[0]), v(c[2]), v(c[3])]
+                : a.famille === "generaliste" ? [v(c[0]), v(c[1]), 1 - v(c[3])]
+                : [v(c[0]), v(c[1]), v(c[3])];
+        const sc = r5((x[0] * w[0] + x[1] * w[1] + x[2] * w[2]) / (w[0] + w[1] + w[2]));
+        return { code: c, famille: a.famille, score: sc, bande: bande(sc) };
+      })
+    };
+    // meilleur profil de chaque famille (haut de prDétail)
+    const parFamille = Object.fromEntries(["radical", "specialiste", "generaliste"].map(f =>
+      [f, premiers(sections.profils.filter(p => p.famille === f), 1)]));
+    return { sections, parFamille, moinsAccessibles: derniers(sections.profils, 1), profil: profil(s) };
+  }
+
+  return { VERSION, ORDRE, ordonner, codeCanonique, analyser, profil, profilClasseur, scoresTypes, fiche, statistiques, classer, FLECHES, MOTIVATIONS, PROJETS, oppose, scoresDepuisTemperaments, PARAMETRES_TYPES };
 });

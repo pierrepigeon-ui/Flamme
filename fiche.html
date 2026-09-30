@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FLAMME — fiche de profil</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+<script src="flamme_moteur.js"></script>
+<style>
+:root{--ink:#1B2430;--muted:#5B6573;--line:#DDE1E7;--paper:#F4F6F8;--panel:#FFFFFF;--hover:#EEF1F5;--ok:#1E7A46;--warn:#9A5B00;--err:#B42318;
+  --serif:"Source Serif 4",Georgia,"Times New Roman",serif;--sans:"IBM Plex Sans","Segoe UI",Arial,sans-serif}
+*{box-sizing:border-box} html,body{margin:0} body{background:var(--paper);color:var(--ink);font:15px/1.5 var(--sans)}
+button,input{font:inherit;color:inherit} :focus-visible{outline:2px solid #3B6FE0;outline-offset:2px} .hidden{display:none!important}
+header{display:flex;align-items:baseline;gap:18px;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
+.wordmark{font:600 24px/1 var(--serif);letter-spacing:.02em;margin:0} .signature{font:italic 14px/1.4 var(--serif);color:var(--muted);margin:0}
+header nav a{color:var(--muted);text-decoration:none;padding:4px 10px;border-radius:5px} header nav a:hover{background:var(--hover);color:var(--ink)}
+.who{margin-left:auto;font-size:13px;color:var(--muted);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn{border:1px solid var(--ink);background:var(--ink);color:var(--panel);padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:500}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.msg{font-size:14px;min-height:1.4em;margin:6px 0 0} .msg.err{color:var(--err)}
+.bloque{max-width:560px;margin:60px auto;padding:0 20px;font:italic 17px/1.5 var(--serif);color:var(--muted)}
+.outils{max-width:1000px;margin:16px auto 0;padding:0 20px;display:flex;gap:10px;flex-wrap:wrap}
+
+/* la feuille */
+.feuille{max-width:1000px;margin:16px auto 40px;background:#fff;color:#1B2430;border:1px solid var(--line);border-radius:10px;padding:36px 44px}
+.entete{display:flex;justify-content:space-between;align-items:baseline;gap:16px;border-bottom:2px solid #1B2430;padding-bottom:8px;margin-bottom:18px;flex-wrap:wrap}
+.entete .marque{font:600 20px var(--serif);letter-spacing:.02em}
+.entete .marque i{font:italic 13px var(--serif);color:#5B6573;margin-left:8px}
+.entete .qui{font-size:13px;color:#5B6573;text-align:right}
+.cols{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:32px}
+.profil{margin-bottom:18px;break-inside:avoid}
+.profil .code{font:600 14px var(--sans);color:#5B6573;display:flex;gap:8px;align-items:center}
+.profil h1{font:600 34px/1.1 var(--serif);margin:4px 0 2px}
+.profil .devise{font:italic 18px/1.35 var(--serif);color:#5B6573}
+.profil .texte{font:16px/1.6 var(--serif);margin-top:12px}
+.profil .texte p{margin:0 0 10px}
+.frontiere{font-size:14px;color:var(--warn);border-left:3px solid var(--warn);padding:4px 10px;margin:0 0 16px}
+h2{font:600 17px var(--serif);margin:22px 0 8px;padding-bottom:3px;border-bottom:1px solid #DDE1E7;break-after:avoid}
+.impact{break-inside:avoid;margin-bottom:12px}
+.impact b{font-weight:600}
+.impact div{font:15px/1.55 var(--serif);white-space:pre-line;margin-top:3px}
+.roles{display:grid;grid-template-columns:1fr 1fr;gap:4px 18px;font:15px/1.55 var(--serif);white-space:pre-line;break-inside:avoid}
+table.cl{border-collapse:collapse;width:100%;font-size:13px;break-inside:avoid}
+table.cl td{padding:3px 4px;border-bottom:1px solid #EEF1F5;vertical-align:top}
+table.cl td.f{font-size:16px;width:22px;text-align:center}
+table.cl td.n{font-weight:600;text-transform:uppercase;font-size:12px;letter-spacing:.02em;white-space:nowrap}
+table.cl td.d{color:#5B6573;font-style:italic}
+table.cl tr.top td{background:#F4F6F8}
+.pips{display:inline-flex;gap:3px;align-items:center;vertical-align:1px}
+.pip{width:11px;height:11px;border-radius:50%;border:1px solid #8892A0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.pip.sec{width:7px;height:7px} .pip.abs{background:transparent!important;border:1.5px dashed var(--c)} .pip.sep{width:auto;height:auto;border:0;font-size:10px;color:#5B6573}
+.histo{display:flex;gap:6px;align-items:flex-end;height:60px;margin:6px 0 2px}
+.histo div{flex:1;text-align:center;font-size:11px}
+.histo span{display:block;border:1px solid #9AA4B2;border-radius:3px 3px 0 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.pied{margin-top:22px;border-top:1px solid #DDE1E7;padding-top:6px;font-size:11px;color:#5B6573;display:flex;justify-content:space-between}
+footer{border-top:1px solid var(--line);background:var(--panel);padding:4px 20px;text-align:right;font-size:12px;color:var(--muted)}
+dialog{border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);padding:24px;width:min(380px,92vw)} dialog::backdrop{background:rgba(10,15,25,.45)}
+dialog h2{border:0} .field{display:block;margin-bottom:12px} .field span{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+.field input{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:6px;background:var(--paper)}
+@media (max-width:800px){ .cols{grid-template-columns:1fr} .feuille{padding:20px} .roles{grid-template-columns:1fr} }
+@page{size:A4 portrait;margin:12mm}
+@media print{
+  body{background:#fff} header,.outils,footer,dialog{display:none!important}
+  .feuille{border:0;border-radius:0;margin:0;padding:0;max-width:none}
+  .profil h1{font-size:28px} .profil .texte{font-size:13.5px} .impact div,.roles{font-size:12.5px} h2{font-size:15px;margin-top:14px}
+  .cols{grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:22px}
+  .roles{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1 class="wordmark">FLAMME</h1><p class="signature">Cartographiez votre énergie</p>
+  <nav><a href="autotest.html">Autotest</a><a href="index.html">Console</a></nav>
+  <div class="who"><span id="who"></span>
+    <button class="btn ghost" id="btn-login" type="button">Se connecter</button>
+    <button class="btn ghost hidden" id="btn-logout" type="button">Se déconnecter</button></div>
+</header>
+<p class="bloque" id="bloque">Chargement…</p>
+<div class="outils hidden" id="outils">
+  <button class="btn" type="button" onclick="window.print()">Imprimer ou enregistrer en PDF</button>
+  <a class="btn ghost hidden" id="lien-detail" href="#">Voir le détail</a>
+</div>
+<article class="feuille hidden" id="feuille"></article>
+<footer id="version"></footer>
+<dialog id="dlg-login"><form id="form-login"><h2 style="font:600 22px var(--serif);margin:0 0 14px">Se connecter</h2>
+  <label class="field"><span>Adresse e-mail</span><input type="email" id="email" autocomplete="username" required></label>
+  <label class="field"><span>Mot de passe</span><input type="password" id="password" autocomplete="current-password" required></label>
+  <div style="display:flex;gap:10px"><button class="btn" type="submit">Se connecter</button><button class="btn ghost" type="button" id="login-fermer">Fermer</button></div>
+  <p class="msg" id="login-msg" role="status"></p></form></dialog>
+<script>
+const VERSION = { numero:"1.0", date:"2026-09-30 14:50" };
+const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
+const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";
+const M = window.FLAMME_MOTEUR;
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pct = x => (x * 100).toFixed(1).replace(".", ",") + " %";
+const dateFr = d => new Date(d).toLocaleDateString("fr-FR", { day:"numeric", month:"long", year:"numeric" });
+let user = null, role = null, E = {}, C = {};
+$("#version").textContent = `Fiche ${VERSION.numero}, version du ${VERSION.date.replace(/(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d)/,"$3/$2/$1 à $4h$5")} — moteur ${M.VERSION.numero}`;
+
+function pips(code){
+  let out = "", absent = false;
+  for (const ch of code){
+    if (ch === "/"){ absent = true; out += '<span class="pip sep">/</span>'; continue; }
+    const up = ch.toUpperCase(), c = C[up]; if (!c) continue;
+    const cls = ch === up ? "pip" : (absent ? "pip abs" : "pip sec");
+    out += `<span class="${cls}" style="background:${c.couleur};--c:${c.couleur === '#FFFFFF' ? '#8892A0' : c.couleur}"></span>`;
+  }
+  return `<span class="pips" aria-hidden="true">${out}</span>`;
+}
+const nomMaj = code => esc((E[code]?.nom || code).toLocaleUpperCase("fr-FR"));
+
+/* ---------- source des scores : ?resultat=ID ou ?W=..&U=..&B=..&R=..&G=.. (en %) ---------- */
+async function lireScores(){
+  const q = new URLSearchParams(location.search);
+  if (q.get("resultat")){
+    const { data, error } = await sb.from("resultats").select("*").eq("id", q.get("resultat")).maybeSingle();
+    if (error || !data) throw new Error("Ce résultat est introuvable, ou tu n'as pas le droit de le consulter.");
+    let qui = "";
+    if (role === "proprietaire" && data.user_id !== user.id){
+      const { data: pers } = await sb.rpc("personnes"); const p = (pers || []).find(x => x.user_id === data.user_id);
+      qui = p ? (p.nom || p.email) : "";
+    }
+    return { scores: data.scores, date: data.passe_le, qui, id: data.id };
+  }
+  const s = {}; for (const c of M.ORDRE){ const v = parseFloat(String(q.get(c) ?? "").replace(",", ".")); if (!isFinite(v)) throw new Error("Il manque des scores : ouvre la fiche depuis l'autotest ou depuis la console."); s[c] = v; }
+  return { scores: s, date: new Date().toISOString(), qui: "" };
+}
+
+function blocProfil(code){
+  const f = E[code] || {};
+  const paras = [f.texte1, f.texte2, f.texte3].filter(Boolean).map(t => `<p>${esc(t)}</p>`).join("");
+  return `<section class="profil"><div class="code">${pips(code)}${esc(code)}</div><h1>${esc(f.nom || code)}</h1>
+    <div class="devise">${esc(f.devise || "")}</div>${paras ? `<div class="texte">${paras}</div>` : ""}</section>`;
+}
+function tableau(liste){
+  return `<table class="cl">${liste.map(x => `<tr class="${x.niveau === 0 ? "top" : ""}"><td class="f" title="rang ${x.rang}">${x.fleche}</td>
+    <td>${pips(x.code)}</td><td class="n">${nomMaj(x.code)}</td><td class="d">${esc(E[x.code]?.devise || "")}</td></tr>`).join("")}</table>`;
+}
+
+function rendre(src){
+  const s01 = Object.fromEntries(M.ORDRE.map(c => [c, src.scores[c] / 100]));
+  const f = M.fiche(s01);
+  const codes = f.profil.codes;
+  const impacts = (liste, champ, phrase) => liste.map(x => `<div class="impact"><b>${nomMaj(x.code)} (${esc(x.code)})</b> ${phrase}, ce qui peut présenter les impacts suivants :
+    <div>${esc(E[x.code]?.[champ] || "—")}</div></div>`).join("");
+  const roles = liste => liste.map(x => `<div class="roles"><div>${esc(E[x.code]?.texte_plus || "")}</div><div>${esc(E[x.code]?.texte_moins || "")}</div></div>`).join("");
+  $("#feuille").innerHTML = `
+    <div class="entete"><div class="marque">FLAMME<i>Cartographiez votre énergie</i></div>
+      <div class="qui">Fiche de profil${src.qui ? " — " + esc(src.qui) : ""}<br>${dateFr(src.date)}</div></div>
+    ${f.profil.frontiere ? `<p class="frontiere">Profil frontière : les scores placent à égalité entre ${codes.length} profils, présentés l'un après l'autre.</p>` : ""}
+    <div class="cols">
+      <div>
+        ${codes.map(blocProfil).join("")}
+        <h2>Motivations dominantes</h2>${impacts(f.motivationsDominantes, "texte_plus", "est une motivation dominante")}
+        <h2>Motivations peu présentes</h2>${impacts(f.motivationsFaibles, "texte_moins", "est une motivation peu présente")}
+        <h2>Ces rôles et activités peuvent convenir à ce profil</h2>${roles(f.projetFort)}
+        <h2>Ces rôles et activités peuvent ne pas convenir à ce profil</h2>${roles(f.projetFaible)}
+      </div>
+      <div>
+        <h2 style="margin-top:0">Scores</h2>
+        <div class="histo">${M.ORDRE.map(c => `<div><span style="height:${Math.max(2, src.scores[c] * .5)}px;background:${C[c]?.couleur}"></span>${c}</div>`).join("")}</div>
+        <div style="font-size:12px;color:#5B6573">${M.ORDRE.map(c => `${c} ${String(Math.round(src.scores[c] * 10) / 10).replace(".", ",")}`).join(" · ")}</div>
+        <h2>Valeurs <small style="font:12px var(--sans);color:#5B6573">ce qui est important</small></h2>${tableau(f.valeurs)}
+        <h2>Motivations <small style="font:12px var(--sans);color:#5B6573">ce qui apporte l'énergie</small></h2>${tableau(f.motivations)}
+        <h2>Projets <small style="font:12px var(--sans);color:#5B6573">où l'énergie est utilisée</small></h2>${tableau(f.projets)}
+      </div>
+    </div>
+    <div class="pied"><span>FLAMME — fiche ${VERSION.numero}, moteur ${M.VERSION.numero}</span><span>↑ ↗ → ↘ ↓ : du plus présent au moins présent</span></div>`;
+  document.title = `FLAMME — fiche ${codes.join(" / ")}`;
+  if (role === "proprietaire"){ const l = $("#lien-detail"); l.href = "detail.html" + location.search; l.classList.remove("hidden"); }
+}
+
+/* ---------- accès ---------- */
+$("#btn-login").addEventListener("click", () => { $("#login-msg").textContent = ""; $("#dlg-login").showModal(); });
+$("#login-fermer").addEventListener("click", () => $("#dlg-login").close());
+$("#btn-logout").addEventListener("click", () => sb.auth.signOut());
+$("#form-login").addEventListener("submit", async e => { e.preventDefault(); const m = $("#login-msg"); m.className = "msg"; m.textContent = "Connexion…";
+  const { error } = await sb.auth.signInWithPassword({ email: $("#email").value.trim(), password: $("#password").value });
+  if (error){ m.className = "msg err"; m.textContent = /invalid/i.test(error.message) ? "Adresse ou mot de passe incorrect." : error.message; } else $("#dlg-login").close(); });
+
+sb.auth.onAuthStateChange(async (_e, session) => {
+  const u = session?.user || null; if (u?.id === user?.id && role !== null) return;
+  user = u; role = null;
+  $("#btn-login").classList.toggle("hidden", !!user); $("#btn-logout").classList.toggle("hidden", !user);
+  $("#who").textContent = user ? user.email : "";
+  ["#feuille", "#outils"].forEach(s => $(s).classList.add("hidden")); $("#bloque").classList.remove("hidden");
+  if (!user){ $("#bloque").textContent = "La fiche de profil est réservée aux personnes qui ont un compte. Connecte-toi pour l'afficher."; return; }
+  const { data: r } = await sb.rpc("mon_role"); role = r || "";
+  if (!role){ $("#bloque").textContent = "Ton compte n'a pas encore accès à FLAMME."; return; }
+  try {
+    const [{ data: els, error }, { data: cols }] = await Promise.all([sb.from("elements").select("*"), sb.from("couleurs").select("*")]);
+    if (error) throw new Error(error.message);
+    E = Object.fromEntries(els.map(e => [e.code, e])); C = Object.fromEntries((cols || []).map(c => [c.code, c]));
+    rendre(await lireScores());
+    $("#bloque").classList.add("hidden"); ["#feuille", "#outils"].forEach(s => $(s).classList.remove("hidden"));
+  } catch (err){ $("#bloque").textContent = err.message; }
+});
+</script>
+</body>
+</html>
