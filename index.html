@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FLAMME — console 1.4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+<style>
+:root{
+  --ink:#1B2430; --muted:#5B6573; --line:#DDE1E7; --paper:#F4F6F8; --panel:#FFFFFF;
+  --hover:#EEF1F5; --sel:#E3E8EF; --ok:#1E7A46; --warn:#9A5B00; --err:#B42318;
+  --serif:"Source Serif 4", Georgia, "Times New Roman", serif;
+  --sans:"IBM Plex Sans", "Segoe UI", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --ink:#E6E9EE; --muted:#9AA4B2; --line:#2C3542; --paper:#11161D; --panel:#171D25;
+         --hover:#1E2630; --sel:#26303C; --ok:#5CC98A; --warn:#E0A84A; --err:#F2837A; }
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--paper);color:var(--ink);font:15px/1.5 var(--sans)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid #3B6FE0;outline-offset:2px}
+.hidden{display:none!important}
+
+/* ---------- connexion ---------- */
+#login{min-height:100%;display:grid;place-items:center;padding:24px}
+.login-box{width:min(380px,100%)}
+.wordmark{font:600 44px/1 var(--serif);letter-spacing:.02em;margin:0}
+.signature{font:italic 17px/1.4 var(--serif);color:var(--muted);margin:6px 0 28px}
+.field{display:block;margin-bottom:14px}
+.field span{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+.field input,.field select,.field textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+.field textarea{font-family:var(--serif);font-size:16px;line-height:1.6;resize:vertical;min-height:72px}
+.btn{border:1px solid var(--ink);background:var(--ink);color:var(--panel);padding:9px 16px;border-radius:6px;cursor:pointer;font-weight:500}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.msg{font-size:14px;margin-top:12px;min-height:1.4em}
+.msg.err{color:var(--err)} .msg.ok{color:var(--ok)} .msg.warn{color:var(--warn)}
+
+/* ---------- application ---------- */
+#app{height:100%;display:flex;flex-direction:column}
+header{display:flex;align-items:baseline;gap:18px;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
+header .wordmark{font-size:24px}
+header .signature{margin:0;font-size:14px}
+nav{display:flex;gap:4px;margin-left:12px}
+nav button{background:none;border:0;padding:4px 10px;border-radius:5px;cursor:pointer;color:var(--muted)}
+nav button[aria-selected="true"]{background:var(--sel);color:var(--ink)}
+.who{margin-left:auto;font-size:13px;color:var(--muted);display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+#backup-info.late{color:var(--warn)}
+
+main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(300px,400px) 1fr}
+#list-pane{border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;background:var(--panel)}
+.filters{padding:12px 14px;border-bottom:1px solid var(--line);display:grid;gap:8px}
+.filters input,.filters select{width:100%;padding:7px 10px;border:1px solid var(--line);border-radius:6px;background:var(--paper)}
+.filters .row{display:flex;gap:8px}
+.count{font-size:12px;color:var(--muted)}
+#list{overflow:auto;flex:1;list-style:none;margin:0;padding:4px 0}
+#list li{display:grid;grid-template-columns:78px 1fr;gap:2px 10px;padding:8px 14px;cursor:pointer;border-left:3px solid transparent}
+#list li:hover{background:var(--hover)}
+#list li[aria-selected="true"]{background:var(--sel);border-left-color:var(--ink)}
+#list .code{font-size:13px;color:var(--muted);grid-row:span 2;display:flex;flex-direction:column;gap:3px}
+#list .nom{font:600 16px/1.3 var(--serif)}
+#list .devise{font:italic 14px/1.35 var(--serif);color:var(--muted)}
+.draft{font:500 11px var(--sans);color:var(--warn);border:1px solid currentColor;border-radius:3px;padding:0 4px;margin-left:6px;vertical-align:2px}
+
+/* pastilles de couleur (émaux) */
+.pips{display:inline-flex;gap:3px;align-items:center}
+.pip{width:12px;height:12px;border-radius:50%;border:1px solid #8892A0}
+.pip.sec{width:8px;height:8px}
+.pip.abs{background:transparent!important;border:1.5px dashed var(--c)}
+.pip.sep{width:auto;height:auto;border:0;font-size:11px;color:var(--muted);margin:0 1px}
+
+/* éditeur */
+#edit-pane{overflow:auto;min-height:0}
+.band{height:10px}
+.editor{max-width:820px;padding:22px 32px 48px}
+.editor h2{font:600 30px/1.2 var(--serif);margin:10px 0 2px}
+.editor .meta{color:var(--muted);font-size:13px;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+.actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:8px;position:sticky;bottom:0;background:var(--paper);padding:12px 0;border-top:1px solid var(--line)}
+.actions label{font-size:13px;color:var(--muted);display:flex;gap:6px;align-items:center}
+.empty{padding:48px 32px;color:var(--muted);font:italic 17px/1.5 var(--serif);max-width:520px}
+.readonly-note{font-size:13px;color:var(--warn);margin:8px 0 0}
+
+/* version */
+.version{font-size:12px;color:var(--muted);margin:24px 0 0}
+footer{border-top:1px solid var(--line);background:var(--panel);padding:4px 20px;text-align:right}
+footer .version{margin:0}
+
+/* dialogue et personnes */
+dialog{border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);padding:24px;width:min(420px,92vw)}
+dialog::backdrop{background:rgba(10,15,25,.45)}
+dialog h2{font:600 22px var(--serif);margin:0 0 16px}
+.row-btn{display:flex;gap:10px;flex-wrap:wrap}
+#personnes-pane{grid-column:1 / -1;overflow:auto;padding:20px 28px;max-width:1100px}
+#personnes-pane h2{font:600 22px var(--serif);margin:0 0 6px}
+#personnes-pane .aide{color:var(--muted);font-size:14px;max-width:720px;margin:0 0 16px}
+#personnes-pane td input,#personnes-pane td select,.ajout input,.ajout select{padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--paper);width:100%}
+.ajout{display:grid;grid-template-columns:2fr 1.4fr 1fr auto;gap:10px;align-items:end;margin:8px 0 6px;max-width:900px}
+.ajout .field{margin:0}
+.sans-role{color:var(--warn)}
+@media (max-width:760px){ .ajout{grid-template-columns:1fr} }
+
+/* journal */
+#journal-pane{grid-column:1 / -1;overflow:auto;padding:20px 28px}
+table.j{border-collapse:collapse;width:100%;font-size:14px}
+table.j th{text-align:left;font-weight:500;color:var(--muted);border-bottom:1px solid var(--line);padding:6px 10px}
+table.j td{border-bottom:1px solid var(--line);padding:8px 10px;vertical-align:top}
+.diff div{margin-bottom:4px}
+.diff b{font-weight:500}
+.diff del{color:var(--err);text-decoration:line-through}
+.diff ins{color:var(--ok);text-decoration:none}
+.hist{margin-top:28px}
+.hist h3{font:600 18px var(--serif);margin:0 0 8px}
+
+@media (max-width:760px){
+  main{grid-template-columns:1fr}
+  #edit-pane{position:fixed;inset:0;background:var(--paper);z-index:5}
+  #edit-pane.closed{display:none}
+  .grid2{grid-template-columns:1fr}
+  .editor{padding:16px}
+  .back{display:inline-block!important}
+}
+.back{display:none;margin:12px 16px 0}
+@media (prefers-reduced-motion:no-preference){ .band{transition:background .3s} }
+</style>
+</head>
+<body>
+
+<!-- ====== connexion ====== -->
+<section id="login" class="hidden">
+  <form class="login-box" id="login-form">
+    <h1 class="wordmark">FLAMME</h1>
+    <p class="signature">Cartographiez votre énergie</p>
+    <label class="field"><span>Adresse e-mail</span><input type="email" id="email" autocomplete="username" required></label>
+    <label class="field"><span>Mot de passe</span><input type="password" id="password" autocomplete="current-password" required></label>
+    <button class="btn" type="submit">Se connecter</button>
+    <p class="msg" id="login-msg" role="status"></p>
+    <p class="version" data-version></p>
+  </form>
+</section>
+
+<!-- ====== mot de passe ====== -->
+<dialog id="dlg-mdp">
+  <form method="dialog" id="form-mdp">
+    <h2>Changer mon mot de passe</h2>
+    <label class="field"><span>Nouveau mot de passe (8 caractères au moins)</span><input type="password" id="mdp1" autocomplete="new-password" minlength="8" required></label>
+    <label class="field"><span>Le même, une seconde fois</span><input type="password" id="mdp2" autocomplete="new-password" minlength="8" required></label>
+    <div class="row-btn"><button class="btn" id="mdp-ok" type="submit" value="ok">Changer le mot de passe</button><button class="btn ghost" type="button" id="mdp-annuler">Fermer</button></div>
+    <p class="msg" id="mdp-msg" role="status"></p>
+  </form>
+</dialog>
+
+<!-- ====== application ====== -->
+<section id="app" class="hidden">
+  <header>
+    <h1 class="wordmark">FLAMME</h1>
+    <p class="signature">Cartographiez votre énergie</p>
+    <nav role="tablist">
+      <button role="tab" aria-selected="true" data-tab="elements">Éléments</button>
+      <button role="tab" aria-selected="false" data-tab="journal" id="tab-journal">Journal</button>
+      <button role="tab" aria-selected="false" data-tab="personnes" id="tab-personnes">Personnes</button>
+    </nav>
+    <div class="who"><span id="backup-info"></span><button class="btn ghost hidden" id="backup" type="button">Sauvegarder la base</button><span id="who"></span><button class="btn ghost" id="mdp" type="button">Mon mot de passe</button><button class="btn ghost" id="logout" type="button">Se déconnecter</button></div>
+  </header>
+
+  <main id="view-elements">
+    <aside id="list-pane">
+      <div class="filters">
+        <input type="search" id="q" placeholder="Chercher un code, un nom, un mot du texte" aria-label="Rechercher">
+        <div class="row">
+          <select id="f-couche" aria-label="Couche"></select>
+          <select id="f-famille" aria-label="Famille de profils" class="hidden"></select>
+          <select id="f-statut" aria-label="Statut"></select>
+        </div>
+        <div class="count" id="count"></div>
+      </div>
+      <ul id="list" role="listbox" aria-label="Éléments"></ul>
+    </aside>
+
+    <section id="edit-pane" class="closed">
+      <button class="btn ghost back" id="back" type="button">Retour à la liste</button>
+      <div class="band" id="band"></div>
+      <div id="editor-host"><p class="empty">Choisis un élément dans la liste pour lire ou modifier sa fiche.</p></div>
+    </section>
+  </main>
+
+  <main id="view-journal" class="hidden">
+    <section id="journal-pane"></section>
+  </main>
+  <main id="view-personnes" class="hidden">
+    <section id="personnes-pane"></section>
+  </main>
+  <footer><span class="version" data-version></span></footer>
+</section>
+
+<script>
+/* ================= configuration ================= */
+const VERSION = { numero:"1.4", date:"2026-09-30 13:42" };   // à incrémenter à chaque livraison
+const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
+const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
+
+const LANGUE = "fr";   // langue du vocabulaire du modèle (table vocabulaire)
+const CHAMPS = ["nom","devise","titre","texte1","texte2","texte3","nom_interne","notes","date_revision","statut"];
+const LIBELLES = {nom:"Nom",devise:"Devise",titre:"Titre",texte1:"Texte 1",texte2:"Texte 2",texte3:"Texte 3",
+                  nom_interne:"Nom interne",notes:"Notes",date_revision:"Date de révision",statut:"Statut",
+                  couche:"Couche",famille:"Famille",code:"Code",ordre:"Ordre",couleur:"Couleur",couleur_texte:"Couleur du texte",langue:"Langue"};
+
+document.querySelectorAll("[data-version]").forEach(el =>
+  el.textContent = `Console ${VERSION.numero}, version du ${VERSION.date.replace(/(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d)/, "$3/$2/$1 à $4h$5")}`);
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+let state = { user:null, role:null, noms:{}, couleurs:{}, vocab:{}, elements:[], current:null, loaded:null };
+
+/* libellé du vocabulaire du modèle, dans la langue choisie (repli : la clé elle-même) */
+function lib(domaine, cle, pluriel = false){
+  const v = state.vocab[domaine]?.[cle];
+  return v ? (pluriel && v.pluriel ? v.pluriel : v.singulier) : cle;
+}
+const maj1 = s => s ? s[0].toUpperCase() + s.slice(1) : s;
+function cles(domaine){
+  return Object.values(state.vocab[domaine] || {}).sort((a,b) => (a.ordre ?? 99) - (b.ordre ?? 99)).map(v => v.cle);
+}
+function remplirFiltres(){
+  const opt = (v, t) => `<option value="${esc(v)}">${esc(t)}</option>`;
+  $("#f-couche").innerHTML  = opt("", "Toutes les couches") + cles("couche").map(c => opt(c, maj1(lib("couche", c, true)))).join("");
+  $("#f-famille").innerHTML = opt("", "Toutes familles")    + cles("famille").map(c => opt(c, maj1(lib("famille", c, true)))).join("");
+  $("#f-statut").innerHTML  = opt("", "Tous statuts")       + cles("statut").map(c => opt(c, maj1(lib("statut", c, true)))).join("");
+}
+
+/* ================= pastilles ================= */
+// Majuscule = couleur principale ; minuscule = couleur secondaire ; minuscule après « / » = couleur absente.
+function pips(code){
+  let out = "", absent = false;
+  for (const ch of code){
+    if (ch === "/"){ absent = true; out += '<span class="pip sep">/</span>'; continue; }
+    const up = ch.toUpperCase(), c = state.couleurs[up];
+    if (!c) continue;
+    const cls = ch === up ? "pip" : (absent ? "pip abs" : "pip sec");
+    out += `<span class="${cls}" style="background:${c.couleur};--c:${c.couleur === '#FFFFFF' ? '#8892A0' : c.couleur}" title="${esc(lib("couleur", up))}${cls.includes('abs') ? ' (absent)' : ''}"></span>`;
+  }
+  return `<span class="pips">${out}</span>`;
+}
+function bandFor(code){
+  const cols = [...code].filter(ch => ch === ch.toUpperCase() && state.couleurs[ch]).map(ch => state.couleurs[ch].couleur);
+  if (!cols.length) return "var(--line)";
+  if (cols.length === 1) return cols[0];
+  return `linear-gradient(90deg, ${cols.join(", ")})`;
+}
+
+/* ================= connexion ================= */
+$("#login-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const m = $("#login-msg"); m.className = "msg"; m.textContent = "Connexion…";
+  const { error } = await sb.auth.signInWithPassword({ email: $("#email").value.trim(), password: $("#password").value });
+  if (error){
+    m.className = "msg err";
+    m.textContent = /invalid/i.test(error.message) ? "Adresse ou mot de passe incorrect." : "Connexion impossible : " + error.message;
+  }
+});
+$("#logout").addEventListener("click", () => sb.auth.signOut());
+
+sb.auth.onAuthStateChange((_evt, session) => {
+  if (session?.user){ if (state.user?.id !== session.user.id){ state.user = session.user; demarrer(); } }
+  else { state.user = null; $("#app").classList.add("hidden"); $("#login").classList.remove("hidden"); }
+});
+
+async function demarrer(){
+  $("#login").classList.add("hidden"); $("#app").classList.remove("hidden");
+  const [{ data: role }, { data: roles }, { data: couleurs, error: e1 }, { data: els, error: e2 }, { data: vocab }] = await Promise.all([
+    sb.rpc("mon_role"),
+    sb.from("roles_utilisateurs").select("*"),
+    sb.from("couleurs").select("*").order("ordre"),
+    sb.from("elements").select("*").order("ordre"),
+    sb.from("vocabulaire").select("*").eq("langue", LANGUE)
+  ]);
+  (vocab || []).forEach(v => ((state.vocab[v.domaine] ??= {})[v.cle] = v));
+  remplirFiltres();
+  state.role = role;
+  (roles || []).forEach(r => state.noms[r.user_id] = r.nom || r.role);
+  (couleurs || []).forEach(c => state.couleurs[c.code] = c);
+  state.elements = els || [];
+  const nom = state.noms[state.user.id] || state.user.email;
+  $("#who").textContent = `${nom} — ${{proprietaire:"propriétaire",editeur:"éditeur",invite:"invité"}[role] || "aucun rôle"}`;
+  $("#tab-journal").classList.toggle("hidden", role !== "proprietaire");
+  $("#backup").classList.toggle("hidden", role !== "proprietaire");
+  $("#tab-personnes").classList.toggle("hidden", role !== "proprietaire");
+  if (role === "proprietaire") infoSauvegarde();
+  if (!role){
+    $("#editor-host").innerHTML = `<p class="empty">Ton compte est bien connecté, mais aucun rôle ne lui est attribué dans FLAMME. Le propriétaire doit te déclarer dans la table des rôles.</p>`;
+  } else if (e1 || e2){
+    $("#editor-host").innerHTML = `<p class="empty">Lecture de la base impossible : ${esc((e1||e2).message)}</p>`;
+  }
+  afficherListe();
+}
+
+/* ================= liste ================= */
+["#q","#f-couche","#f-famille","#f-statut"].forEach(s => $(s).addEventListener("input", afficherListe));
+$("#f-couche").addEventListener("change", () => {
+  $("#f-famille").classList.toggle("hidden", $("#f-couche").value !== "profil");
+  if ($("#f-couche").value !== "profil") $("#f-famille").value = "";
+  afficherListe();
+});
+
+function norm(s){ return String(s ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase(); }
+function filtrer(){
+  const q = norm($("#q").value.trim()), c = $("#f-couche").value, f = $("#f-famille").value, st = $("#f-statut").value;
+  return state.elements.filter(e =>
+    (!c || e.couche === c) && (!f || e.famille === f) && (!st || e.statut === st) &&
+    (!q || norm([e.code,e.nom,e.devise,e.titre,e.texte1,e.texte2,e.texte3,e.nom_interne,e.notes].join(" ")).includes(q)));
+}
+function afficherListe(){
+  const items = filtrer();
+  $("#count").textContent = `${items.length} élément${items.length > 1 ? "s" : ""} sur ${state.elements.length}`;
+  $("#list").innerHTML = items.map(e => `
+    <li role="option" tabindex="0" data-code="${esc(e.code)}" aria-selected="${state.current === e.code}">
+      <span class="code">${pips(e.code)}<span>${esc(e.code)}</span></span>
+      <span class="nom">${esc(e.nom)}${e.statut === "brouillon" ? `<span class="draft">${esc(lib("statut","brouillon"))}</span>` : ""}</span>
+      <span class="devise">${esc(e.devise)}</span>
+    </li>`).join("");
+}
+$("#list").addEventListener("click", e => { const li = e.target.closest("li"); if (li) ouvrir(li.dataset.code); });
+$("#list").addEventListener("keydown", e => { if (e.key === "Enter"){ const li = e.target.closest("li"); if (li) ouvrir(li.dataset.code); } });
+$("#back").addEventListener("click", () => $("#edit-pane").classList.add("closed"));
+
+/* ================= fiche ================= */
+const peutEcrire = () => state.role === "proprietaire" || state.role === "editeur";
+
+async function ouvrir(code){
+  if (state.current && estModifie() && !confirm("Des modifications n'ont pas été enregistrées. Les abandonner ?")) return;
+  const { data, error } = await sb.from("elements").select("*").eq("code", code).single();
+  if (error){ alert("Lecture impossible : " + error.message); return; }
+  state.current = code; state.loaded = data;
+  majLocale(data);
+  afficherListe();
+  $("#edit-pane").classList.remove("closed");
+  $("#band").style.background = bandFor(code);
+  const ro = peutEcrire() ? "" : "readonly";
+  const dis = peutEcrire() ? "" : "disabled";
+  const t = (k, rows = 3) => `<label class="field"><span>${LIBELLES[k]}</span><textarea data-k="${k}" rows="${rows}" ${ro}>${esc(data[k])}</textarea></label>`;
+  const i = (k, type = "text") => `<label class="field"><span>${LIBELLES[k]}</span><input data-k="${k}" type="${type}" value="${esc(data[k])}" ${ro}></label>`;
+  $("#editor-host").innerHTML = `
+    <div class="editor">
+      <div class="meta">${pips(data.code)}<span>${esc(data.code)}</span><span>${esc(maj1(lib("couche", data.couche)))}${data.famille ? " " + esc(lib("famille", data.famille)) : ""}</span>
+        <span>modifié le ${new Date(data.modifie_le).toLocaleString("fr-FR")}${data.modifie_par ? " par " + esc(state.noms[data.modifie_par] || "un éditeur") : ""}</span></div>
+      <h2 id="titre-fiche">${esc(data.nom)}</h2>
+      ${peutEcrire() ? "" : '<p class="readonly-note">Lecture seule : ton rôle ne permet pas de modifier le contenu.</p>'}
+      <div class="grid2">${i("nom")}${i("devise")}</div>
+      ${t("titre",2)}${t("texte1",4)}${t("texte2",4)}${t("texte3",4)}
+      <div class="grid2">${i("nom_interne")}${i("date_revision","date")}</div>
+      ${t("notes",2)}
+      <label class="field" style="max-width:220px"><span>Statut</span>
+        <select data-k="statut" ${dis}>${cles("statut").map(c => `<option value="${esc(c)}">${esc(lib("statut", c))}</option>`).join("")}</select></label>
+      ${peutEcrire() ? `
+      <div class="actions">
+        <button class="btn" id="save" type="button" disabled>Enregistrer les modifications</button>
+        <button class="btn ghost" id="cancel" type="button" disabled>Annuler</button>
+        <label><input type="checkbox" id="bump" checked> Mettre la date de révision à aujourd'hui</label>
+        <span class="msg" id="save-msg" role="status"></span>
+      </div>` : ""}
+      ${state.role === "proprietaire" ? '<div class="hist" id="hist"></div>' : ""}
+    </div>`;
+  $('[data-k="statut"]').value = data.statut;
+  if (peutEcrire()){
+    $("#save").addEventListener("click", enregistrer);
+    $("#cancel").addEventListener("click", () => { state.current = null; ouvrir(code); });
+  }
+  if (state.role === "proprietaire") historique(code);
+}
+
+function valeursForm(){
+  const v = {};
+  document.querySelectorAll("#editor-host [data-k]").forEach(el => {
+    const s = el.value.trim(); v[el.dataset.k] = s === "" ? null : s;
+  });
+  return v;
+}
+function estModifie(){
+  if (!state.loaded || !document.querySelector("#editor-host [data-k]")) return false;
+  const v = valeursForm();
+  return CHAMPS.some(k => (v[k] ?? null) !== (state.loaded[k] ?? null));
+}
+$("#editor-host").addEventListener("input", () => { if (peutEcrire() && $("#save")) surSaisie(); });
+function surSaisie(){
+  const m = estModifie();
+  $("#save").disabled = !m; $("#cancel").disabled = !m;
+  $("#save-msg").textContent = ""; $("#save-msg").className = "msg";
+  $("#titre-fiche").textContent = valeursForm().nom || "";
+}
+
+async function enregistrer(){
+  const v = valeursForm(), msg = $("#save-msg");
+  if (!v.nom){ msg.className = "msg err"; msg.textContent = "Le nom est obligatoire."; return; }
+  const maj = {};
+  CHAMPS.forEach(k => { if ((v[k] ?? null) !== (state.loaded[k] ?? null)) maj[k] = v[k]; });
+  if ($("#bump").checked) maj.date_revision = new Date().toLocaleDateString("sv-SE");   // AAAA-MM-JJ
+  $("#save").disabled = true; msg.className = "msg"; msg.textContent = "Enregistrement…";
+  // on n'écrit que si personne n'a modifié la fiche depuis son ouverture
+  const { data, error } = await sb.from("elements").update(maj)
+    .eq("code", state.current).eq("modifie_le", state.loaded.modifie_le).select();
+  if (error){ msg.className = "msg err"; msg.textContent = "Enregistrement refusé : " + error.message; $("#save").disabled = false; return; }
+  if (!data.length){
+    msg.className = "msg warn";
+    msg.textContent = "Cette fiche a été modifiée entre-temps. Annule pour recharger la version à jour, puis refais ta modification.";
+    return;
+  }
+  state.loaded = data[0]; majLocale(data[0]); afficherListe();
+  const code = state.current; state.current = null; await ouvrir(code);
+  const m2 = $("#save-msg"); m2.className = "msg ok"; m2.textContent = "Modifications enregistrées.";
+}
+function majLocale(row){
+  const i = state.elements.findIndex(e => e.code === row.code);
+  if (i >= 0) state.elements[i] = row;
+}
+
+/* ================= journal ================= */
+function diffHtml(j){
+  if (j.action === "INSERT") return j.par ? "Création" : "Import initial";
+  if (j.action === "DELETE") return "Suppression";
+  const a = j.avant || {}, b = j.apres || {};
+  return Object.keys(b).filter(k => !["modifie_le","modifie_par"].includes(k) && JSON.stringify(a[k]) !== JSON.stringify(b[k]))
+    .map(k => `<div><b>${esc(LIBELLES[k] || k)}</b> : <del>${esc(a[k] ?? "—")}</del> <ins>${esc(b[k] ?? "—")}</ins></div>`).join("") || "—";
+}
+function ligneJournal(j, avecCle){
+  const qui = j.par ? esc(state.noms[j.par] || "utilisateur inconnu") : "import";
+  return `<tr><td>${new Date(j.le).toLocaleString("fr-FR")}</td><td>${qui}</td>${avecCle ? `<td>${esc(j.cle)}</td>` : ""}<td class="diff">${diffHtml(j)}</td></tr>`;
+}
+async function historique(code){
+  const { data } = await sb.from("journal").select("*").eq("cle", code).order("id", { ascending:false }).limit(50);
+  const host = $("#hist"); if (!host) return;
+  host.innerHTML = `<h3>Historique de la fiche</h3>
+    <table class="j"><thead><tr><th>Date</th><th>Par</th><th>Changements</th></tr></thead>
+    <tbody>${(data || []).map(j => ligneJournal(j, false)).join("")}</tbody></table>`;
+}
+async function afficherJournal(){
+  const host = $("#journal-pane");
+  host.innerHTML = '<p class="count">Chargement…</p>';
+  const { data, error } = await sb.from("journal").select("*").neq("action","INSERT").order("id", { ascending:false }).limit(300);
+  if (error){ host.innerHTML = `<p class="msg err">Lecture du journal impossible : ${esc(error.message)}</p>`; return; }
+  host.innerHTML = data.length
+    ? `<table class="j"><thead><tr><th>Date</th><th>Par</th><th>Élément</th><th>Changements</th></tr></thead>
+       <tbody>${data.map(j => ligneJournal(j, true)).join("")}</tbody></table>
+       <p class="count">Les 300 dernières modifications (l'import initial n'est pas affiché).</p>`
+    : '<p class="empty">Aucune modification depuis l\'import initial. Chaque changement fait dans la console apparaîtra ici.</p>';
+}
+
+
+/* ================= sauvegarde ================= */
+const TABLES_SAUVEGARDE = ["couleurs","vocabulaire","elements","elements_traductions","roles_utilisateurs","journal"];
+async function lireTout(table){
+  const tout = [], pas = 1000;
+  for (let debut = 0; ; debut += pas){
+    const { data, error } = await sb.from(table).select("*").range(debut, debut + pas - 1);
+    if (error) throw new Error(`${table} : ${error.message}`);
+    tout.push(...data);
+    if (data.length < pas) return tout;
+  }
+}
+function telecharger(nom, contenu, type){
+  const url = URL.createObjectURL(new Blob([contenu], { type }));
+  const a = Object.assign(document.createElement("a"), { href:url, download:nom });
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+function versCSV(lignes){
+  if (!lignes.length) return "";
+  const cols = Object.keys(lignes[0]);
+  const cell = v => { const s = v == null ? "" : String(v); return /[";\n\r]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s; };
+  return "\ufeff" + [cols.join(";"), ...lignes.map(l => cols.map(c => cell(l[c])).join(";"))].join("\r\n");
+}
+function infoSauvegarde(){
+  let d = null; try { d = localStorage.getItem("flamme_derniere_sauvegarde"); } catch(e){}
+  const el = $("#backup-info");
+  if (!d){ el.textContent = "Aucune sauvegarde faite depuis ce poste"; el.className = "late"; return; }
+  const jours = Math.floor((Date.now() - new Date(d)) / 86400000);
+  el.textContent = jours === 0 ? "Sauvegardé aujourd'hui" : `Dernière sauvegarde il y a ${jours} jour${jours > 1 ? "s" : ""}`;
+  el.className = jours > 7 ? "late" : "";
+}
+$("#backup").addEventListener("click", async () => {
+  const b = $("#backup"); b.disabled = true; b.textContent = "Sauvegarde…";
+  try {
+    const donnees = {};
+    for (const t of TABLES_SAUVEGARDE) donnees[t] = await lireTout(t);
+    const maintenant = new Date();
+    const horo = maintenant.toLocaleDateString("sv-SE") + "_" + maintenant.toTimeString().slice(0,5).replace(":","h");
+    const comptes = Object.fromEntries(TABLES_SAUVEGARDE.map(t => [t, donnees[t].length]));
+    const sauvegarde = { meta:{ projet:"FLAMME", format:1, console:VERSION.numero, date:maintenant.toISOString(), source:SUPABASE_URL, comptes }, ...donnees };
+    telecharger(`flamme_sauvegarde_${horo}.json`, JSON.stringify(sauvegarde, null, 1), "application/json");
+    telecharger(`flamme_elements_${horo}.csv`, versCSV(donnees.elements), "text/csv");
+    try { localStorage.setItem("flamme_derniere_sauvegarde", maintenant.toISOString()); } catch(e){}
+    infoSauvegarde();
+    b.textContent = "Sauvegarder la base";
+    alert(`Sauvegarde terminée : ${comptes.elements} éléments, ${comptes.elements_traductions} traductions, ${comptes.journal} entrées de journal.\nRange les deux fichiers dans ton dossier de sauvegardes.`);
+  } catch (err){
+    b.textContent = "Sauvegarder la base";
+    alert("Sauvegarde interrompue, aucun fichier n'est complet : " + err.message);
+  }
+  b.disabled = false;
+});
+
+/* ================= mot de passe ================= */
+$("#mdp").addEventListener("click", () => { $("#form-mdp").reset(); $("#mdp-msg").textContent = ""; $("#dlg-mdp").showModal(); $("#mdp1").focus(); });
+$("#mdp-annuler").addEventListener("click", () => $("#dlg-mdp").close());
+$("#form-mdp").addEventListener("submit", async e => {
+  e.preventDefault();
+  const m = $("#mdp-msg"), a = $("#mdp1").value, b = $("#mdp2").value;
+  if (a.length < 8){ m.className = "msg err"; m.textContent = "Le mot de passe doit faire au moins 8 caractères."; return; }
+  if (a !== b){ m.className = "msg err"; m.textContent = "Les deux saisies sont différentes."; return; }
+  $("#mdp-ok").disabled = true; m.className = "msg"; m.textContent = "Changement en cours…";
+  const { error } = await sb.auth.updateUser({ password: a });
+  $("#mdp-ok").disabled = false;
+  if (error){ m.className = "msg err"; m.textContent = "Changement refusé : " + error.message; return; }
+  m.className = "msg ok"; m.textContent = "Mot de passe changé. Il servira dès ta prochaine connexion.";
+  $("#form-mdp").reset();
+});
+
+/* ================= personnes (propriétaire) ================= */
+const ROLES = { proprietaire:"propriétaire", editeur:"éditeur", invite:"invité" };
+const selRole = (v, attrs = "") => `<select ${attrs}>${Object.entries(ROLES).map(([k,l]) => `<option value="${k}"${k === v ? " selected" : ""}>${l}</option>`).join("")}</select>`;
+async function afficherPersonnes(msg){
+  const host = $("#personnes-pane");
+  const { data, error } = await sb.rpc("personnes");
+  if (error){
+    host.innerHTML = `<p class="msg err">Liste des comptes impossible à lire : ${esc(error.message)}. As-tu exécuté la migration 04 ?</p>`;
+    return;
+  }
+  (data || []).forEach(p => { if (p.role) state.noms[p.user_id] = p.nom || p.role; });
+  const date = d => d ? new Date(d).toLocaleString("fr-FR") : "jamais";
+  host.innerHTML = `
+    <h2>Personnes</h2>
+    <p class="aide">Pour donner accès à quelqu'un : crée d'abord son compte dans Supabase (Authentication, Users, Add user) avec son e-mail et un mot de passe provisoire, puis attribue-lui ici un rôle et un nom. Il changera son mot de passe à sa première connexion, avec « Mon mot de passe ».</p>
+    <div class="ajout">
+      <label class="field"><span>E-mail du compte</span><input id="aj-email" type="email"></label>
+      <label class="field"><span>Nom affiché</span><input id="aj-nom" type="text"></label>
+      <label class="field"><span>Rôle</span>${selRole("invite", 'id="aj-role"')}</label>
+      <button class="btn" id="aj-ok" type="button">Donner l'accès</button>
+    </div>
+    <p class="msg ${msg?.cls || ""}" id="pers-msg" role="status">${esc(msg?.txt || "")}</p>
+    <table class="j"><thead><tr><th>Nom</th><th>E-mail</th><th>Rôle</th><th>Dernière connexion</th><th></th></tr></thead>
+    <tbody>${(data || []).map(p => {
+      const moi = p.user_id === state.user.id;
+      return `<tr data-id="${esc(p.user_id)}" data-email="${esc(p.email)}">
+        <td><input class="p-nom" value="${esc(p.nom)}" placeholder="${p.role ? "" : "sans accès"}"></td>
+        <td>${esc(p.email)}${p.role ? "" : ' <span class="sans-role">(aucun accès)</span>'}</td>
+        <td>${selRole(p.role || "invite", `class="p-role"${moi ? " disabled" : ""}`)}</td>
+        <td>${date(p.derniere_connexion)}</td>
+        <td class="row-btn"><button class="btn ghost p-ok" type="button">${p.role ? "Enregistrer" : "Donner l'accès"}</button>
+          ${p.role && !moi ? '<button class="btn ghost p-retirer" type="button">Retirer l\'accès</button>' : ""}</td></tr>`;}).join("")}</tbody></table>`;
+  $("#aj-ok").addEventListener("click", () => attribuer($("#aj-email").value, $("#aj-role").value, $("#aj-nom").value));
+  host.querySelectorAll("tbody tr").forEach(tr => {
+    tr.querySelector(".p-ok").addEventListener("click", () =>
+      attribuer(tr.dataset.email, tr.querySelector(".p-role").value, tr.querySelector(".p-nom").value));
+    tr.querySelector(".p-retirer")?.addEventListener("click", async () => {
+      if (!confirm(`Retirer l'accès de ${tr.dataset.email} ? Son compte existera toujours, mais il ne verra plus rien.`)) return;
+      const { error } = await sb.rpc("retirer_role", { p_user: tr.dataset.id });
+      afficherPersonnes(error ? { cls:"err", txt:"Retrait refusé : " + error.message } : { cls:"ok", txt:`Accès retiré pour ${tr.dataset.email}.` });
+    });
+  });
+}
+async function attribuer(email, role, nom){
+  if (!email.trim()){ $("#pers-msg").className = "msg err"; $("#pers-msg").textContent = "Indique l'e-mail du compte."; return; }
+  const { error } = await sb.rpc("attribuer_role", { p_email: email, p_role: role, p_nom: nom });
+  afficherPersonnes(error ? { cls:"err", txt:"Refusé : " + error.message } : { cls:"ok", txt:`${email.trim()} : ${ROLES[role]}, accès enregistré.` });
+}
+
+/* ================= onglets ================= */
+document.querySelectorAll("nav button").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll("nav button").forEach(x => x.setAttribute("aria-selected", x === b));
+  const t = b.dataset.tab;
+  ["elements","journal","personnes"].forEach(v => $("#view-" + v).classList.toggle("hidden", v !== t));
+  if (t === "journal") afficherJournal();
+  if (t === "personnes") afficherPersonnes();
+}));
+window.addEventListener("beforeunload", e => { if (estModifie()){ e.preventDefault(); e.returnValue = ""; } });
+</script>
+</body>
+</html>
