@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FLAMME — console 1.9</title>
+<title>FLAMME — console 1.10</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
@@ -221,7 +221,7 @@ table.j td{border-bottom:1px solid var(--line);padding:8px 10px;vertical-align:t
 
 <script>
 /* ================= configuration ================= */
-const VERSION = { numero:"1.9", date:"2026-09-30 14:50" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"1.10", date:"2026-09-30 15:04" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 
@@ -583,17 +583,32 @@ async function afficherPersonnes(msg){
         <td>${selRole(p.role || "invite", `class="p-role"${moi ? " disabled" : ""}`)}</td>
         <td>${date(p.derniere_connexion)}</td>
         <td class="row-btn"><button class="btn ghost p-ok" type="button">${p.role ? "Enregistrer" : "Donner l'accès"}</button>
-          ${p.role && !moi ? '<button class="btn ghost p-retirer" type="button">Retirer l\'accès</button>' : ""}</td></tr>`;}).join("")}</tbody></table>`;
+          ${p.role && !moi ? '<button class="btn ghost p-retirer" type="button">Retirer l\'accès</button>' : ""}
+          ${!moi ? '<button class="btn ghost p-mdp" type="button">Réinitialiser le mot de passe</button>' : ""}</td></tr>`;}).join("")}</tbody></table>`;
   $("#aj-ok").addEventListener("click", () => attribuer($("#aj-email").value, $("#aj-role").value, $("#aj-nom").value));
   host.querySelectorAll("tbody tr").forEach(tr => {
     tr.querySelector(".p-ok").addEventListener("click", () =>
       attribuer(tr.dataset.email, tr.querySelector(".p-role").value, tr.querySelector(".p-nom").value));
+    tr.querySelector(".p-mdp")?.addEventListener("click", async () => {
+      const propose = motDePasseProvisoire();
+      const mdp = prompt(`Nouveau mot de passe provisoire pour ${tr.dataset.email} (8 caractères au moins).\nTu peux garder celui qui est proposé :`, propose);
+      if (mdp === null) return;
+      const { error } = await sb.rpc("reinitialiser_mdp", { p_user: tr.dataset.id, p_mdp: mdp });
+      afficherPersonnes(error
+        ? { cls:"err", txt:"Réinitialisation refusée : " + error.message + (/function|fonction/i.test(error.message) ? " (as-tu exécuté la migration 07 ?)" : "") }
+        : { cls:"ok", txt:`Mot de passe provisoire de ${tr.dataset.email} : ${mdp} — transmets-le-lui, et demande-lui de le changer avec « Mon mot de passe » dans la console.` });
+    });
     tr.querySelector(".p-retirer")?.addEventListener("click", async () => {
       if (!confirm(`Retirer l'accès de ${tr.dataset.email} ? Son compte existera toujours, mais il ne verra plus rien.`)) return;
       const { error } = await sb.rpc("retirer_role", { p_user: tr.dataset.id });
       afficherPersonnes(error ? { cls:"err", txt:"Retrait refusé : " + error.message } : { cls:"ok", txt:`Accès retiré pour ${tr.dataset.email}.` });
     });
   });
+}
+function motDePasseProvisoire(){
+  const a = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";   // sans caractères ambigus (l, 1, O, 0…)
+  const v = crypto.getRandomValues(new Uint32Array(12));
+  return [...v].map(x => a[x % a.length]).join("");
 }
 async function attribuer(email, role, nom){
   if (!email.trim()){ $("#pers-msg").className = "msg err"; $("#pers-msg").textContent = "Indique l'e-mail du compte."; return; }
