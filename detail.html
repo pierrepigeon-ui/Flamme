@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FLAMME — détail</title>
+<title>Flamme Bleue — détail</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
@@ -62,8 +62,8 @@ dialog{border:1px solid var(--line);border-radius:10px;background:var(--panel);c
 </head>
 <body>
 <header>
-  <h1 class="wordmark">FLAMME</h1><p class="signature">Cartographiez votre énergie</p>
-  <nav><a href="index.html">Console</a><a href="autotest.html">Autotest</a></nav>
+  <h1 class="wordmark">Flamme Bleue</h1><p class="signature">Cartographiez votre énergie</p>
+  <nav><a href="index.html">Accueil</a><a href="console.html">Console</a><a href="autotest.html">Autotest</a></nav>
   <div class="who"><span id="who"></span>
     <button class="btn ghost" id="btn-login" type="button">Se connecter</button>
     <button class="btn ghost hidden" id="btn-logout" type="button">Se déconnecter</button></div>
@@ -81,7 +81,7 @@ dialog{border:1px solid var(--line);border-radius:10px;background:var(--panel);c
   <div style="display:flex;gap:10px"><button class="btn" type="submit">Se connecter</button><button class="btn ghost" type="button" id="login-fermer">Fermer</button></div>
   <p class="msg" id="login-msg" role="status"></p></form></dialog>
 <script>
-const VERSION = { numero:"1.1", date:"2026-09-30 15:25" };
+const VERSION = { numero:"1.2", date:"2026-10-01 12:36" };
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";
 const ACCES = ["proprietaire"];
@@ -170,7 +170,7 @@ function rendre(src){
       ${st.sections[k].map(x => `<tr><td class="r">${x.rang}</td><td>${pips(x.code)} ${esc(x.code)}${x.tiers ? ` <span class="n">+ ${x.tiers}</span>` : ""}</td><td class="n">${esc(libelle(x.code))}</td><td class="s">${pct(x.score)}</td></tr>`).join("")}
       </table></section>`).join("")}</div>`;
   $("#lien-fiche").href = "fiche.html" + location.search;
-  document.title = `FLAMME — détail ${st.profil.codes.join(" / ")}`;
+  document.title = `Flamme Bleue — détail ${st.profil.codes.join(" / ")}`;
 }
 
 $("#btn-login").addEventListener("click", () => { $("#login-msg").textContent = ""; $("#dlg-login").showModal(); });

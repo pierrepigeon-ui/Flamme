@@ -197,7 +197,7 @@ ${o.devise ? listel(o.devise, id) : ""}
   const pct = x => String(Math.round(x * 10) / 10).replace(".", ",") + " %";
 
   const GRAMMAIRE = [
-    ["Les émaux", "Chaque couleur du modèle prend son émail héraldique : argent (W), azur (U), sable (B), gueules (R), sinople (G). L'or, métal libre, est celui de FLAMME : il porte les meubles."],
+    ["Les émaux", "Chaque couleur du modèle prend son émail héraldique : argent (W), azur (U), sable (B), gueules (R), sinople (G). L'or, métal libre, est celui de Flamme Bleue : il porte les meubles."],
     ["La règle des émaux", "On ne pose jamais métal sur métal ni couleur sur couleur. Juxtaposer reste permis : les partitions du champ peuvent donc unir deux couleurs. Les meubles sont d'or, ou de sable sur l'argent."],
     ["Le côté d'honneur", "La dextre (à gauche pour qui regarde l'écu) est la place d'honneur : la couleur au score le plus élevé s'y place."],
     ["Radical (1.23)", "Champ plein de la couleur principale, au chef parti des deux secondaires. Si leur moyenne est inférieure à 50 %, le chef devient un comble, sa version amoindrie."],

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FLAMME — écusson</title>
+<title>Flamme Bleue — écusson</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
@@ -62,8 +62,8 @@ dialog{border:1px solid var(--line);border-radius:10px;background:var(--panel);c
 </head>
 <body>
 <header>
-  <h1 class="wordmark">FLAMME</h1><p class="signature">Cartographiez votre énergie</p>
-  <nav><a href="autotest.html">Autotest</a><a href="index.html">Console</a></nav>
+  <h1 class="wordmark">Flamme Bleue</h1><p class="signature">Cartographiez votre énergie</p>
+  <nav><a href="index.html">Accueil</a><a href="autotest.html">Autotest</a><a href="console.html">Console</a></nav>
   <div class="who"><span id="who"></span>
     <button class="btn ghost" id="btn-login" type="button">Se connecter</button>
     <button class="btn ghost hidden" id="btn-logout" type="button">Se déconnecter</button></div>
@@ -83,7 +83,7 @@ dialog{border:1px solid var(--line);border-radius:10px;background:var(--panel);c
   <div style="display:flex;gap:10px"><button class="btn" type="submit">Se connecter</button><button class="btn ghost" type="button" id="login-fermer">Fermer</button></div>
   <p class="msg" id="login-msg" role="status"></p></form></dialog>
 <script>
-const VERSION = { numero:"1.0", date:"2026-09-30 15:56" };
+const VERSION = { numero:"1.1", date:"2026-10-01 12:36" };
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";
 const M = window.FLAMME_MOTEUR, B = window.FLAMME_BLASON;
@@ -147,13 +147,13 @@ function rendre(src){
         ${note ? `<p class="note">${esc(note)}</p>` : ""}
       </div>
     </section>
-    <details class="grammaire"><summary>La grammaire des écussons FLAMME</summary>
+    <details class="grammaire"><summary>La grammaire des écussons Flamme Bleue</summary>
       <dl>${B.GRAMMAIRE.map(([t, d]) => `<dt>${esc(t)}</dt><dd>${esc(d)}</dd>`).join("")}</dl>
       <h2>Les vingt meubles</h2>
       <div class="planche">${Object.entries(B.MEUBLES).map(([k, m]) => `<div><svg viewBox="0 0 100 100"><g fill="#E6B422" stroke="#1B2430" stroke-width="2.6" stroke-linejoin="round">${m.svg}</g></svg>${esc(m.nom)}<br><b>${esc(k)}</b> ${esc(E[k]?.nom || "")}</div>`).join("")}</div>
     </details>`;
   $("#lien-fiche").href = "fiche.html" + location.search;
-  document.title = `FLAMME — écusson ${codes.join(" / ")}`;
+  document.title = `Flamme Bleue — écusson ${codes.join(" / ")}`;
 }
 
 /* exports */
@@ -188,7 +188,7 @@ sb.auth.onAuthStateChange(async (_e, session) => {
   ["#page", "#outils"].forEach(s => $(s).classList.add("hidden")); $("#bloque").classList.remove("hidden");
   if (!user){ $("#bloque").textContent = "L'écusson est réservé aux personnes qui ont un compte. Connecte-toi pour l'afficher."; return; }
   const { data: r } = await sb.rpc("mon_role"); role = r || "";
-  if (!role){ $("#bloque").textContent = "Ton compte n'a pas encore accès à FLAMME."; return; }
+  if (!role){ $("#bloque").textContent = "Ton compte n'a pas encore accès à Flamme Bleue."; return; }
   try {
     const [{ data: els, error }, { data: cols }] = await Promise.all([sb.from("elements").select("*"), sb.from("couleurs").select("*")]);
     if (error) throw new Error(error.message);

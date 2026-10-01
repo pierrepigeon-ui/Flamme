@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FLAMME — fiche de profil</title>
+<title>Flamme Bleue — fiche de profil</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
@@ -73,8 +73,8 @@ dialog h2{border:0} .field{display:block;margin-bottom:12px} .field span{display
 </head>
 <body>
 <header>
-  <h1 class="wordmark">FLAMME</h1><p class="signature">Cartographiez votre énergie</p>
-  <nav><a href="autotest.html">Autotest</a><a href="index.html">Console</a></nav>
+  <h1 class="wordmark">Flamme Bleue</h1><p class="signature">Cartographiez votre énergie</p>
+  <nav><a href="index.html">Accueil</a><a href="autotest.html">Autotest</a><a href="console.html">Console</a></nav>
   <div class="who"><span id="who"></span>
     <button class="btn ghost" id="btn-login" type="button">Se connecter</button>
     <button class="btn ghost hidden" id="btn-logout" type="button">Se déconnecter</button></div>
@@ -93,7 +93,7 @@ dialog h2{border:0} .field{display:block;margin-bottom:12px} .field span{display
   <div style="display:flex;gap:10px"><button class="btn" type="submit">Se connecter</button><button class="btn ghost" type="button" id="login-fermer">Fermer</button></div>
   <p class="msg" id="login-msg" role="status"></p></form></dialog>
 <script>
-const VERSION = { numero:"1.2", date:"2026-09-30 15:56" };
+const VERSION = { numero:"1.3", date:"2026-10-01 12:36" };
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";
 const M = window.FLAMME_MOTEUR;
@@ -158,7 +158,7 @@ function rendre(src){
     <div>${esc(E[x.code]?.[champ] || "—")}</div></div>`).join("");
   const roles = liste => liste.map(x => `<div class="roles"><div>${esc(E[x.code]?.texte_plus || "")}</div><div>${esc(E[x.code]?.texte_moins || "")}</div></div>`).join("");
   $("#feuille").innerHTML = `
-    <div class="entete"><div class="marque">FLAMME<i>Cartographiez votre énergie</i></div>
+    <div class="entete"><div class="marque">Flamme Bleue<i>Cartographiez votre énergie</i></div>
       <div class="qui">${src.type ? "Fiche du profil type<br>scores types de la famille" : `Fiche de profil${src.qui ? " — " + esc(src.qui) : ""}<br>${dateFr(src.date)}`}</div></div>
     ${f.profil.frontiere ? `<p class="frontiere">Profil frontière : les scores placent à égalité entre ${codes.length} profils, présentés l'un après l'autre.</p>` : ""}
     <div class="cols">
@@ -178,8 +178,8 @@ function rendre(src){
         <h2>Projets <small style="font:12px var(--sans);color:#5B6573">où l'énergie est utilisée</small></h2>${tableau(f.projets)}
       </div>
     </div>
-    <div class="pied"><span>FLAMME — fiche ${VERSION.numero}, moteur ${M.VERSION.numero}</span><span>↑ ↗ → ↘ ↓ : du plus présent au moins présent</span></div>`;
-  document.title = `FLAMME — fiche ${codes.join(" / ")}`;
+    <div class="pied"><span>Flamme Bleue — fiche ${VERSION.numero}, moteur ${M.VERSION.numero}</span><span>↑ ↗ → ↘ ↓ : du plus présent au moins présent</span></div>`;
+  document.title = `Flamme Bleue — fiche ${codes.join(" / ")}`;
   $("#lien-ecusson").href = "ecusson.html" + location.search;
   if (role === "proprietaire"){ const l = $("#lien-detail"); l.href = "detail.html" + location.search; l.classList.remove("hidden"); }
 }
@@ -200,7 +200,7 @@ sb.auth.onAuthStateChange(async (_e, session) => {
   ["#feuille", "#outils"].forEach(s => $(s).classList.add("hidden")); $("#bloque").classList.remove("hidden");
   if (!user){ $("#bloque").textContent = "La fiche de profil est réservée aux personnes qui ont un compte. Connecte-toi pour l'afficher."; return; }
   const { data: r } = await sb.rpc("mon_role"); role = r || "";
-  if (!role){ $("#bloque").textContent = "Ton compte n'a pas encore accès à FLAMME."; return; }
+  if (!role){ $("#bloque").textContent = "Ton compte n'a pas encore accès à Flamme Bleue."; return; }
   try {
     const [{ data: els, error }, { data: cols }] = await Promise.all([sb.from("elements").select("*"), sb.from("couleurs").select("*")]);
     if (error) throw new Error(error.message);
