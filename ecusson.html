@@ -8,8 +8,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
-<script src="flamme_moteur.js"></script>
-<script src="flamme_blason.js"></script>
+<script src="flamme_moteur.js?v=1.3"></script>
+<script src="flamme_blason.js?v=1.8"></script>
 <style>
 :root{--ink:#1B2430;--muted:#5B6573;--line:#DDE1E7;--paper:#F4F6F8;--panel:#FFFFFF;--hover:#EEF1F5;--ok:#1E7A46;--warn:#9A5B00;--err:#B42318;
   --serif:"Source Serif 4",Georgia,"Times New Roman",serif;--sans:"IBM Plex Sans","Segoe UI",Arial,sans-serif}
@@ -51,7 +51,7 @@ details.grammaire dd{margin:0}
 .planche{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;margin-top:12px}
 .planche div{text-align:center;font-size:12px;color:#5B6573}
 .planche svg{width:64px;height:64px;display:block;margin:0 auto 2px}
-footer{border-top:1px solid var(--line);background:var(--panel);padding:4px 20px;text-align:right;font-size:12px;color:var(--muted)}
+footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid var(--line);background:var(--panel);padding:4px 20px;text-align:right;font-size:12px;color:var(--muted)}
 dialog{border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);padding:24px;width:min(380px,92vw)} dialog::backdrop{background:rgba(10,15,25,.45)}
 .field{display:block;margin-bottom:12px} .field span{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
 .field input{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:6px;background:var(--paper)}
@@ -77,14 +77,14 @@ dialog{border:1px solid var(--line);border-radius:10px;background:var(--panel);c
   <a class="btn ghost" id="lien-fiche" href="#">Voir la fiche</a>
 </div>
 <main class="hidden" id="page"></main>
-<footer id="version"></footer>
+<footer><span id="credits">Meubles et animaux : icônes de Lorc, Delapouite et contributeurs, <a href="https://game-icons.net" target="_blank" rel="noopener">game-icons.net</a>, licence <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a>.</span> <span id="version"></span></footer>
 <dialog id="dlg-login"><form id="form-login"><h2 style="font:600 22px var(--serif);margin:0 0 14px">Se connecter</h2>
   <label class="field"><span>Adresse e-mail</span><input type="email" id="email" autocomplete="username" required></label>
   <label class="field"><span>Mot de passe</span><input type="password" id="password" autocomplete="current-password" required></label>
   <div style="display:flex;gap:10px"><button class="btn" type="submit">Se connecter</button><button class="btn ghost" type="button" id="login-fermer">Fermer</button></div>
   <p class="msg" id="login-msg" role="status"></p></form></dialog>
 <script>
-const VERSION = { numero:"1.4", date:"2026-10-01 22:54" };
+const VERSION = { numero:"1.5", date:"2026-10-01 23:43" };
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";
 const M = window.FLAMME_MOTEUR, B = window.FLAMME_BLASON;
@@ -115,7 +115,26 @@ async function lireSource(){
   return { scores: s, date: new Date().toISOString(), qui: "", classement: null };
 }
 
-function rendre(src){
+/* bibliothèque d'images (meubles, animaux) : chargée une fois, secours sur les dessins internes */
+let BIB = null;
+const interieur = t => t.replace(/^[\s\S]*?<svg[^>]*>/, "").replace(/<\/svg>\s*$/, "");
+async function chargerBibliotheque(){
+  if (BIB) return BIB;
+  BIB = { meubles: {}, animaux: {}, catalogue: null };
+  try {
+    const cat = await (await fetch("bibliotheque/catalogue.json?v=1")).json(); BIB.catalogue = cat;
+    await Promise.all(Object.entries(cat.meubles).map(async ([k, v]) => { if (v.fichier) BIB.meubles[k] = interieur(await (await fetch("bibliotheque/" + v.fichier)).text()); }));
+  } catch (e){ console.warn("Bibliothèque d'images indisponible : dessins internes utilisés.", e); }
+  return BIB;
+}
+async function imageAnimal(code){
+  const v = BIB?.catalogue?.animaux?.[code];
+  if (!v?.fichier) return null;
+  if (!(code in BIB.animaux)){ try { BIB.animaux[code] = interieur(await (await fetch("bibliotheque/" + v.fichier)).text()); } catch { BIB.animaux[code] = null; } }
+  return BIB.animaux[code];
+}
+
+async function rendre(src){
   const s01 = Object.fromEntries(M.ORDRE.map(c => [c, src.scores[c] / 100]));
   const codes = M.profil(s01, { classement: src.classement }).codes;
   // tempéraments : classement choisi par la personne dans l'autotest, sinon calcul (prDétail)
@@ -128,7 +147,9 @@ function rendre(src){
     const eg = (i, j) => Math.abs(t[i].score - t[j].score) < 1e-9;
     if (eg(0, 1) || eg(1, 2) || eg(17, 18) || eg(18, 19)) note = "Certains tempéraments retenus sont à égalité avec leurs voisins : l'ordre de la base les a départagés pour le choix des meubles.";
   }
-  svgs = codes.map((c, i) => B.ecusson({ code: c, scores: src.scores, temperaments: temps, couleurs: C,
+  await chargerBibliotheque();
+  const animaux = Object.fromEntries(await Promise.all(codes.map(async c => [c, await imageAnimal(c)])));
+  svgs = codes.map((c, i) => B.ecusson({ images: { meubles: BIB.meubles, animal: animaux[c] }, code: c, scores: src.scores, temperaments: temps, couleurs: C,
     devise: E[c]?.devise_heraldique || E[c]?.devise || "", animal: E[c]?.animal_totem || "", id: "e" + i,
     noms: Object.fromEntries(Object.values(E).filter(e => e.couche === "temperament").map(e => [e.code, e.nom])) }));
   const frontiere = codes.length > 1;
@@ -151,7 +172,7 @@ function rendre(src){
     <details class="grammaire"><summary>La grammaire des écussons Flamme Bleue</summary>
       <dl>${B.GRAMMAIRE.map(([t, d]) => `<dt>${esc(t)}</dt><dd>${esc(d)}</dd>`).join("")}</dl>
       <h2>Les vingt meubles</h2>
-      <div class="planche">${Object.entries(B.MEUBLES).map(([k, m]) => `<div><svg viewBox="0 0 100 100"><g fill="#E6B422" stroke="#1B2430" stroke-width="2.6" stroke-linejoin="round">${m.svg}</g></svg>${esc(m.nom)}<br><b>${esc(k)}</b> ${esc(E[k]?.nom || "")}</div>`).join("")}</div>
+      <div class="planche">${Object.entries(B.MEUBLES).map(([k, m]) => `<div>${BIB.meubles[k] ? `<svg viewBox="0 0 512 512"><g color="#E6B422" fill="#E6B422" stroke="#1B2430" stroke-width="12" paint-order="stroke">${BIB.meubles[k]}</g></svg>` : `<svg viewBox="0 0 100 100"><g fill="#E6B422" stroke="#1B2430" stroke-width="2.6" stroke-linejoin="round">${m.svg}</g></svg>`}${esc(m.nom)}<br><b>${esc(k)}</b> ${esc(E[k]?.nom || "")}</div>`).join("")}</div>
     </details>`;
   $("#lien-fiche").href = "fiche.html" + location.search;
   document.title = `Flamme Bleue — écusson ${codes.join(" / ")}`;
@@ -171,8 +192,9 @@ async function policeIntegree(){
 function svgComplet(){
   // un seul écu, ou plusieurs accolés dans un même SVG
   const n = svgs.length, w = 400 * n + 20 * (n - 1);
-  const corps = svgs.map((r, i) => r.svg.replace(/<svg[^>]*>/, `<svg x="${i * 420}" y="0" width="400" height="560" viewBox="0 0 400 560">`)).join("");
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="560" viewBox="0 0 ${w} 560">${policeExport}<rect width="${w}" height="560" fill="#fff"/>${corps}</svg>`;
+  const H = B.HAUTEUR;
+  const corps = svgs.map((r, i) => r.svg.replace(/<svg[^>]*>/, `<svg x="${i * 420}" y="0" width="400" height="${H}" viewBox="${B.VUE}">`)).join("");
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${H}" viewBox="0 0 ${w} ${H}">${policeExport}<rect width="${w}" height="${H}" fill="#fff"/>${corps}</svg>`;
 }
 const nomFichier = ext => `flamme_ecusson_${document.title.split("écusson ")[1].replace(/[/.\s]/g, "-")}.${ext}`;
 let policeExport = "";
@@ -180,7 +202,7 @@ $("#dl-svg").addEventListener("click", async () => { policeExport = await police
 $("#dl-png").addEventListener("click", async () => {
   policeExport = await policeIntegree();
   const txt = svgComplet(), w = +txt.match(/width="(\d+)"/)[1], img = new Image();
-  img.onload = () => { const c = document.createElement("canvas"); c.width = w * 2; c.height = 1120; const x = c.getContext("2d"); x.scale(2, 2); x.drawImage(img, 0, 0); c.toBlob(b => telecharger(nomFichier("png"), b), "image/png"); };
+  img.onload = () => { const c = document.createElement("canvas"); c.width = w * 2; c.height = B.HAUTEUR * 2; const x = c.getContext("2d"); x.scale(2, 2); x.drawImage(img, 0, 0); c.toBlob(b => telecharger(nomFichier("png"), b), "image/png"); };
   img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(txt);
 });
 
@@ -205,7 +227,7 @@ sb.auth.onAuthStateChange(async (_e, session) => {
     const [{ data: els, error }, { data: cols }] = await Promise.all([sb.from("elements").select("*"), sb.from("couleurs").select("*")]);
     if (error) throw new Error(error.message);
     E = Object.fromEntries(els.map(e => [e.code, e])); C = Object.fromEntries((cols || []).map(c => [c.code, c]));
-    rendre(await lireSource());
+    await rendre(await lireSource());
     $("#bloque").classList.add("hidden"); ["#page", "#outils"].forEach(s => $(s).classList.remove("hidden"));
   } catch (err){ $("#bloque").textContent = err.message; }
 });

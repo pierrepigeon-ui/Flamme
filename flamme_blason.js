@@ -9,7 +9,7 @@
   if (typeof module === "object" && module.exports) module.exports = b; else racine.FLAMME_BLASON = b;
 })(typeof self !== "undefined" ? self : this, function (M) {
   "use strict";
-  const VERSION = { numero: "1.7", date: "2026-10-01 22:48" };
+  const VERSION = { numero: "1.8", date: "2026-10-01 23:43" };
 
 /* Meubles héraldiques FLAMME : silhouettes pleines dans une boîte 100 × 100, cernées de sable.
    Chaque meuble : { nom, pluriel, genre ('m'|'f'), svg } — svg sans couleur (fill/stroke hérités). */
@@ -21,12 +21,12 @@ const MEUBLES = {
     <rect x="16" y="6" width="7" height="90" rx="3"/><circle cx="19.5" cy="7" r="5"/>
     <path d="M23 12h62v44l-10 16-10-16-10 16-11-16-10 16-11-16z"/>` },
   "W/r": { nom:"chaîne", pluriel:"chaînes", genre:"f", svg:`<g transform="translate(50 55) rotate(-32) scale(1.3) translate(-50 -55)"><path fill-rule="evenodd" d="M16 43h16a12 12 0 0 1 0 24h-16a12 12 0 0 1 0-24zm0 8a4 4 0 0 0 0 8h16a4 4 0 0 0 0-8z"/><path fill-rule="evenodd" d="M38 47a12 12 0 0 1 24 0v16a12 12 0 0 1-24 0zm8 0v16a4 4 0 0 0 8 0V47a4 4 0 0 0-8 0z"/><path fill-rule="evenodd" d="M68 43h16a12 12 0 0 1 0 24h-16a12 12 0 0 1 0-24zm0 8a4 4 0 0 0 0 8h16a4 4 0 0 0 0-8z"/></g>` },
-  "W/g": { nom:"équerre", pluriel:"équerres", genre:"f", svg:`
+  "W/g": { nom:"balance", pluriel:"balances", genre:"f", svg:`
     <path d="M14 10h16v60h56v16H14z"/>` },
   "U/b": { nom:"livre ouvert", pluriel:"livres ouverts", genre:"m", svg:`
     <path d="M50 24C40 16 24 14 8 18v60c16-4 32-2 42 6 10-8 26-10 42-6V18C76 14 60 16 50 24z"/>
     <path d="M50 24v58" fill="none"/>` },
-  "U/r": { nom:"compas", pluriel:"compas", genre:"m", svg:`
+  "U/r": { nom:"loupe", pluriel:"loupes", genre:"f", svg:`
     <circle cx="50" cy="14" r="9"/><path d="M45 20l-26 72 6 2 28-66zM55 20l26 72-6 2-28-66z"/><path d="M28 64h44v7H28z"/>` },
   "U/g": { nom:"flèche", pluriel:"flèches", genre:"f", svg:`
     <path d="M47 30h6v58h-6z"/><path d="M50 4l16 30H34z"/><path d="M47 76l-12 16V78l12-10zM53 76l12 16V78L53 68z"/>` },
@@ -74,8 +74,7 @@ const MEUBLES = {
   const accorde = (mot, genre, pluriel) => mot + (genre === "f" ? "e" : "") + (pluriel ? "s" : "");
 
   const EGALITE = 0.5;                        // écart (en points) en dessous duquel deux couleurs sont dites égales
-  const FEMININS = new Set(["abeille","colombe","pieuvre","chouette","orque","étoile de mer","oie sauvage","hirondelle","loutre",
-    "mangouste","grue","fourmi","tortue","sterne arctique","pie","luciole","cigogne","baleine","araignée","panthère","lionne"]);
+  const FEMININS = new Set(["abeille", "colombe", "pieuvre", "chouette", "orque", "étoile de mer", "oie sauvage", "hirondelle", "grenouille", "grue", "fourmi", "tortue", "tortue de mer", "libellule", "mante religieuse", "pie", "poule aux œufs d'or", "cigogne", "baleine", "araignée", "panthère", "chauve-souris", "chenille", "licorne", "otarie", "lionne", "mangouste", "loutre"]);
   const article = a => (FEMININS.has(a) ? "une " : "un ") + a;
 
   /**
@@ -253,6 +252,11 @@ const MEUBLES = {
     const poser = (t, [x, y], taille, renverse) => {
       const m = MEUBLES[t], met = metal(x, y);
       const fill = met === "or" ? OR : "#1B2430", tr = met === "or" ? SABLE_TRAIT : OR, k = taille / 100;
+      const img = o.images?.meubles?.[t];
+      if (img){                                   // image de la bibliothèque (512 × 512, couleur héritée)
+        const ki = taille / 512;
+        return { met, svg: `<g transform="translate(${x - taille / 2} ${y - taille / 2}) scale(${ki.toFixed(4)})${renverse ? " rotate(180 256 256)" : ""}" color="${fill}" fill="${fill}" stroke="${tr}" stroke-width="${(1.6 / ki).toFixed(1)}" paint-order="stroke" stroke-linejoin="round"><title>${t} — ${m.nom}</title>${img}</g>` };
+      }
       return { met, svg: `<g transform="translate(${x - taille / 2} ${y - taille / 2}) scale(${k})${renverse ? " rotate(180 50 50)" : ""}" fill="${fill}" stroke="${tr}" stroke-width="${(2.6 / k * 0.5).toFixed(2)}" stroke-linejoin="round"><title>${t} — ${m.nom}</title>${m.svg}</g>` };
     };
     let haut, bas;
@@ -299,7 +303,18 @@ const MEUBLES = {
     if (o.animal){ blason += ` Cimier : ${article(o.animal)}.`; lecture.push(`Le cimier, au-dessus de l'écu, porte l'animal-totem du profil : ${article(o.animal)}.`); }
     if (o.devise) blason += ` Devise : « ${o.devise} ».`;
 
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 560" width="400" height="560">
+    let cimier = "";
+    if (o.animal && o.images?.animal){
+      const coul = parScore(M.ORDRE)[0], segs = 6, lw = 200, x0 = 100, y0 = -2;
+      let torse = "";
+      for (let i = 0; i < segs; i++) torse += `<rect x="${x0 + i * lw / segs}" y="${y0}" width="${lw / segs}" height="16" fill="${i % 2 ? teinte(coul) : OR}"/>`;
+      cimier = `<g><title>Cimier : ${article(o.animal)}</title>
+        <g transform="translate(130 -146) scale(${(140 / 512).toFixed(4)})" color="${OR}" fill="${OR}" stroke="${SABLE_TRAIT}" stroke-width="${(1.6 / (140 / 512)).toFixed(1)}" paint-order="stroke" stroke-linejoin="round">${o.images.animal}</g>
+        <g clip-path="url(#torse-${id})">${torse}</g><rect x="${x0}" y="${y0}" width="${lw}" height="16" rx="8" fill="none" stroke="${SABLE_TRAIT}" stroke-width="2"/>
+        <clipPath id="torse-${id}"><rect x="${x0}" y="${y0}" width="${lw}" height="16" rx="8"/></clipPath></g>`;
+    }
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${VUE}" width="400" height="${HAUTEUR}">
+${cimier}
 <defs><clipPath id="ecu-${id}"><path d="${ECU}"/></clipPath>
 <linearGradient id="lustre-${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".16"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".16"/></linearGradient>
 ${defs.join("\n")}</defs>
@@ -313,6 +328,7 @@ ${o.devise ? listel(o.devise, id) : ""}
     return { svg, blason, lecture };
   }
 
+  const HAUTEUR = 730, VUE = "0 -170 400 730";      // place pour le cimier au-dessus de l'écu
   function listel(devise, id){
     const t = devise.length > 30 ? 13 : devise.length > 22 ? 15 : 17;      // Cinzel : capitales, plus larges
     return `<path d="M8 496 L34 486 L34 532 L8 542 L21 519 Z" fill="#C9A227" stroke="#1B2430" stroke-width="1.5"/>
@@ -341,5 +357,5 @@ ${o.devise ? listel(o.devise, id) : ""}
     ["La devise", "Portée sur un listel sous l'écu."]
   ];
 
-  return { VERSION, MEUBLES, EMAUX, GRAMMAIRE, ecusson };
+  return { VERSION, MEUBLES, EMAUX, GRAMMAIRE, HAUTEUR, VUE, ecusson };
 });
