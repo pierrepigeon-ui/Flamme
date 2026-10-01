@@ -83,7 +83,7 @@ dialog{border:1px solid var(--line);border-radius:10px;background:var(--panel);c
   <div style="display:flex;gap:10px"><button class="btn" type="submit">Se connecter</button><button class="btn ghost" type="button" id="login-fermer">Fermer</button></div>
   <p class="msg" id="login-msg" role="status"></p></form></dialog>
 <script>
-const VERSION = { numero:"1.1", date:"2026-10-01 12:36" };
+const VERSION = { numero:"1.2", date:"2026-10-01 22:09" };
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";
 const M = window.FLAMME_MOTEUR, B = window.FLAMME_BLASON;
@@ -128,7 +128,7 @@ function rendre(src){
     if (eg(0, 1) || eg(1, 2) || eg(17, 18) || eg(18, 19)) note = "Certains tempéraments retenus sont à égalité avec leurs voisins : l'ordre de la base les a départagés pour le choix des meubles.";
   }
   svgs = codes.map((c, i) => B.ecusson({ code: c, scores: src.scores, temperaments: temps, couleurs: C,
-    devise: E[c]?.devise_heraldique || E[c]?.devise || "", id: "e" + i,
+    devise: E[c]?.devise_heraldique || E[c]?.devise || "", animal: E[c]?.animal_totem || "", id: "e" + i,
     noms: Object.fromEntries(Object.values(E).filter(e => e.couche === "temperament").map(e => [e.code, e.nom])) }));
   const frontiere = codes.length > 1;
   $("#page").innerHTML = `
@@ -138,9 +138,9 @@ function rendre(src){
         <h1 class="titre">${frontiere ? "Écus accolés" : "Les armes de " + esc(E[codes[0]]?.nom || codes[0])}</h1>
         <div class="sous">${src.type ? "Profil type (scores types de la famille)" : (src.qui ? esc(src.qui) + " — " : "") + dateFr(src.date)} — ${M.ORDRE.map(c => `${c} ${String(Math.round(src.scores[c] * 10) / 10).replace(".", ",")}`).join(" · ")}</div>
         ${svgs.map((r, i) => `${frontiere ? `<h2>${esc(codes[i])} — ${esc(E[codes[i]]?.nom || "")}</h2>` : ""}<p class="blasonnement">${esc(r.blason)}</p>
-          ${frontiere ? `<ol class="lecture">${r.lecture.slice(0, -3).map(l => `<li>${esc(l)}</li>`).join("")}</ol>` : ""}`).join("")}
+          ${frontiere ? `<ol class="lecture">${r.lecture.slice(0, r.lecture.findIndex(l => l.startsWith("En cœur"))).map(l => `<li>${esc(l)}</li>`).join("")}</ol>` : ""}`).join("")}
         <h2>Comment se lisent ces armes</h2>
-        <ol class="lecture">${(frontiere ? svgs[0].lecture.slice(-3) : svgs[0].lecture).map(l => `<li>${esc(l)}</li>`).join("")}
+        <ol class="lecture">${(frontiere ? svgs[0].lecture.slice(-(svgs[0].lecture.length - svgs[0].lecture.findIndex(l => l.startsWith("En cœur")))) : svgs[0].lecture).map(l => `<li>${esc(l)}</li>`).join("")}
           <li>${esc(`Les meubles viennent ${origine}.`)}</li>
           ${frontiere ? `<li>${esc("Profil frontière : les scores placent à égalité entre plusieurs profils. Leurs écus sont accolés, comme on réunit deux lignées.")}</li>` : ""}
           <li>${esc(E[codes[0]]?.devise_heraldique ? "La devise est la devise héraldique du profil." : "La devise est celle du profil, en attendant sa devise héraldique.")}</li></ol>
