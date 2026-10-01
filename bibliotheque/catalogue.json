@@ -1,0 +1,674 @@
+{
+ "licence": {
+  "titre": "CC BY 3.0",
+  "url": "https://creativecommons.org/licenses/by/3.0/",
+  "source": "game-icons.net (via Iconify)",
+  "credit": "Icônes de Lorc, Delapouite et contributeurs, game-icons.net, sous licence CC BY 3.0"
+ },
+ "meubles": {
+  "W/u": {
+   "nom": "chêne",
+   "fichier": "meubles/W_u.svg",
+   "icone": "oak",
+   "statut": "exact"
+  },
+  "W/b": {
+   "nom": "gonfanon",
+   "fichier": "meubles/W_b.svg",
+   "icone": "knight-banner",
+   "statut": "exact"
+  },
+  "W/r": {
+   "nom": "chaîne",
+   "fichier": "meubles/W_r.svg",
+   "icone": "crossed-chains",
+   "statut": "exact"
+  },
+  "W/g": {
+   "nom": "balance",
+   "fichier": "meubles/W_g.svg",
+   "icone": "scales",
+   "statut": "exact",
+   "note": "remplace l’équerre, absent de la bibliothèque"
+  },
+  "U/b": {
+   "nom": "livre ouvert",
+   "fichier": "meubles/U_b.svg",
+   "icone": "open-book",
+   "statut": "exact"
+  },
+  "U/r": {
+   "nom": "loupe",
+   "fichier": "meubles/U_r.svg",
+   "icone": "magnifying-glass",
+   "statut": "exact",
+   "note": "remplace le compas, absent de la bibliothèque"
+  },
+  "U/g": {
+   "nom": "flèche",
+   "fichier": "meubles/U_g.svg",
+   "icone": "barbed-arrow",
+   "statut": "exact"
+  },
+  "U/w": {
+   "nom": "comète",
+   "fichier": "meubles/U_w.svg",
+   "icone": "comet-spark",
+   "statut": "exact"
+  },
+  "B/r": {
+   "nom": "marteau",
+   "fichier": "meubles/B_r.svg",
+   "icone": "claw-hammer",
+   "statut": "exact"
+  },
+  "B/g": {
+   "nom": "échelle",
+   "fichier": "meubles/B_g.svg",
+   "icone": "ladder",
+   "statut": "exact"
+  },
+  "B/w": {
+   "nom": "couronne",
+   "fichier": "meubles/B_w.svg",
+   "icone": "crown",
+   "statut": "exact"
+  },
+  "B/u": {
+   "nom": "mont",
+   "fichier": "meubles/B_u.svg",
+   "icone": "peaks",
+   "statut": "exact"
+  },
+  "R/g": {
+   "nom": "coupe",
+   "fichier": "meubles/R_g.svg",
+   "icone": "jeweled-chalice",
+   "statut": "exact"
+  },
+  "R/w": {
+   "nom": "chaîne brisée",
+   "fichier": "meubles/R_w.svg",
+   "icone": "breaking-chain",
+   "statut": "exact"
+  },
+  "R/u": {
+   "nom": "fasce ondée",
+   "fichier": "meubles/R_u.svg",
+   "icone": "waves",
+   "statut": "exact"
+  },
+  "R/b": {
+   "nom": "flamme",
+   "fichier": "meubles/R_b.svg",
+   "icone": "flame",
+   "statut": "exact"
+  },
+  "G/w": {
+   "nom": "rose",
+   "fichier": "meubles/G_w.svg",
+   "icone": "rose",
+   "statut": "exact"
+  },
+  "G/u": {
+   "nom": "soleil",
+   "fichier": "meubles/G_u.svg",
+   "icone": "heraldic-sun",
+   "statut": "exact"
+  },
+  "G/b": {
+   "nom": "pont",
+   "fichier": "meubles/G_b.svg",
+   "icone": "stone-bridge",
+   "statut": "exact"
+  },
+  "G/r": {
+   "nom": "anneaux entrelacés",
+   "fichier": "meubles/G_r.svg",
+   "icone": "linked-rings",
+   "statut": "exact"
+  }
+ },
+ "animaux": {
+  "W.rg": {
+   "nom": "abeille",
+   "fichier": "animaux/W-rg.svg",
+   "icone": "bee",
+   "statut": "exact"
+  },
+  "W.bg": {
+   "nom": "cygne",
+   "fichier": "animaux/W-bg.svg",
+   "icone": "swan",
+   "statut": "exact"
+  },
+  "W.br": {
+   "nom": "loup",
+   "fichier": "animaux/W-br.svg",
+   "icone": "wolf-howl",
+   "statut": "exact"
+  },
+  "W.gu": {
+   "nom": "banc de poissons",
+   "fichier": "animaux/W-gu.svg",
+   "icone": "school-of-fish",
+   "statut": "exact"
+  },
+  "W.ur": {
+   "nom": "colombe",
+   "fichier": "animaux/W-ur.svg",
+   "icone": "dove",
+   "statut": "exact"
+  },
+  "W.ub": {
+   "nom": "castor",
+   "fichier": "animaux/W-ub.svg",
+   "icone": "beaver",
+   "statut": "exact"
+  },
+  "U.rg": {
+   "nom": "kiwi",
+   "fichier": "animaux/U-rg.svg",
+   "icone": "kiwi-bird",
+   "statut": "exact"
+  },
+  "U.bg": {
+   "nom": "chouette",
+   "fichier": "animaux/U-bg.svg",
+   "icone": "owl",
+   "statut": "exact"
+  },
+  "U.br": {
+   "nom": "orque",
+   "fichier": "animaux/U-br.svg",
+   "icone": "whale-tail",
+   "statut": "approché"
+  },
+  "U.gw": {
+   "nom": "dauphin",
+   "fichier": "animaux/U-gw.svg",
+   "icone": "dolphin",
+   "statut": "exact"
+  },
+  "U.rw": {
+   "nom": "tisserin",
+   "fichier": "animaux/U-rw.svg",
+   "icone": "nest-birds",
+   "statut": "approché"
+  },
+  "U.wb": {
+   "nom": "grand-duc",
+   "fichier": "animaux/U-wb.svg",
+   "icone": "barn-owl",
+   "statut": "approché"
+  },
+  "B.rg": {
+   "nom": "tigre",
+   "fichier": "animaux/B-rg.svg",
+   "icone": "tiger",
+   "statut": "exact"
+  },
+  "B.gu": {
+   "nom": "faucon pèlerin",
+   "fichier": "animaux/B-gu.svg",
+   "icone": "falcon-moon",
+   "statut": "approché"
+  },
+  "B.ur": {
+   "nom": "pégase",
+   "fichier": "animaux/B-ur.svg",
+   "icone": "pegasus",
+   "statut": "exact"
+  },
+  "B.gw": {
+   "nom": "étoile de mer",
+   "fichier": "animaux/B-gw.svg",
+   "icone": "sea-star",
+   "statut": "exact"
+  },
+  "B.rw": {
+   "nom": "aigle",
+   "fichier": "animaux/B-rw.svg",
+   "icone": "eagle-emblem",
+   "statut": "exact"
+  },
+  "B.wu": {
+   "nom": "cerf",
+   "fichier": "animaux/B-wu.svg",
+   "icone": "stag-head",
+   "statut": "exact"
+  },
+  "R.bg": {
+   "nom": "chenille",
+   "fichier": "animaux/R-bg.svg",
+   "icone": "caterpillar",
+   "statut": "exact"
+  },
+  "R.gu": {
+   "nom": "cheval sauvage",
+   "fichier": "animaux/R-gu.svg",
+   "icone": "horse-head",
+   "statut": "exact"
+  },
+  "R.ub": {
+   "nom": "griffon",
+   "fichier": "animaux/R-ub.svg",
+   "icone": "griffin-symbol",
+   "statut": "exact"
+  },
+  "R.gw": {
+   "nom": "grenouille",
+   "fichier": "animaux/R-gw.svg",
+   "icone": "frog",
+   "statut": "exact"
+  },
+  "R.wb": {
+   "nom": "oie sauvage",
+   "fichier": "animaux/R-wb.svg",
+   "icone": "canadian-goose",
+   "statut": "exact"
+  },
+  "R.wu": {
+   "nom": "hirondelle",
+   "fichier": "animaux/R-wu.svg",
+   "icone": "swallow",
+   "statut": "exact"
+  },
+  "G.br": {
+   "nom": "bélier",
+   "fichier": "animaux/G-br.svg",
+   "icone": "ram-profile",
+   "statut": "exact"
+  },
+  "G.ur": {
+   "nom": "hippocampe",
+   "fichier": "animaux/G-ur.svg",
+   "icone": "seahorse",
+   "statut": "exact"
+  },
+  "G.ub": {
+   "nom": "lynx",
+   "fichier": "animaux/G-ub.svg",
+   "icone": "lynx-head",
+   "statut": "exact"
+  },
+  "G.rw": {
+   "nom": "chien",
+   "fichier": "animaux/G-rw.svg",
+   "icone": "sitting-dog",
+   "statut": "exact"
+  },
+  "G.wb": {
+   "nom": "buffle",
+   "fichier": "animaux/G-wb.svg",
+   "icone": "buffalo-head",
+   "statut": "exact"
+  },
+  "G.wu": {
+   "nom": "pique-bœuf",
+   "fichier": "animaux/G-wu.svg",
+   "icone": "bird-twitter",
+   "statut": "approché"
+  },
+  "WU.g": {
+   "nom": "grue",
+   "fichier": "animaux/WU-g.svg",
+   "icone": "crane",
+   "statut": "exact"
+  },
+  "WU.b": {
+   "nom": "ibis",
+   "fichier": "animaux/WU-b.svg",
+   "icone": "ibis",
+   "statut": "exact"
+  },
+  "WU.r": {
+   "nom": "oiseau-jardinier",
+   "fichier": "animaux/WU-r.svg",
+   "icone": "nest-eggs",
+   "statut": "approché"
+  },
+  "WB.g": {
+   "nom": "lion",
+   "fichier": "animaux/WB-g.svg",
+   "icone": "lion",
+   "statut": "exact"
+  },
+  "WB.u": {
+   "nom": "fourmi",
+   "fichier": "animaux/WB-u.svg",
+   "icone": "ant",
+   "statut": "exact"
+  },
+  "WB.r": {
+   "nom": "gorille",
+   "fichier": "animaux/WB-r.svg",
+   "icone": "gorilla",
+   "statut": "exact"
+  },
+  "UB.g": {
+   "nom": "libellule",
+   "fichier": "animaux/UB-g.svg",
+   "icone": "dragonfly",
+   "statut": "exact"
+  },
+  "UB.w": {
+   "nom": "tortue",
+   "fichier": "animaux/UB-w.svg",
+   "icone": "tortoise",
+   "statut": "exact"
+  },
+  "UB.r": {
+   "nom": "bouquetin",
+   "fichier": "animaux/UB-r.svg",
+   "icone": "goat",
+   "statut": "approché"
+  },
+  "UR.g": {
+   "nom": "tortue de mer",
+   "fichier": "animaux/UR-g.svg",
+   "icone": "sea-turtle",
+   "statut": "exact"
+  },
+  "UR.w": {
+   "nom": "colibri",
+   "fichier": "animaux/UR-w.svg",
+   "icone": "hummingbird",
+   "statut": "exact"
+  },
+  "UR.b": {
+   "nom": "chimpanzé",
+   "fichier": "animaux/UR-b.svg",
+   "icone": "monkey",
+   "statut": "approché"
+  },
+  "BR.g": {
+   "nom": "goéland",
+   "fichier": "animaux/BR-g.svg",
+   "icone": "seagull",
+   "statut": "exact"
+  },
+  "BR.w": {
+   "nom": "coq",
+   "fichier": "animaux/BR-w.svg",
+   "icone": "rooster",
+   "statut": "exact"
+  },
+  "BR.u": {
+   "nom": "mante religieuse",
+   "fichier": "animaux/BR-u.svg",
+   "icone": "praying-mantis",
+   "statut": "exact"
+  },
+  "BG.r": {
+   "nom": "pie",
+   "fichier": "animaux/BG-r.svg",
+   "icone": "crow-dive",
+   "statut": "approché"
+  },
+  "BG.w": {
+   "nom": "pieuvre",
+   "fichier": "animaux/BG-w.svg",
+   "icone": "octopus",
+   "statut": "exact"
+  },
+  "BG.u": {
+   "nom": "poule aux œufs d'or",
+   "fichier": "animaux/BG-u.svg",
+   "icone": "chicken",
+   "statut": "exact"
+  },
+  "RG.b": {
+   "nom": "renard",
+   "fichier": "animaux/RG-b.svg",
+   "icone": "fox",
+   "statut": "exact"
+  },
+  "RG.w": {
+   "nom": "bison",
+   "fichier": "animaux/RG-w.svg",
+   "icone": "bison",
+   "statut": "exact"
+  },
+  "RG.u": {
+   "nom": "raton laveur",
+   "fichier": "animaux/RG-u.svg",
+   "icone": "raccoon-head",
+   "statut": "exact"
+  },
+  "RW.g": {
+   "nom": "saumon",
+   "fichier": "animaux/RW-g.svg",
+   "icone": "salmon",
+   "statut": "exact"
+  },
+  "RW.u": {
+   "nom": "scarabée",
+   "fichier": "animaux/RW-u.svg",
+   "icone": "scarab-beetle",
+   "statut": "exact"
+  },
+  "RW.b": {
+   "nom": "toucan",
+   "fichier": "animaux/RW-b.svg",
+   "icone": "toucan",
+   "statut": "exact"
+  },
+  "GW.r": {
+   "nom": "manchot empereur",
+   "fichier": "animaux/GW-r.svg",
+   "icone": "penguin",
+   "statut": "exact"
+  },
+  "GW.u": {
+   "nom": "pélican",
+   "fichier": "animaux/GW-u.svg",
+   "icone": "eating-pelican",
+   "statut": "exact"
+  },
+  "GW.b": {
+   "nom": "cigogne",
+   "fichier": "animaux/GW-b.svg",
+   "icone": "stork-delivery",
+   "statut": "exact"
+  },
+  "GU.r": {
+   "nom": "papillon monarque",
+   "fichier": "animaux/GU-r.svg",
+   "icone": "butterfly",
+   "statut": "exact"
+  },
+  "GU.w": {
+   "nom": "moineau",
+   "fichier": "animaux/GU-w.svg",
+   "icone": "sparrow",
+   "statut": "exact"
+  },
+  "GU.b": {
+   "nom": "chat",
+   "fichier": "animaux/GU-b.svg",
+   "icone": "cat",
+   "statut": "exact"
+  },
+  "WU/b": {
+   "nom": "baleine",
+   "fichier": "animaux/WU_b.svg",
+   "icone": "sperm-whale",
+   "statut": "exact"
+  },
+  "WU/r": {
+   "nom": "perroquet gris",
+   "fichier": "animaux/WU_r.svg",
+   "icone": "parrot-head",
+   "statut": "exact"
+  },
+  "WU/g": {
+   "nom": "bec-en-sabot",
+   "fichier": "animaux/WU_g.svg",
+   "icone": "shoebill-stork",
+   "statut": "exact"
+  },
+  "WB/u": {
+   "nom": "chauve-souris",
+   "fichier": "animaux/WB_u.svg",
+   "icone": "bat",
+   "statut": "exact"
+  },
+  "WB/r": {
+   "nom": "bœuf",
+   "fichier": "animaux/WB_r.svg",
+   "icone": "cow",
+   "statut": "approché"
+  },
+  "WB/g": {
+   "nom": "épervier",
+   "fichier": "animaux/WB_g.svg",
+   "icone": "hawk-emblem",
+   "statut": "approché"
+  },
+  "UB/w": {
+   "nom": "nautile",
+   "fichier": "animaux/UB_w.svg",
+   "icone": "nautilus-shell",
+   "statut": "exact"
+  },
+  "UB/r": {
+   "nom": "araignée",
+   "fichier": "animaux/UB_r.svg",
+   "icone": "spider-alt",
+   "statut": "exact"
+  },
+  "UB/g": {
+   "nom": "blaireau",
+   "fichier": "animaux/UB_g.svg",
+   "icone": "badger",
+   "statut": "exact"
+  },
+  "UR/w": {
+   "nom": "sanglier",
+   "fichier": "animaux/UR_w.svg",
+   "icone": "boar",
+   "statut": "exact"
+  },
+  "UR/b": {
+   "nom": "pigeon voyageur",
+   "fichier": "animaux/UR_b.svg",
+   "icone": "peace-dove",
+   "statut": "approché"
+  },
+  "UR/g": {
+   "nom": "corbeau",
+   "fichier": "animaux/UR_g.svg",
+   "icone": "raven",
+   "statut": "exact"
+  },
+  "BR/w": {
+   "nom": "panda",
+   "fichier": "animaux/BR_w.svg",
+   "icone": "panda",
+   "statut": "exact"
+  },
+  "BR/u": {
+   "nom": "panthère",
+   "fichier": "animaux/BR_u.svg",
+   "icone": "feline",
+   "statut": "exact"
+  },
+  "BR/g": {
+   "nom": "dragon",
+   "fichier": "animaux/BR_g.svg",
+   "icone": "dragon-head",
+   "statut": "exact"
+  },
+  "BG/w": {
+   "nom": "flamant rose",
+   "fichier": "animaux/BG_w.svg",
+   "icone": "flamingo",
+   "statut": "exact"
+  },
+  "BG/u": {
+   "nom": "taureau",
+   "fichier": "animaux/BG_u.svg",
+   "icone": "bull",
+   "statut": "exact"
+  },
+  "BG/r": {
+   "nom": "écureuil",
+   "fichier": "animaux/BG_r.svg",
+   "icone": "squirrel",
+   "statut": "exact"
+  },
+  "RG/w": {
+   "nom": "coyote",
+   "fichier": "animaux/RG_w.svg",
+   "icone": "wolf-head",
+   "statut": "approché"
+  },
+  "RG/u": {
+   "nom": "mammouth",
+   "fichier": "animaux/RG_u.svg",
+   "icone": "mammoth",
+   "statut": "exact"
+  },
+  "RG/b": {
+   "nom": "chameau",
+   "fichier": "animaux/RG_b.svg",
+   "icone": "camel",
+   "statut": "exact"
+  },
+  "RW/u": {
+   "nom": "hérisson",
+   "fichier": "animaux/RW_u.svg",
+   "icone": "hedgehog",
+   "statut": "exact"
+  },
+  "RW/b": {
+   "nom": "licorne",
+   "fichier": "animaux/RW_b.svg",
+   "icone": "unicorn",
+   "statut": "exact"
+  },
+  "RW/g": {
+   "nom": "caméléon",
+   "fichier": "animaux/RW_g.svg",
+   "icone": "chameleon-glyph",
+   "statut": "exact"
+  },
+  "GW/u": {
+   "nom": "zèbre",
+   "fichier": "animaux/GW_u.svg",
+   "icone": "zebra-shield",
+   "statut": "approché"
+  },
+  "GW/b": {
+   "nom": "otarie",
+   "fichier": "animaux/GW_b.svg",
+   "icone": "juggling-seal",
+   "statut": "exact"
+  },
+  "GW/r": {
+   "nom": "caribou",
+   "fichier": "animaux/GW_r.svg",
+   "icone": "deer",
+   "statut": "approché"
+  },
+  "GU/w": {
+   "nom": "ours blanc",
+   "fichier": "animaux/GU_w.svg",
+   "icone": "polar-bear",
+   "statut": "exact"
+  },
+  "GU/b": {
+   "nom": "éléphant",
+   "fichier": "animaux/GU_b.svg",
+   "icone": "elephant",
+   "statut": "exact"
+  },
+  "GU/r": {
+   "nom": "héron",
+   "fichier": "animaux/GU_r.svg",
+   "icone": "heron",
+   "statut": "exact"
+  }
+ }
+}
