@@ -14,7 +14,7 @@
 })(typeof self !== "undefined" ? self : this, function () {
   "use strict";
 
-  const VERSION = { numero: "1.3", date: "2026-10-01 22:53" };
+  const VERSION = { numero: "1.3", date: "2026-10-01 23:01" };
   const ORDRE = ["W", "U", "B", "R", "G"];
 
   /* ---------- ordre canonique des combinaisons (usrSortCode) ---------- */
@@ -246,11 +246,11 @@
 
   /* ---------- scores types d'un profil (onglet prPARAM) ---------- */
   const PARAMETRES_TYPES = {         // rang 1 à 5, en %
-    radical:     [80, 60, 60, 30, 30],
+    radical:     [80, 55, 55, 30, 30],     // 250 % (corrigé le 01/10/2026 ; prPARAM indiquait 80/60/60/30/30 = 260 %)
     specialiste: [75, 75, 50, 25, 25],
     generaliste: [75, 75, 45, 45, 10]
   };
-  /** Scores types d'un profil, dans l'ordre de ses couleurs : scoresTypes("U.rg") -> {U:80,R:60,G:60,W:30,B:30} */
+  /** Scores types d'un profil, dans l'ordre de ses couleurs : scoresTypes("U.rg") -> {U:80,R:55,G:55,W:30,B:30} */
   function scoresTypes(code) {
     const a = analyser(code);
     if (a.couche !== "profil") throw new Error(`${code} n'est pas un code de profil`);
