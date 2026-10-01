@@ -164,7 +164,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px}
 </dialog>
 
 <script>
-const VERSION = { numero:"1.5", date:"2026-10-01 12:36" };
+const VERSION = { numero:"1.6", date:"2026-10-01 22:54" };
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";
 const M = window.FLAMME_MOTEUR;
@@ -337,7 +337,7 @@ function afficherValeurs(p){
 /* ---------- résultats ---------- */
 function afficherResultats(){
   const { pourcentages: p } = M.scoresDepuisTemperaments(liste);
-  const r = M.profil(p);
+  const r = M.profil(p, { classement: liste });
   dernier = { p, r, classement: liste.slice() };
   afficherValeurs(p);
   $("#histo").innerHTML = M.ORDRE.map(c => `<div class="barre"><b>${c}</b><div class="fond"><div class="val" style="width:${p[c]}%;background:${couleurs[c].couleur};${c === "W" ? "border:1px solid #888" : ""}"></div></div><span class="pct">${fmt(p[c])} %</span></div>`).join("");
@@ -380,13 +380,13 @@ $("#btn-save").addEventListener("click", async () => {
   if (dernierEnregistre === dernier.classement.join()){ msg("Ce classement est déjà enregistré : modifiez-le avant d'enregistrer un nouveau résultat.", "warn"); return; }
   $("#btn-save").disabled = true;
   const { error } = await sb.from("resultats").insert({
-    classement: dernier.classement, scores: dernier.p, codes: dernier.r.codes, frontiere: dernier.r.frontiere,
+    classement: dernier.classement, scores: dernier.p, codes: [dernier.r.code, ...dernier.r.voisins], frontiere: dernier.r.voisins.length > 0,
     version_moteur: M.VERSION.numero, version_autotest: VERSION.numero
   });
   $("#btn-save").disabled = false;
   if (error){ msg("Enregistrement refusé : " + error.message, "err"); return; }
   dernierEnregistre = dernier.classement.join();
-  msg(`Résultat enregistré : ${dernier.r.codes.join(" / ")}.`, "ok"); historique();
+  msg(`Résultat enregistré : ${dernier.r.code}.`, "ok"); historique();
 });
 $("#btn-fiche").addEventListener("click", () => {
   if (!role || !dernier) return;
@@ -412,7 +412,7 @@ async function historique(){
   if (error){ bloc.classList.add("hidden"); return; }
   bloc.classList.remove("hidden");
   $("#historique").innerHTML = data.length
-    ? `<ul>${data.map(r => `<li>${new Date(r.passe_le).toLocaleDateString("fr-FR")} — <b>${esc(r.codes.join(" / "))}</b>${r.frontiere ? " (frontière)" : ""}
+    ? `<ul>${data.map(r => `<li>${new Date(r.passe_le).toLocaleDateString("fr-FR")} — <b>${esc(r.codes[0])}</b>
         <a class="lien" href="fiche.html?resultat=${r.id}" target="_blank">fiche</a>
         <a class="lien" href="ecusson.html?resultat=${r.id}" target="_blank">écusson</a>
         <button class="lien reprendre" data-id="${r.id}" type="button">reprendre</button>

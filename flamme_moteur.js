@@ -14,7 +14,7 @@
 })(typeof self !== "undefined" ? self : this, function () {
   "use strict";
 
-  const VERSION = { numero: "1.2", date: "2026-09-30 14:48" };
+  const VERSION = { numero: "1.3", date: "2026-10-01 22:53" };
   const ORDRE = ["W", "U", "B", "R", "G"];
 
   /* ---------- ordre canonique des combinaisons (usrSortCode) ---------- */
@@ -174,7 +174,7 @@
    * @returns {{codes:string[], frontiere:boolean, familles:string[], classement:string[][], ecarts:number[]}}
    *   codes : 1 profil, ou plusieurs à égalité (triés par famille : radical, généraliste, spécialiste, puis par code)
    */
-  function profil(s) {
+  function profilsEgaux(s) {
     ORDRE.forEach(c => { if (typeof s[c] !== "number" || !isFinite(s[c])) throw new Error(`score manquant ou invalide pour ${c}`); });
     const trouves = new Map();
     const perms = permutationsCompatibles(s);
@@ -196,6 +196,46 @@
       ecarts: [0, 1, 2, 3].map(i => Math.round((s[c0[i]] - s[c0[i + 1]]) * 1e6) / 1e6)
     };
   }
+  /**
+   * Profil unique (règle de départage validée par Pierre le 01/10/2026).
+   * Quand plusieurs profils sont ex aequo :
+   *   1. le plus accessible (score de la carte des 90 profils) ;
+   *   2. sinon, celui dont les couleurs ont été placées le plus haut dans le classement des tempéraments de la personne ;
+   *   3. sinon, l'ordre de la roue (W, U, B, R, G).
+   * @param {Object} s scores (0–1 ou 0–100)
+   * @param {{classement?: string[]}} [options] classement des 20 tempéraments (autotest), s'il existe
+   * @returns {{code, codes:[code], voisins:string[], departage:string|null, frontiere:false, familles, classement, ecarts}}
+   */
+  function profil(s, options = {}) {
+    const r = profilsEgaux(s);
+    let cands = r.codes.slice(), departage = null;
+    if (cands.length > 1){
+      const max = Math.max(...ORDRE.map(c => s[c])), s01 = max > 1 ? Object.fromEntries(ORDRE.map(c => [c, s[c] / 100])) : s;
+      const acc = c => { const a = analyser(c), w = POIDS[a.famille], v = x => s01[x.toUpperCase()];
+        const x = a.famille === "radical" ? [v(c[0]), v(c[2]), v(c[3])] : a.famille === "generaliste" ? [v(c[0]), v(c[1]), 1 - v(c[3])] : [v(c[0]), v(c[1]), v(c[3])];
+        return r5((x[0] * w[0] + x[1] * w[1] + x[2] * w[2]) / (w[0] + w[1] + w[2])); };
+      const best = Math.max(...cands.map(acc)); const n0 = cands.length;
+      cands = cands.filter(c => Math.abs(acc(c) - best) < 1e-9);
+      if (cands.length < n0) departage = "accessibilite";
+      const cl = options.classement;
+      if (cands.length > 1 && Array.isArray(cl) && cl.length === 20){
+        const rang = c => { const i = cl.findIndex(t => t[0] === c); return i < 0 ? 99 : i; };
+        const cle = code => { const a = analyser(code); return [...(a.principales + a.secondaires)].map(rang).sort((x, y) => x - y); };
+        const cmp = (x, y) => { for (let i = 0; i < Math.max(x.length, y.length); i++){ const d = (x[i] ?? 99) - (y[i] ?? 99); if (d) return d; } return 0; };
+        cands.sort((a, b) => cmp(cle(a), cle(b)));
+        const n1 = cands.length; cands = cands.filter(c => cmp(cle(c), cle(cands[0])) === 0);
+        if (cands.length < n1) departage = "classement";
+      }
+      if (cands.length > 1){
+        const ordreRoue = c => [...c.replace(/[./]/g, "")].map(x => ORDRE.indexOf(x.toUpperCase())).join(",");
+        cands.sort((a, b) => ordreRoue(a).localeCompare(ordreRoue(b))); cands = [cands[0]]; departage = "roue";
+      }
+    }
+    const code = cands[0];
+    return { code, codes: [code], voisins: r.codes.filter(c => c !== code), departage, frontiere: false,
+             familles: [analyser(code).famille], classement: r.classement, ecarts: r.ecarts };
+  }
+
   // classement par groupes d'égalité : [["U"],["R","G"],["W","B"]]
   function groupesEgalite(s) {
     const tri = ORDRE.slice().sort((a, b) => s[b] - s[a] || ORDRE.indexOf(a) - ORDRE.indexOf(b));
@@ -276,7 +316,7 @@
    * Fiche (prPRINT). Scores nets = part de chaque couleur dans le total.
    * Projets : moyenne des 3 couleurs (correction de la formule AVERAGE(v1;v2*v3) du classeur).
    */
-  function fiche(s){
+  function fiche(s, options = {}){
     verifier(s);
     const somme = ORDRE.reduce((a, c) => a + s[c], 0);
     const net = Object.fromEntries(ORDRE.map(c => [c, somme === 0 ? 0.2 : s[c] / somme]));
@@ -284,7 +324,7 @@
     const motivations = avecNiveaux(classer(MOTIVATIONS.map((c, i) => ({ code: c, score: moy([...c].map(x => net[x])), ordre: i }))), NIVEAU_10);
     const projets = avecNiveaux(classer(PROJETS.map((c, i) => ({ code: c, score: moy([...c].map(x => net[x])), ordre: i }))), NIVEAU_10);
     return {
-      profil: profil(s), net, valeurs, motivations, projets,
+      profil: profil(s, options), net, valeurs, motivations, projets,
       motivationsDominantes: premiers(motivations, 2),
       motivationsFaibles: derniers(motivations, 2),
       projetFort: premiers(projets, 1),
@@ -302,7 +342,7 @@
    * @param {Object} s scores des 5 couleurs (0–1)
    * @param {string[]} codesProfils les 90 codes de profils (ordre de la base)
    */
-  function statistiques(s, codesProfils){
+  function statistiques(s, codesProfils, options = {}){
     verifier(s);
     const v = c => s[c.toUpperCase()];
     const L = (codes, f) => classer(codes.map((c, i) => Object.assign({ ordre: i }, f(c))));
@@ -334,8 +374,8 @@
     // meilleur profil de chaque famille (haut de prDétail)
     const parFamille = Object.fromEntries(["radical", "specialiste", "generaliste"].map(f =>
       [f, premiers(sections.profils.filter(p => p.famille === f), 1)]));
-    return { sections, parFamille, moinsAccessibles: derniers(sections.profils, 1), profil: profil(s) };
+    return { sections, parFamille, moinsAccessibles: derniers(sections.profils, 1), profil: profil(s, options) };
   }
 
-  return { VERSION, ORDRE, ordonner, codeCanonique, analyser, profil, profilClasseur, scoresTypes, fiche, statistiques, classer, FLECHES, MOTIVATIONS, PROJETS, oppose, scoresDepuisTemperaments, PARAMETRES_TYPES };
+  return { VERSION, ORDRE, ordonner, codeCanonique, analyser, profil, profilsEgaux, profilClasseur, scoresTypes, fiche, statistiques, classer, FLECHES, MOTIVATIONS, PROJETS, oppose, scoresDepuisTemperaments, PARAMETRES_TYPES };
 });

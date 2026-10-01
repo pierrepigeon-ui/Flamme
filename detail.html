@@ -81,7 +81,7 @@ dialog{border:1px solid var(--line);border-radius:10px;background:var(--panel);c
   <div style="display:flex;gap:10px"><button class="btn" type="submit">Se connecter</button><button class="btn ghost" type="button" id="login-fermer">Fermer</button></div>
   <p class="msg" id="login-msg" role="status"></p></form></dialog>
 <script>
-const VERSION = { numero:"1.2", date:"2026-10-01 12:36" };
+const VERSION = { numero:"1.3", date:"2026-10-01 22:54" };
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";
 const ACCES = ["proprietaire"];
@@ -135,7 +135,7 @@ async function lireScores(){
     const { data, error } = await sb.from("resultats").select("*").eq("id", q.get("resultat")).maybeSingle();
     if (error || !data) throw new Error("Ce résultat est introuvable.");
     const { data: pers } = await sb.rpc("personnes"); const p = (pers || []).find(x => x.user_id === data.user_id);
-    return { scores: data.scores, date: data.passe_le, qui: p ? (p.nom || p.email) : "" };
+    return { scores: data.scores, date: data.passe_le, qui: p ? (p.nom || p.email) : "", classement: data.classement };
   }
   const s = {}; for (const c of M.ORDRE){ const v = parseFloat(String(q.get(c) ?? "").replace(",", ".")); if (!isFinite(v)) throw new Error("Il manque des scores : ouvre le détail depuis la console ou depuis une fiche."); s[c] = v; }
   return { scores: s, date: new Date().toISOString(), qui: "" };
@@ -144,7 +144,7 @@ async function lireScores(){
 function rendre(src){
   const s01 = Object.fromEntries(M.ORDRE.map(c => [c, src.scores[c] / 100]));
   const codesProfils = Object.values(E).filter(e => e.couche === "profil").sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0)).map(e => e.code);
-  const st = M.statistiques(s01, codesProfils);
+  const st = M.statistiques(s01, codesProfils, { classement: src.classement });
   const moi = new Set(st.profil.codes);
   const fam = (titre, liste) => `<div class="fam"><div class="t">${titre}</div>${liste.map(x => `<div class="c">${pips(x.code)} ${esc(x.code)} ${esc(libelle(x.code))}</div>`).join("")}
     <div class="sc">${liste.length ? pct(liste[0].score) + " — " + liste[0].bande : ""}${liste.length > 1 ? " (égalité)" : ""}</div></div>`;

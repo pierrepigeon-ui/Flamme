@@ -26,6 +26,7 @@ header nav a{color:var(--muted);text-decoration:none;padding:4px 10px;border-rad
 .outils{max-width:1000px;margin:16px auto 0;padding:0 20px;display:flex;gap:10px;flex-wrap:wrap}
 
 /* écusson */
+@font-face{font-family:"Cinzel";src:url("polices/cinzel-600.woff2") format("woff2");font-weight:600;font-display:swap}
 main{max-width:1150px;margin:16px auto 40px;padding:0 20px}
 .armes.accoles{grid-template-columns:1fr}
 .armes.accoles .ecus figure{max-width:360px}
@@ -83,7 +84,7 @@ dialog{border:1px solid var(--line);border-radius:10px;background:var(--panel);c
   <div style="display:flex;gap:10px"><button class="btn" type="submit">Se connecter</button><button class="btn ghost" type="button" id="login-fermer">Fermer</button></div>
   <p class="msg" id="login-msg" role="status"></p></form></dialog>
 <script>
-const VERSION = { numero:"1.2", date:"2026-10-01 22:09" };
+const VERSION = { numero:"1.4", date:"2026-10-01 22:54" };
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";
 const M = window.FLAMME_MOTEUR, B = window.FLAMME_BLASON;
@@ -116,7 +117,7 @@ async function lireSource(){
 
 function rendre(src){
   const s01 = Object.fromEntries(M.ORDRE.map(c => [c, src.scores[c] / 100]));
-  const codes = M.profil(s01).codes;
+  const codes = M.profil(s01, { classement: src.classement }).codes;
   // tempéraments : classement choisi par la personne dans l'autotest, sinon calcul (prDétail)
   let temps, origine, note = "";
   if (src.classement?.length === 20){ temps = src.classement; origine = "du classement des 20 tempéraments fait par la personne dans l'autotest"; }
@@ -158,15 +159,26 @@ function rendre(src){
 
 /* exports */
 function telecharger(nom, blob){ const u = URL.createObjectURL(blob); const a = Object.assign(document.createElement("a"), { href:u, download:nom }); document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 2000); }
+// la police du listel est intégrée aux exports, pour qu'ils restent fidèles hors du site
+let policeB64 = null;
+async function policeIntegree(){
+  if (policeB64 === null){
+    try { const r = await fetch("polices/cinzel-600.woff2"); const b = new Uint8Array(await r.arrayBuffer());
+      let bin = ""; b.forEach(x => bin += String.fromCharCode(x)); policeB64 = btoa(bin); } catch { policeB64 = ""; }
+  }
+  return policeB64 ? `<style>@font-face{font-family:"Cinzel";font-weight:600;src:url(data:font/woff2;base64,${policeB64}) format("woff2")}</style>` : "";
+}
 function svgComplet(){
   // un seul écu, ou plusieurs accolés dans un même SVG
   const n = svgs.length, w = 400 * n + 20 * (n - 1);
   const corps = svgs.map((r, i) => r.svg.replace(/<svg[^>]*>/, `<svg x="${i * 420}" y="0" width="400" height="560" viewBox="0 0 400 560">`)).join("");
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="560" viewBox="0 0 ${w} 560"><rect width="${w}" height="560" fill="#fff"/>${corps}</svg>`;
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="560" viewBox="0 0 ${w} 560">${policeExport}<rect width="${w}" height="560" fill="#fff"/>${corps}</svg>`;
 }
 const nomFichier = ext => `flamme_ecusson_${document.title.split("écusson ")[1].replace(/[/.\s]/g, "-")}.${ext}`;
-$("#dl-svg").addEventListener("click", () => telecharger(nomFichier("svg"), new Blob([svgComplet()], { type:"image/svg+xml" })));
-$("#dl-png").addEventListener("click", () => {
+let policeExport = "";
+$("#dl-svg").addEventListener("click", async () => { policeExport = await policeIntegree(); telecharger(nomFichier("svg"), new Blob([svgComplet()], { type:"image/svg+xml" })); });
+$("#dl-png").addEventListener("click", async () => {
+  policeExport = await policeIntegree();
   const txt = svgComplet(), w = +txt.match(/width="(\d+)"/)[1], img = new Image();
   img.onload = () => { const c = document.createElement("canvas"); c.width = w * 2; c.height = 1120; const x = c.getContext("2d"); x.scale(2, 2); x.drawImage(img, 0, 0); c.toBlob(b => telecharger(nomFichier("png"), b), "image/png"); };
   img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(txt);

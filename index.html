@@ -98,7 +98,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px} .field{display:block;margi
   <p class="msg" id="login-msg" role="status"></p></form></dialog>
 
 <script>
-const VERSION = { numero:"1.0", date:"2026-10-01 12:36" };
+const VERSION = { numero:"1.1", date:"2026-10-01 22:54" };
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -132,7 +132,7 @@ sb.auth.onAuthStateChange(async (_e, session) => {
   if (!role){ $("#espace-sous").textContent = "Votre compte n'a pas encore accès à Flamme Bleue. L'Arpenteur doit vous l'ouvrir."; $("#tuiles").innerHTML = ""; return; }
   const dernier = res?.[0];
   $("#espace-sous").textContent = dernier
-    ? `Votre dernier résultat : ${dernier.codes.join(" / ")}, le ${new Date(dernier.passe_le).toLocaleDateString("fr-FR")}.`
+    ? `Votre dernier résultat : ${dernier.codes[0]}, le ${new Date(dernier.passe_le).toLocaleDateString("fr-FR")}.`
     : "Vous n'avez pas encore enregistré de résultat : commencez par l'autotest.";
   let t = tuile("autotest.html", "Autotest", dernier ? "Reprendre ou refaire votre classement" : "Classer les vingt tempéraments");
   if (dernier){
