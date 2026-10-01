@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Flamme Bleue — console 1.15</title>
+<title>Flamme Bleue — console 1.17</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
-<script src="flamme_moteur.js"></script>
+<script src="flamme_moteur.js?v=1.3"></script>
 <style>
 :root{
   --ink:#1B2430; --muted:#5B6573; --line:#DDE1E7; --paper:#F4F6F8; --panel:#FFFFFF;
@@ -116,6 +116,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 16px}
 .saisie-grille label b{display:flex;gap:6px;align-items:center;color:var(--ink);font-size:15px;margin-bottom:4px}
 .saisie-grille input{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel);font-variant-numeric:tabular-nums}
 .saisie-profil{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-top:12px}
+#saisie-pour{padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
 .saisie-profil .nom{font:600 24px var(--serif)} .saisie-profil .devise{font:italic 16px var(--serif);color:var(--muted)}
 @media (max-width:760px){ .saisie-grille{grid-template-columns:repeat(2,1fr)} }
 
@@ -246,7 +247,7 @@ table.j td{border-bottom:1px solid var(--line);padding:8px 10px;vertical-align:t
 
 <script>
 /* ================= configuration ================= */
-const VERSION = { numero:"1.15", date:"2026-10-01 22:54" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"1.17", date:"2026-10-01 23:10" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 
@@ -660,7 +661,7 @@ async function afficherProduction(userId, msg){
     <h3 class="sous-titre">Autotests enregistrés (${res.length})</h3>
     ${res.length ? `<table class="j"><thead><tr><th>Date</th><th>Profil</th><th>Scores W U B R G</th><th></th></tr></thead><tbody>
       ${res.map(r => `<tr><td>${date(r.passe_le)}</td>
-        <td>${r.codes.slice(0, 1).map(c => `${pips(c)} ${esc(c)} <span class="count">${nomEl(c)}</span>`).join("<br>")}</td>
+        <td>${r.codes.slice(0, 1).map(c => `${pips(c)} ${esc(c)} <span class="count">${nomEl(c)}</span>`).join("<br>")}${r.origine === "saisie" ? ' <span class="draft">saisie</span>' : ""}</td>
         <td><div class="mini" title="${M_ORDRE.map(c => c + " " + fmt1(r.scores[c])).join(" · ")}">${M_ORDRE.map(c => `<span style="height:${Math.max(2, (r.scores[c] || 0) * .26)}px;background:${state.couleurs[c]?.couleur || "#999"}"></span>`).join("")}</div></td>
         <td class="row-btn"><a class="btn ghost" href="fiche.html?resultat=${r.id}" target="_blank">Fiche</a>
           <a class="btn ghost" href="ecusson.html?resultat=${r.id}" target="_blank">Écusson</a>
@@ -716,7 +717,7 @@ async function afficherResultats(filtre = ""){
     ${lignes.length ? `<table class="j"><thead><tr><th>Date</th><th>Personne</th><th>Profil</th><th>Scores W U B R G</th><th>Versions</th></tr></thead>
     <tbody>${lignes.map(r => `<tr class="res" data-id="${r.id}">
       <td>${new Date(r.passe_le).toLocaleString("fr-FR")}</td><td>${nom(r.user_id)}</td>
-      <td>${r.codes.slice(0, 1).map(c => `${pips(c)} ${esc(c)} <span class="count">${esc(state.elements.find(e => e.code === c)?.nom || "")}</span>`).join("<br>")}</td>
+      <td>${r.codes.slice(0, 1).map(c => `${pips(c)} ${esc(c)} <span class="count">${esc(state.elements.find(e => e.code === c)?.nom || "")}</span>`).join("<br>")}${r.origine === "saisie" ? ' <span class="draft">saisie</span>' : ""}</td>
       <td><div class="mini" title="${M_ORDRE.map(c => c + " " + fmt1(r.scores[c])).join(" · ")}">${M_ORDRE.map(c => `<span style="height:${Math.max(2, (r.scores[c] || 0) * .26)}px;background:${state.couleurs[c]?.couleur || "#999"}"></span>`).join("")}</div></td>
       <td class="count">moteur ${esc(r.version_moteur || "?")}, test ${esc(r.version_autotest || "?")}</td></tr>`).join("")}</tbody></table>`
     : '<p class="empty">Aucun résultat enregistré. Ils apparaîtront ici dès qu\'une personne connectée enregistrera son autotest.</p>'}`;
@@ -761,6 +762,8 @@ function exporterResultats(lignes){
 /* ================= saisie directe (propriétaire) ================= */
 const SAISIE = { W:"", U:"", B:"", R:"", G:"" };
 function afficherSaisie(){
+  chargerPersonnesSaisie();
+  if (!window.FLAMME_MOTEUR){ $("#saisie-somme").className = "msg err"; $("#saisie-somme").textContent = "Le moteur de calcul (flamme_moteur.js) n'a pas pu être chargé : vérifie qu'il est bien dans le dépôt, puis recharge la page (Ctrl + F5)."; return; }
   $("#saisie-grille").innerHTML = M_ORDRE.map(c => `<label><b>${pips(c)} ${c}</b><span>${esc(state.vocab.couleur?.[c]?.singulier || "")}</span>
     <input type="number" min="0" max="100" step="0.1" data-c="${c}" value="${SAISIE[c]}" inputmode="decimal"></label>`).join("");
   $("#saisie-grille").querySelectorAll("input").forEach(i => i.addEventListener("input", () => { SAISIE[i.dataset.c] = i.value; calculerSaisie(); }));
@@ -777,14 +780,45 @@ function calculerSaisie(){
     out.innerHTML = ""; return;
   }
   m.className = "msg ok"; m.textContent = `Somme : ${fmt1(somme)} % ✓`;
-  const r = window.FLAMME_MOTEUR.profil(v), e = state.elements.find(x => x.code === r.code) || {};
+  let r;
+  try {
+    r = window.FLAMME_MOTEUR.profil(v);
+    if (!r.code || !Array.isArray(r.voisins)) throw new Error(`le moteur chargé est trop ancien (version ${window.FLAMME_MOTEUR.VERSION?.numero || "?"}, il faut la 1.3) : vide le cache du navigateur (Ctrl + F5)`);
+  } catch (err){ m.className = "msg err"; m.textContent = `Somme : ${fmt1(somme)} % ✓, mais le profil n'a pas pu être calculé : ${err.message}.`; out.innerHTML = ""; return; }
+  const e = state.elements.find(x => x.code === r.code) || {};
   const q = M_ORDRE.map(c => `${c}=${v[c]}`).join("&");
   const dep = { accessibilite: "le plus accessible des profils ex aequo", roue: "départagé par l'ordre de la roue (pas de classement de tempéraments en saisie directe)" }[r.departage];
   out.innerHTML = `<div class="saisie-profil"><div>${pips(r.code)} <b>${esc(r.code)}</b> — ${esc(lib("famille", analyserFamille(r.code)))}</div>
     <div class="nom">${esc(e.nom || "")}</div><div class="devise">${esc(e.devise_heraldique || e.devise || "")}</div>
     ${r.voisins.length ? `<p class="count">Ex aequo avec ${esc(r.voisins.join(", "))} : ${dep}.</p>` : ""}
     <div class="row-btn" style="margin-top:10px"><a class="btn" href="fiche.html?${q}" target="_blank">Fiche</a>
-      <a class="btn ghost" href="ecusson.html?${q}" target="_blank">Écusson</a><a class="btn ghost" href="detail.html?${q}" target="_blank">Détail</a></div></div>`;
+      <a class="btn ghost" href="ecusson.html?${q}" target="_blank">Écusson</a><a class="btn ghost" href="detail.html?${q}" target="_blank">Détail</a></div>
+    <div class="row-btn" style="margin-top:14px;align-items:center;flex-wrap:wrap">
+      <label class="count" for="saisie-pour">Enregistrer ce résultat pour</label>
+      <select id="saisie-pour">${(SAISIE_PERSONNES || []).map(p => `<option value="${p.user_id}"${p.user_id === state.user?.id ? " selected" : ""}>${esc(p.nom || p.email)}</option>`).join("")}</select>
+      <button class="btn" type="button" id="saisie-enregistrer">Enregistrer</button></div>
+    <p class="count">Le classement des 20 tempéraments est reconstitué à partir des scores, comme dans la page Détail. Le résultat est marqué « saisie ».</p></div>`;
+  $("#saisie-enregistrer").addEventListener("click", () => enregistrerSaisie(v, r));
+}
+let SAISIE_PERSONNES = null;
+async function chargerPersonnesSaisie(){
+  if (SAISIE_PERSONNES) return;
+  const { data } = await sb.rpc("personnes");
+  SAISIE_PERSONNES = (data || []).sort((a, b) => (a.nom || a.email).localeCompare(b.nom || b.email, "fr"));
+  calculerSaisie();
+}
+async function enregistrerSaisie(v, r){
+  const pour = $("#saisie-pour")?.value; if (!pour) return;
+  const qui = SAISIE_PERSONNES.find(p => p.user_id === pour);
+  if (!confirm(`Enregistrer ${r.code} (${M_ORDRE.map(c => c + " " + fmt1(v[c])).join(", ")}) comme résultat de ${qui?.nom || qui?.email} ?`)) return;
+  const s01 = Object.fromEntries(M_ORDRE.map(c => [c, v[c] / 100]));
+  const codesProfils = state.elements.filter(e => e.couche === "profil").sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0)).map(e => e.code);
+  const classement = window.FLAMME_MOTEUR.statistiques(s01, codesProfils).sections.temperaments.map(t => t.code);
+  const { error } = await sb.from("resultats").insert({ user_id: pour, classement, scores: v, codes: [r.code, ...r.voisins], frontiere: r.voisins.length > 0,
+    version_moteur: window.FLAMME_MOTEUR.VERSION.numero, version_autotest: "console " + VERSION.numero, origine: "saisie" });
+  const m = $("#saisie-somme");
+  if (error){ m.className = "msg err"; m.textContent = "Enregistrement refusé : " + error.message + (/origine/.test(error.message) ? " (la migration 11 est-elle installée ?)" : ""); return; }
+  m.className = "msg ok"; m.textContent = `Résultat ${r.code} enregistré pour ${qui?.nom || qui?.email}. Il apparaît dans l'onglet Résultats.`;
 }
 const analyserFamille = c => window.FLAMME_MOTEUR.analyser(c).famille;
 

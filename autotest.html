@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.46.0/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
-<script src="flamme_moteur.js"></script>
+<script src="flamme_moteur.js?v=1.3"></script>
 <style>
 :root{
   --ink:#1B2430; --muted:#5B6573; --line:#DDE1E7; --paper:#F4F6F8; --panel:#FFFFFF;
@@ -55,7 +55,12 @@ main{display:grid;grid-template-columns:minmax(0,3.6fr) minmax(280px,1.2fr);gap:
 .carte{position:relative;min-height:84px;padding:10px 10px 8px;border-radius:7px;cursor:grab;user-select:none;touch-action:manipulation}
 .carte.drag{opacity:.35}
 .carte.choisie{box-shadow:0 0 0 3px var(--focus)}
-.carte .code{font:600 12px var(--sans);letter-spacing:.02em}
+.carte .code{font:600 12px var(--sans);letter-spacing:.02em;display:flex;align-items:center;gap:6px}
+.disques{display:inline-flex;align-items:center;gap:3px;background:#fff;border-radius:10px;padding:2px 5px;box-shadow:0 0 0 1px rgba(27,36,48,.35)}
+.disque{width:11px;height:11px;border-radius:50%;background:var(--c);box-shadow:inset 0 0 0 1px rgba(27,36,48,.35)}
+.disque.abs{background:transparent;border:2px dashed var(--c);box-shadow:none;box-sizing:border-box}
+.disque.abs.blanc{border-color:#8892A0}
+.disques .sep-d{font-size:10px;color:#5B6573}
 .carte .nom{font:600 15px/1.25 var(--serif);margin-top:3px}
 .carte .devise{font:italic 12.5px/1.3 var(--serif);margin-top:3px;opacity:.9}
 .carte .ico{position:absolute;top:8px;right:8px;font-size:17px;opacity:.6}
@@ -127,7 +132,6 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px}
   <div class="actions">
     <button class="btn" id="btn-save" type="button" disabled>Enregistrer mon résultat</button>
     <button class="btn ghost" id="btn-fiche" type="button" disabled>Voir ma fiche</button>
-    <button class="btn ghost" id="btn-copy" type="button">Copier les scores</button>
     <button class="btn ghost" id="btn-reset" type="button">Recommencer</button>
   </div>
   <p class="msg" id="msg" role="status"></p>
@@ -164,7 +168,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px}
 </dialog>
 
 <script>
-const VERSION = { numero:"1.6", date:"2026-10-01 22:54" };
+const VERSION = { numero:"1.7", date:"2026-10-01 23:10" };
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";
 const M = window.FLAMME_MOTEUR;
@@ -255,6 +259,12 @@ function pips(code){
 }
 
 /* ---------- grille des tempéraments ---------- */
+// disques : la couleur présente pleine, la couleur absente en pointillés
+function disques(code){
+  const [p, a] = code.split("/"), A = a.toUpperCase();
+  const d = (c, abs) => `<span class="disque${abs ? " abs" : ""}${c === "W" ? " blanc" : ""}" style="--c:${couleurs[c].couleur}" title="${esc(c)}${abs ? " (absent)" : ""}"></span>`;
+  return `<span class="disques">${d(p)}<span class="sep-d">/</span>${d(A, true)}</span>`;
+}
 function styleCarte(code){
   const [p, a] = code.split("/"); const cp = couleurs[p], ca = couleurs[a.toUpperCase()];
   const fond = p === "W" ? "#F1F1F1" : cp.couleur;
@@ -273,7 +283,7 @@ function afficherGrille(){
       <div class="carte${choisie === i ? " choisie" : ""}" draggable="true" tabindex="0" data-i="${i}" style="${styleCarte(code)}"
            aria-label="Rang ${i + 1} : ${esc(t.nom)}, ${esc(t.devise)}">
         ${ICONES[code] ? `<i class="ti ${ICONES[code]} ico" aria-hidden="true"></i>` : ""}
-        <div class="code">${esc(code)}</div><div class="nom">${esc(t.nom)}</div><div class="devise">${esc(t.devise)}</div>
+        <div class="code">${disques(code)} ${esc(code)}</div><div class="nom">${esc(t.nom)}</div><div class="devise">${esc(t.devise)}</div>
         <div class="bulle">${t.titre ? `<b>« ${esc(t.titre)} »</b>` : ""}${esc([t.texte1, t.texte2, t.texte3].filter(Boolean).join(" "))}</div>
       </div></div>`;
   }).join("");
@@ -373,7 +383,7 @@ async function reprendreDernier(){
   if (pasEncoreTouche || confirm(`Reprendre votre dernier résultat enregistré (${dateFr(r.passe_le)}) ? Votre classement en cours serait remplacé.`)) restaurer(r);
 }
 
-/* ---------- enregistrer, copier, recommencer ---------- */
+/* ---------- enregistrer, recommencer ---------- */
 const msg = (t, cls = "") => { const m = $("#msg"); m.className = "msg " + cls; m.textContent = t; };
 $("#btn-save").addEventListener("click", async () => {
   if (!role || !dernier) return;
@@ -393,12 +403,6 @@ $("#btn-fiche").addEventListener("click", () => {
   // valeurs exactes : un arrondi casserait les égalités qui font les profils frontière
   const q = M.ORDRE.map(c => `${c}=${encodeURIComponent(String(dernier.p[c]))}`).join("&");
   window.open("fiche.html?" + q, "_blank");
-});
-$("#btn-copy").addEventListener("click", async () => {
-  if (!dernier) return;
-  const t = M.ORDRE.map(c => c + "\t" + dernier.p[c].toFixed(3).replace(".", ",")).join("\r\n");
-  try { await navigator.clipboard.writeText(t); msg("Scores copiés (W, U, B, R, G), prêts à coller dans Excel.", "ok"); }
-  catch { msg("Copie impossible dans ce navigateur. Scores : " + t.replace(/\r\n/g, " ; "), "warn"); }
 });
 $("#btn-reset").addEventListener("click", () => {
   if (!confirm("Remettre les 20 tempéraments dans leur ordre de départ ?")) return;
