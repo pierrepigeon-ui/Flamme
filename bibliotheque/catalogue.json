@@ -313,8 +313,9 @@
   "WU.g": {
    "nom": "grue",
    "fichier": "animaux/WU-g.svg",
-   "icone": "crane",
-   "statut": "exact"
+   "icone": "paper-crane",
+   "statut": "approché",
+   "note": "grue en origami (l'icône « crane » était une grue de chantier)"
   },
   "WU.b": {
    "nom": "ibis",
