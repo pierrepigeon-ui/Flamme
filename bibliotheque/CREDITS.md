@@ -12,3 +12,9 @@ L'auteur précis de chaque icône est indiqué sur game-icons.net (nom de l'icô
 
 Les couleurs d'origine ont été remplacées par `currentColor`, pour que le moteur puisse colorer les images
 (or, sable…) : c'est une modification, que la licence autorise.
+
+## Dessins originaux et compositions (révision du 02/10/2026)
+
+Cinq animaux sont des **dessins originaux** créés pour Blue Flame, dans l'esprit graphique de game-icons : hirondelle (R.wu), moineau (GU.w), suricate (UR/b), caméléon (RW/g), paon (BG/w). Ils n'appellent aucun crédit tiers.
+
+Cinq autres sont des **compositions** de deux icônes game-icons (même licence CC BY 3.0, modification autorisée) : pique-bœuf sur buffle (G.wu), vouivre sur son trésor (BG.r), luciole (RW.u), araignée sur sa toile (UB/r, yeux masqués), zèbre (GW/u, rayures ajoutées).

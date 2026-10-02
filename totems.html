@@ -77,14 +77,14 @@ dialog{border:1px solid var(--line);border-radius:10px;background:var(--panel);c
   </div>
   <div id="liste"></div>
 </main>
-<footer><span>Animaux : icônes de Lorc, Delapouite et contributeurs, <a href="https://game-icons.net" target="_blank" rel="noopener">game-icons.net</a>, licence <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a>.</span><span id="version"></span></footer>
+<footer><span>Animaux : icônes de Lorc, Delapouite et contributeurs, <a href="https://game-icons.net" target="_blank" rel="noopener">game-icons.net</a>, licence <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a> ; quelques dessins et compositions originaux.</span><span id="version"></span></footer>
 <dialog id="dlg-login"><form id="form-login"><h2 style="font:600 22px var(--serif);margin:0 0 14px">Se connecter</h2>
   <label class="field"><span>Adresse e-mail</span><input type="email" id="email" autocomplete="username" required></label>
   <label class="field"><span>Mot de passe</span><input type="password" id="password" autocomplete="current-password" required></label>
   <div style="display:flex;gap:10px"><button class="btn" type="submit">Se connecter</button><button class="btn ghost" type="button" id="login-fermer">Fermer</button></div>
   <p class="msg" id="login-msg" role="status"></p></form></dialog>
 <script>
-const VERSION = { numero:"1.0", date:"2026-10-02 08:46" };
+const VERSION = { numero:"1.1", date:"2026-10-02 12:27" };
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";
 const M = window.FLAMME_MOTEUR;
@@ -149,7 +149,7 @@ async function charger(){
   if (error) throw new Error(error.message);
   PROFILS = els.filter(e => e.couche === "profil").sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0)); C = Object.fromEntries((cols || []).map(c => [c.code, c]));
   try {
-    CAT = await (await fetch("bibliotheque/catalogue.json?v=2")).json();
+    CAT = await (await fetch("bibliotheque/catalogue.json?v=3")).json();
     await Promise.all(Object.entries(CAT.animaux).map(async ([k, v]) => { if (v.fichier) IMG[k] = interieur(await (await fetch("bibliotheque/" + v.fichier)).text()); }));
   } catch (e){ console.warn("Bibliothèque d'images indisponible", e); }
   puces(); afficher();

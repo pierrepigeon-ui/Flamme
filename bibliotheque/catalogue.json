@@ -149,15 +149,15 @@
    "statut": "exact"
   },
   "W.gu": {
-   "nom": "banc de poissons",
+   "nom": "chevreuil",
    "fichier": "animaux/W-gu.svg",
-   "icone": "school-of-fish",
+   "icone": "deer-head",
    "statut": "exact"
   },
   "W.ur": {
-   "nom": "colombe",
+   "nom": "chien de sauvetage",
    "fichier": "animaux/W-ur.svg",
-   "icone": "dove",
+   "icone": "sniffing-dog",
    "statut": "exact"
   },
   "W.ub": {
@@ -167,9 +167,9 @@
    "statut": "exact"
   },
   "U.rg": {
-   "nom": "kiwi",
+   "nom": "fourmilier",
    "fichier": "animaux/U-rg.svg",
-   "icone": "kiwi-bird",
+   "icone": "anteater",
    "statut": "exact"
   },
   "U.bg": {
@@ -179,9 +179,9 @@
    "statut": "exact"
   },
   "U.br": {
-   "nom": "orque",
+   "nom": "cavalier d'échecs",
    "fichier": "animaux/U-br.svg",
-   "icone": "whale-tail",
+   "icone": "chess-knight",
    "statut": "approché"
   },
   "U.gw": {
@@ -191,16 +191,16 @@
    "statut": "exact"
   },
   "U.rw": {
-   "nom": "tisserin",
+   "nom": "salamandre",
    "fichier": "animaux/U-rw.svg",
-   "icone": "nest-birds",
-   "statut": "approché"
+   "icone": "salamander",
+   "statut": "exact"
   },
   "U.wb": {
-   "nom": "grand-duc",
+   "nom": "sphinx",
    "fichier": "animaux/U-wb.svg",
-   "icone": "barn-owl",
-   "statut": "approché"
+   "icone": "greek-sphinx",
+   "statut": "exact"
   },
   "B.rg": {
    "nom": "tigre",
@@ -209,10 +209,10 @@
    "statut": "exact"
   },
   "B.gu": {
-   "nom": "faucon pèlerin",
+   "nom": "faucon d'Horus",
    "fichier": "animaux/B-gu.svg",
-   "icone": "falcon-moon",
-   "statut": "approché"
+   "icone": "egyptian-bird",
+   "statut": "exact"
   },
   "B.ur": {
    "nom": "pégase",
@@ -221,9 +221,9 @@
    "statut": "exact"
   },
   "B.gw": {
-   "nom": "étoile de mer",
+   "nom": "flamant rose",
    "fichier": "animaux/B-gw.svg",
-   "icone": "sea-star",
+   "icone": "flamingo",
    "statut": "exact"
   },
   "B.rw": {
@@ -239,9 +239,9 @@
    "statut": "exact"
   },
   "R.bg": {
-   "nom": "chenille",
+   "nom": "tigre à dents de sabre",
    "fichier": "animaux/R-bg.svg",
-   "icone": "caterpillar",
+   "icone": "saber-toothed-cat-head",
    "statut": "exact"
   },
   "R.gu": {
@@ -257,10 +257,10 @@
    "statut": "exact"
   },
   "R.gw": {
-   "nom": "grenouille",
+   "nom": "pinson",
    "fichier": "animaux/R-gw.svg",
-   "icone": "frog",
-   "statut": "exact"
+   "icone": "bird-twitter",
+   "statut": "approché"
   },
   "R.wb": {
    "nom": "oie sauvage",
@@ -271,8 +271,8 @@
   "R.wu": {
    "nom": "hirondelle",
    "fichier": "animaux/R-wu.svg",
-   "icone": "swallow",
-   "statut": "exact"
+   "icone": "dessin original",
+   "statut": "dessin"
   },
   "G.br": {
    "nom": "bélier",
@@ -293,9 +293,9 @@
    "statut": "exact"
   },
   "G.rw": {
-   "nom": "chien",
+   "nom": "koala",
    "fichier": "animaux/G-rw.svg",
-   "icone": "sitting-dog",
+   "icone": "koala",
    "statut": "exact"
   },
   "G.wb": {
@@ -305,10 +305,10 @@
    "statut": "exact"
   },
   "G.wu": {
-   "nom": "pique-bœuf",
+   "nom": "pique-bœuf sur buffle",
    "fichier": "animaux/G-wu.svg",
-   "icone": "bird-twitter",
-   "statut": "approché"
+   "icone": "buffalo-head + sparrow",
+   "statut": "composition"
   },
   "WU.g": {
    "nom": "grue",
@@ -324,10 +324,10 @@
    "statut": "exact"
   },
   "WU.r": {
-   "nom": "oiseau-jardinier",
+   "nom": "fourmi",
    "fichier": "animaux/WU-r.svg",
-   "icone": "nest-eggs",
-   "statut": "approché"
+   "icone": "ant",
+   "statut": "exact"
   },
   "WB.g": {
    "nom": "lion",
@@ -336,9 +336,9 @@
    "statut": "exact"
   },
   "WB.u": {
-   "nom": "fourmi",
+   "nom": "grillon",
    "fichier": "animaux/WB-u.svg",
-   "icone": "ant",
+   "icone": "cricket",
    "statut": "exact"
   },
   "WB.r": {
@@ -366,10 +366,10 @@
    "statut": "approché"
   },
   "UR.g": {
-   "nom": "tortue de mer",
+   "nom": "poisson volant",
    "fichier": "animaux/UR-g.svg",
-   "icone": "sea-turtle",
-   "statut": "exact"
+   "icone": "flying-trout",
+   "statut": "approché"
   },
   "UR.w": {
    "nom": "colibri",
@@ -396,16 +396,16 @@
    "statut": "exact"
   },
   "BR.u": {
-   "nom": "mante religieuse",
+   "nom": "gecko",
    "fichier": "animaux/BR-u.svg",
-   "icone": "praying-mantis",
+   "icone": "gecko",
    "statut": "exact"
   },
   "BG.r": {
-   "nom": "pie",
+   "nom": "vouivre sur son trésor",
    "fichier": "animaux/BG-r.svg",
-   "icone": "crow-dive",
-   "statut": "approché"
+   "icone": "wyvern + open-treasure-chest",
+   "statut": "composition"
   },
   "BG.w": {
    "nom": "pieuvre",
@@ -444,10 +444,10 @@
    "statut": "exact"
   },
   "RW.u": {
-   "nom": "scarabée",
+   "nom": "luciole",
    "fichier": "animaux/RW-u.svg",
-   "icone": "scarab-beetle",
-   "statut": "exact"
+   "icone": "flying-beetle + halo",
+   "statut": "composition"
   },
   "RW.b": {
    "nom": "toucan",
@@ -456,9 +456,9 @@
    "statut": "exact"
   },
   "GW.r": {
-   "nom": "manchot empereur",
+   "nom": "mammouth",
    "fichier": "animaux/GW-r.svg",
-   "icone": "penguin",
+   "icone": "mammoth",
    "statut": "exact"
   },
   "GW.u": {
@@ -482,8 +482,8 @@
   "GU.w": {
    "nom": "moineau",
    "fichier": "animaux/GU-w.svg",
-   "icone": "sparrow",
-   "statut": "exact"
+   "icone": "dessin original",
+   "statut": "dessin"
   },
   "GU.b": {
    "nom": "chat",
@@ -494,13 +494,13 @@
   "WU/b": {
    "nom": "baleine",
    "fichier": "animaux/WU_b.svg",
-   "icone": "sperm-whale",
+   "icone": "whale-tail",
    "statut": "exact"
   },
   "WU/r": {
-   "nom": "perroquet gris",
+   "nom": "manchot empereur",
    "fichier": "animaux/WU_r.svg",
-   "icone": "parrot-head",
+   "icone": "penguin",
    "statut": "exact"
   },
   "WU/g": {
@@ -536,8 +536,8 @@
   "UB/r": {
    "nom": "araignée",
    "fichier": "animaux/UB_r.svg",
-   "icone": "spider-alt",
-   "statut": "exact"
+   "icone": "hanging-spider + spider-web",
+   "statut": "composition"
   },
   "UB/g": {
    "nom": "blaireau",
@@ -546,16 +546,16 @@
    "statut": "exact"
   },
   "UR/w": {
-   "nom": "sanglier",
+   "nom": "faucon pèlerin",
    "fichier": "animaux/UR_w.svg",
-   "icone": "boar",
+   "icone": "falcon-moon",
    "statut": "exact"
   },
   "UR/b": {
-   "nom": "pigeon voyageur",
+   "nom": "suricate",
    "fichier": "animaux/UR_b.svg",
-   "icone": "peace-dove",
-   "statut": "approché"
+   "icone": "dessin original",
+   "statut": "dessin"
   },
   "UR/g": {
    "nom": "corbeau",
@@ -578,14 +578,14 @@
   "BR/g": {
    "nom": "dragon",
    "fichier": "animaux/BR_g.svg",
-   "icone": "dragon-head",
+   "icone": "spiked-dragon-head",
    "statut": "exact"
   },
   "BG/w": {
-   "nom": "flamant rose",
+   "nom": "paon",
    "fichier": "animaux/BG_w.svg",
-   "icone": "flamingo",
-   "statut": "exact"
+   "icone": "dessin original",
+   "statut": "dessin"
   },
   "BG/u": {
    "nom": "taureau",
@@ -606,9 +606,9 @@
    "statut": "approché"
   },
   "RG/u": {
-   "nom": "mammouth",
+   "nom": "rhinocéros",
    "fichier": "animaux/RG_u.svg",
-   "icone": "mammoth",
+   "icone": "rhinoceros-horn",
    "statut": "exact"
   },
   "RG/b": {
@@ -618,9 +618,9 @@
    "statut": "exact"
   },
   "RW/u": {
-   "nom": "hérisson",
+   "nom": "tatou",
    "fichier": "animaux/RW_u.svg",
-   "icone": "hedgehog",
+   "icone": "armadillo",
    "statut": "exact"
   },
   "RW/b": {
@@ -632,14 +632,14 @@
   "RW/g": {
    "nom": "caméléon",
    "fichier": "animaux/RW_g.svg",
-   "icone": "chameleon-glyph",
-   "statut": "exact"
+   "icone": "dessin original",
+   "statut": "dessin"
   },
   "GW/u": {
    "nom": "zèbre",
    "fichier": "animaux/GW_u.svg",
-   "icone": "zebra-shield",
-   "statut": "approché"
+   "icone": "horse-head + rayures",
+   "statut": "composition"
   },
   "GW/b": {
    "nom": "otarie",
