@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flamme Bleue — les totems</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+<script src="flamme_moteur.js?v=1.3"></script>
+<style>
+:root{--ink:#1B2430;--muted:#5B6573;--line:#DDE1E7;--paper:#F4F6F8;--panel:#FFFFFF;--hover:#EEF1F5;--ok:#1E7A46;--warn:#9A5B00;--err:#B42318;
+  --serif:"Source Serif 4",Georgia,"Times New Roman",serif;--sans:"IBM Plex Sans","Segoe UI",Arial,sans-serif}
+*{box-sizing:border-box} html,body{margin:0} body{background:var(--paper);color:var(--ink);font:15px/1.5 var(--sans)}
+button,input{font:inherit;color:inherit} :focus-visible{outline:2px solid #3B6FE0;outline-offset:2px} .hidden{display:none!important}
+header{display:flex;align-items:baseline;gap:18px;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
+.wordmark{font:600 24px/1 var(--serif);letter-spacing:.02em;margin:0} .signature{font:italic 14px/1.4 var(--serif);color:var(--muted);margin:0}
+header nav a{color:var(--muted);text-decoration:none;padding:4px 10px;border-radius:5px} header nav a:hover{background:var(--hover);color:var(--ink)}
+.who{margin-left:auto;font-size:13px;color:var(--muted);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn{border:1px solid var(--ink);background:var(--ink);color:var(--panel);padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:500}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.msg{font-size:14px;min-height:1.4em;margin:6px 0 0} .msg.err{color:var(--err)}
+.bloque{max-width:560px;margin:60px auto;padding:0 20px;font:italic 17px/1.5 var(--serif);color:var(--muted)}
+.outils{max-width:1000px;margin:16px auto 0;padding:0 20px;display:flex;gap:10px;flex-wrap:wrap}
+
+/* totems */
+main{max-width:1200px;margin:16px auto 40px;padding:0 20px}
+h1.titre{font:600 30px/1.15 var(--serif);margin:6px 0 2px}
+.sous{color:var(--muted);margin:0 0 14px}
+.filtres{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.filtres input,.filtres select{padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+.filtres input{min-width:220px}
+.puce{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:5px 12px;cursor:pointer;font-size:13px}
+.puce[aria-pressed="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.dot{display:inline-block;width:11px;height:11px;border-radius:50%;border:1px solid #8892A0;vertical-align:-1px}
+h2.fam{font:600 20px var(--serif);margin:22px 0 10px}
+.grille{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.totem{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+.totem .blason{position:relative;aspect-ratio:1/0.8;display:grid;place-items:center;border-bottom:1px solid var(--line)}
+.totem .blason svg.fond{position:absolute;inset:0;width:100%;height:100%}
+.totem .blason svg.bete{position:relative;width:62%;height:auto;filter:drop-shadow(0 1px 0 rgba(27,36,48,.5))}
+.totem .txt{padding:10px 12px 12px;display:flex;flex-direction:column;gap:2px}
+.totem .animal{font:600 18px/1.2 var(--serif)}
+.totem .profil{font-size:13px;color:var(--muted)}
+.totem .devise{font:italic 14px/1.35 var(--serif);margin-top:4px}
+.totem .raison{font-size:13px;color:var(--muted);margin-top:4px}
+.totem .liens{display:flex;gap:10px;margin-top:6px;font-size:13px}
+.totem .liens a{color:var(--ink)}
+.approche{font-size:11px;color:var(--warn)}
+footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid var(--line);background:var(--panel);padding:4px 20px;font-size:12px;color:var(--muted)}
+dialog{border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);padding:24px;width:min(380px,92vw)} dialog::backdrop{background:rgba(10,15,25,.45)}
+.field{display:block;margin-bottom:12px} .field span{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+.field input{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:6px;background:var(--paper)}
+@page{size:A4 portrait;margin:10mm}
+@media print{ body{background:#fff} header,.filtres,footer,dialog,.liens{display:none!important} main{margin:0;padding:0;max-width:none}
+  .grille{grid-template-columns:repeat(4,1fr);gap:8px} .totem{break-inside:avoid} h2.fam{break-before:page} h2.fam:first-of-type{break-before:auto} }
+</style>
+</head>
+<body>
+<header>
+  <h1 class="wordmark">Flamme Bleue</h1><p class="signature">Cartographiez votre énergie</p>
+  <nav><a href="index.html">Accueil</a><a href="console.html">Console</a><a href="rosace.html">Rosace</a></nav>
+  <div class="who"><span id="who"></span>
+    <button class="btn ghost" id="btn-login" type="button">Se connecter</button>
+    <button class="btn ghost hidden" id="btn-logout" type="button">Se déconnecter</button></div>
+</header>
+<p class="bloque" id="bloque">Chargement…</p>
+<main class="hidden" id="page">
+  <h1 class="titre">Les totems des 90 profils</h1>
+  <p class="sous" id="sous"></p>
+  <div class="filtres">
+    <input type="search" id="recherche" placeholder="Chercher un animal, un profil, une devise…" aria-label="Rechercher">
+    <span id="puces-familles"></span>
+    <span id="puces-couleurs"></span>
+    <button class="btn ghost" type="button" onclick="window.print()">Imprimer</button>
+  </div>
+  <div id="liste"></div>
+</main>
+<footer><span>Animaux : icônes de Lorc, Delapouite et contributeurs, <a href="https://game-icons.net" target="_blank" rel="noopener">game-icons.net</a>, licence <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a> ; quelques dessins et compositions originaux.</span><span id="version"></span></footer>
+<dialog id="dlg-login"><form id="form-login"><h2 style="font:600 22px var(--serif);margin:0 0 14px">Se connecter</h2>
+  <label class="field"><span>Adresse e-mail</span><input type="email" id="email" autocomplete="username" required></label>
+  <label class="field"><span>Mot de passe</span><input type="password" id="password" autocomplete="current-password" required></label>
+  <div style="display:flex;gap:10px"><button class="btn" type="submit">Se connecter</button><button class="btn ghost" type="button" id="login-fermer">Fermer</button></div>
+  <p class="msg" id="login-msg" role="status"></p></form></dialog>
+<script>
+const VERSION = { numero:"1.2", date:"2026-10-02 12:41" };
+const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
+const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";
+const M = window.FLAMME_MOTEUR;
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+$("#version").textContent = `Totems ${VERSION.numero}, version du ${VERSION.date.replace(/(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d)/,"$3/$2/$1 à $4h$5")}`;
+const FAMILLES = [["radical","Radicaux (1.23)"],["specialiste","Spécialistes (12.3)"],["generaliste","Généralistes (12/5)"]];
+let user = null, role = null, PROFILS = [], C = {}, CAT = null, IMG = {}, filtreFam = "", filtreCoul = "";
+const interieur = t => t.replace(/^[\s\S]*?<svg[^>]*>/, "").replace(/<\/svg>\s*$/, "");
+
+// fond héraldique de la vignette : les couleurs principales (plein, ou parti, la plus forte à dextre)
+function fond(code){
+  const a = M.analyser(code), cs = [...a.principales];
+  const t = c => C[c]?.couleur || "#888";
+  if (cs.length === 1) return `<svg class="fond" viewBox="0 0 100 80" preserveAspectRatio="none"><rect width="100" height="80" fill="${t(cs[0])}"/></svg>`;
+  return `<svg class="fond" viewBox="0 0 100 80" preserveAspectRatio="none"><rect width="50" height="80" fill="${t(cs[0])}"/><rect x="50" width="50" height="80" fill="${t(cs[1])}"/><path d="M50 0V80" stroke="#1B2430" stroke-width=".8"/></svg>`;
+}
+function bete(code){
+  const a = M.analyser(code), cs = [...a.principales];
+  const surArgent = cs.length === 1 && cs[0] === "W";
+  const col = surArgent ? "#1B2430" : "#E6B422", tr = surArgent ? "#E6B422" : "#1B2430";
+  return IMG[code] ? `<svg class="bete" viewBox="0 0 512 512" color="${col}" fill="${col}" stroke="${tr}" stroke-width="10" paint-order="stroke">${IMG[code]}</svg>` : "";
+}
+const dots = code => [...code.replace(/[./]/g, "")].map(x => { const c = x.toUpperCase(), abs = x !== c && code.includes("/") && code.endsWith(x);
+  return `<span class="dot" style="background:${abs ? "transparent" : C[c]?.couleur};${abs ? `border:1.5px dashed ${C[c]?.couleur}` : ""}" title="${c}"></span>`; }).join(" ");
+
+function afficher(){
+  const q = $("#recherche").value.trim().toLowerCase();
+  const ok = p => (!filtreFam || M.analyser(p.code).famille === filtreFam)
+    && (!filtreCoul || M.analyser(p.code).principales.includes(filtreCoul))
+    && (!q || [p.code, p.nom, p.animal_totem, p.animal_raison, p.devise_heraldique, p.devise].join(" ").toLowerCase().includes(q));
+  let html = "", n = 0;
+  for (const [f, titre] of FAMILLES){
+    const ps = PROFILS.filter(p => M.analyser(p.code).famille === f && ok(p)); if (!ps.length) continue; n += ps.length;
+    html += `<h2 class="fam">${esc(titre)} <span class="count" style="font:400 14px var(--sans);color:var(--muted)">${ps.length}</span></h2><div class="grille">` +
+      ps.map(p => { const st = CAT?.animaux?.[p.code]?.statut;
+        return `<article class="totem"><div class="blason">${fond(p.code)}${bete(p.code)}</div><div class="txt">
+          <div class="animal">${esc(p.animal_totem || "—")} ${st === "approché" ? '<span class="approche" title="image approchée">≈</span>' : ""}</div>
+          <div class="profil">${dots(p.code)} <b>${esc(p.code)}</b> · ${esc(p.nom)}</div>
+          ${p.devise_heraldique ? `<div class="devise">« ${esc(p.devise_heraldique)} »</div>` : ""}
+          ${p.animal_raison ? `<div class="raison">${esc(p.animal_raison)}</div>` : ""}
+          <div class="liens"><a href="ecusson.html?type=${encodeURIComponent(p.code)}" target="_blank">Écusson</a><a href="fiche.html?type=${encodeURIComponent(p.code)}" target="_blank">Fiche</a></div>
+        </div></article>`; }).join("") + `</div>`;
+  }
+  $("#liste").innerHTML = html || `<p class="sous">Aucun totem ne correspond.</p>`;
+  $("#sous").textContent = `${n} profil${n > 1 ? "s" : ""} affiché${n > 1 ? "s" : ""} sur 90 — chaque vignette porte l'animal d'or sur les couleurs principales du profil.`;
+}
+function puces(){
+  $("#puces-familles").innerHTML = [["", "Toutes"], ...FAMILLES.map(([f, t]) => [f, t.split(" ")[0]])].map(([f, t]) =>
+    `<button class="puce" type="button" data-fam="${f}" aria-pressed="${filtreFam === f}">${esc(t)}</button>`).join(" ");
+  $("#puces-couleurs").innerHTML = M.ORDRE.map(c => `<button class="puce" type="button" data-coul="${c}" aria-pressed="${filtreCoul === c}" title="profils dont ${c} est principale"><span class="dot" style="background:${C[c]?.couleur}"></span> ${c}</button>`).join(" ");
+  document.querySelectorAll("[data-fam]").forEach(b => b.onclick = () => { filtreFam = b.dataset.fam; puces(); afficher(); });
+  document.querySelectorAll("[data-coul]").forEach(b => b.onclick = () => { filtreCoul = filtreCoul === b.dataset.coul ? "" : b.dataset.coul; puces(); afficher(); });
+}
+$("#recherche").addEventListener("input", afficher);
+
+async function charger(){
+  const [{ data: els, error }, { data: cols }] = await Promise.all([
+    sb.from("elements").select("*"),
+    sb.from("couleurs").select("*")]);
+  if (error) throw new Error(error.message);
+  PROFILS = els.filter(e => e.couche === "profil").sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0)); C = Object.fromEntries((cols || []).map(c => [c.code, c]));
+  try {
+    CAT = await (await fetch("bibliotheque/catalogue.json?v=3")).json();
+    await Promise.all(Object.entries(CAT.animaux).map(async ([k, v]) => { if (v.fichier) IMG[k] = interieur(await (await fetch("bibliotheque/" + v.fichier + "?v=3")).text()); }));
+  } catch (e){ console.warn("Bibliothèque d'images indisponible", e); }
+  puces(); afficher();
+}
+
+$("#btn-login").addEventListener("click", () => { $("#login-msg").textContent = ""; $("#dlg-login").showModal(); });
+$("#login-fermer").addEventListener("click", () => $("#dlg-login").close());
+$("#btn-logout").addEventListener("click", () => sb.auth.signOut());
+$("#form-login").addEventListener("submit", async e => { e.preventDefault(); const m = $("#login-msg"); m.className = "msg"; m.textContent = "Connexion…";
+  const { error } = await sb.auth.signInWithPassword({ email: $("#email").value.trim(), password: $("#password").value });
+  if (error){ m.className = "msg err"; m.textContent = /invalid/i.test(error.message) ? "Adresse ou mot de passe incorrect." : error.message; } else $("#dlg-login").close(); });
+sb.auth.onAuthStateChange(async (_e, session) => {
+  const u = session?.user || null; if (u?.id === user?.id && role !== null) return;
+  user = u; role = null;
+  $("#btn-login").classList.toggle("hidden", !!user); $("#btn-logout").classList.toggle("hidden", !user);
+  $("#who").textContent = user ? user.email : "";
+  $("#page").classList.add("hidden"); $("#bloque").classList.remove("hidden");
+  if (!user){ $("#bloque").textContent = "Les totems sont réservés aux personnes qui ont un compte. Connecte-toi pour les afficher."; return; }
+  const { data: r } = await sb.rpc("mon_role"); role = r || "";
+  if (!role){ $("#bloque").textContent = "Ton compte n'a pas encore accès à Flamme Bleue."; return; }
+  try { await charger(); $("#bloque").classList.add("hidden"); $("#page").classList.remove("hidden"); }
+  catch (err){ $("#bloque").textContent = err.message; }
+});
+</script>
+</body>
+</html>
