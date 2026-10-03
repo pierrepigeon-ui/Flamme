@@ -98,7 +98,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px} .field{display:block;margi
   <p class="msg" id="login-msg" role="status"></p></form></dialog>
 
 <script>
-const VERSION = { numero:"1.1", date:"2026-10-01 22:54" };
+const VERSION = { numero:"1.2", date:"2026-10-03 20:17" };
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -122,14 +122,21 @@ sb.auth.onAuthStateChange(async (_e, session) => {
   $("#btn-login-2").classList.toggle("hidden", !!user);
   $("#who").textContent = user ? user.email : "";
   if (!user){ $("#espace").classList.add("hidden"); return; }
-  const [{ data: role }, { data: moi }, { data: res }] = await Promise.all([
+  const [{ data: role }, { data: moi }, { data: res }, { data: rolePrisme }] = await Promise.all([
     sb.rpc("mon_role"),
     sb.from("roles_utilisateurs").select("nom").eq("user_id", user.id).maybeSingle(),
-    sb.from("resultats").select("id,passe_le,codes").eq("user_id", user.id).order("passe_le", { ascending:false }).limit(1)
+    sb.from("resultats").select("id,passe_le,codes").eq("user_id", user.id).order("passe_le", { ascending:false }).limit(1),
+    sb.rpc("prisme_mon_role")   // rôle PRISME, indépendant de Flamme Bleue
   ]);
+  // la tuile PRISME n'apparaît qu'aux personnes qui ont un rôle PRISME
+  const tuilePrisme = rolePrisme ? tuile("prisme.html", "PRISME",
+    ["proprietaire","editeur"].includes(rolePrisme) ? "Le modèle d'évaluation des jeux : parcourir et éditer" : "Le modèle d'évaluation des jeux : parcourir") : "";
   $("#espace").classList.remove("hidden");
   $("#bonjour").textContent = `Bonjour${moi?.nom ? ", " + moi.nom : ""}`;
-  if (!role){ $("#espace-sous").textContent = "Votre compte n'a pas encore accès à Flamme Bleue. L'Arpenteur doit vous l'ouvrir."; $("#tuiles").innerHTML = ""; return; }
+  if (!role){
+    $("#espace-sous").textContent = rolePrisme ? "Votre compte donne accès à PRISME." : "Votre compte n'a pas encore accès à Flamme Bleue. L'Arpenteur doit vous l'ouvrir.";
+    $("#tuiles").innerHTML = tuilePrisme; return;
+  }
   const dernier = res?.[0];
   $("#espace-sous").textContent = dernier
     ? `Votre dernier résultat : ${dernier.codes[0]}, le ${new Date(dernier.passe_le).toLocaleDateString("fr-FR")}.`
@@ -141,6 +148,7 @@ sb.auth.onAuthStateChange(async (_e, session) => {
   }
   t += tuile("console.html", role === "proprietaire" ? "Console" : "Le modèle", role === "invite" ? "Parcourir les profils ; changer votre mot de passe" : "Parcourir et éditer le contenu ; votre mot de passe");
   if (role === "proprietaire") t += tuile("rosace.html", "Rosace", "La carte complète du modèle");
+  t += tuilePrisme;
   $("#tuiles").innerHTML = t;
 });
 </script>
