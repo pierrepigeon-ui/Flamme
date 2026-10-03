@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Flamme Bleue — console 1.18</title>
+<title>Flamme Bleue — console 1.19</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
@@ -200,6 +200,7 @@ table.j td{border-bottom:1px solid var(--line);padding:8px 10px;vertical-align:t
       <a class="navlink" href="autotest.html">Autotest</a>
       <a class="navlink hidden" href="rosace.html" id="lien-rosace">Rosace</a>
       <a class="navlink" href="totems.html" id="lien-totems">Totems</a>
+      <a class="navlink hidden" href="prisme.html" id="lien-prisme">PRISME</a>
     </nav>
     <div class="who"><span id="backup-info"></span><button class="btn ghost hidden" id="backup" type="button">Sauvegarder la base</button><span id="who"></span><button class="btn ghost" id="mdp" type="button">Mon mot de passe</button><button class="btn ghost" id="logout" type="button">Se déconnecter</button></div>
   </header>
@@ -248,7 +249,7 @@ table.j td{border-bottom:1px solid var(--line);padding:8px 10px;vertical-align:t
 
 <script>
 /* ================= configuration ================= */
-const VERSION = { numero:"1.18", date:"2026-10-02 08:46" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"1.19", date:"2026-10-03 19:19" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 
@@ -347,6 +348,7 @@ async function demarrer(){
   $("#tab-resultats").classList.toggle("hidden", role !== "proprietaire");
   $("#tab-saisie").classList.toggle("hidden", role !== "proprietaire");
   $("#lien-rosace").classList.toggle("hidden", role !== "proprietaire");
+  $("#lien-prisme").classList.toggle("hidden", role !== "proprietaire");
   if (role === "proprietaire") infoSauvegarde();
   if (!role){
     $("#editor-host").innerHTML = `<p class="empty">Ton compte est bien connecté, mais aucun rôle ne lui est attribué dans Flamme Bleue. Le propriétaire doit te déclarer dans la table des rôles.</p>`;
@@ -494,7 +496,7 @@ function ligneJournal(j, avecCle){
   return `<tr><td>${new Date(j.le).toLocaleString("fr-FR")}</td><td>${qui}</td>${avecCle ? `<td>${esc(j.cle)}</td>` : ""}<td class="diff">${diffHtml(j)}</td></tr>`;
 }
 async function historique(code){
-  const { data } = await sb.from("journal").select("*").eq("cle", code).order("id", { ascending:false }).limit(50);
+  const { data } = await sb.from("journal").select("*").eq("cle", code).not("table_nom", "like", "prisme_%").order("id", { ascending:false }).limit(50);
   const host = $("#hist"); if (!host) return;
   host.innerHTML = `<h3>Historique de la fiche</h3>
     <table class="j"><thead><tr><th>Date</th><th>Par</th><th>Changements</th></tr></thead>
@@ -503,7 +505,7 @@ async function historique(code){
 async function afficherJournal(){
   const host = $("#journal-pane");
   host.innerHTML = '<p class="count">Chargement…</p>';
-  const { data, error } = await sb.from("journal").select("*").neq("action","INSERT").order("id", { ascending:false }).limit(300);
+  const { data, error } = await sb.from("journal").select("*").neq("action","INSERT").not("table_nom", "like", "prisme_%").order("id", { ascending:false }).limit(300);
   if (error){ host.innerHTML = `<p class="msg err">Lecture du journal impossible : ${esc(error.message)}</p>`; return; }
   host.innerHTML = data.length
     ? `<table class="j"><thead><tr><th>Date</th><th>Par</th><th>Élément</th><th>Changements</th></tr></thead>
@@ -649,7 +651,7 @@ async function afficherProduction(userId, msg){
   host.innerHTML = '<p class="count">Chargement…</p>';
   const [{ data: res, error: e1 }, { data: jr, error: e2 }] = await Promise.all([
     sb.from("resultats").select("*").eq("user_id", userId).order("passe_le", { ascending:false }),
-    sb.from("journal").select("*").eq("par", userId).order("id", { ascending:false }).limit(200)
+    sb.from("journal").select("*").eq("par", userId).not("table_nom", "like", "prisme_%").order("id", { ascending:false }).limit(200)
   ]);
   if (e1 || e2){ host.innerHTML = `<p class="msg err">Lecture impossible : ${esc((e1 || e2).message)}</p>`; return; }
   const date = d => d ? new Date(d).toLocaleString("fr-FR") : "jamais";
