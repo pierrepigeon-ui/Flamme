@@ -1,0 +1,2760 @@
+{
+ "chapitres": [
+  {
+   "code": "SYS",
+   "nom": "Système",
+   "ordre": 1,
+   "couleur": "#4f6b8f"
+  },
+  {
+   "code": "EXP",
+   "nom": "Expérience",
+   "ordre": 2,
+   "couleur": "#7a5c8f"
+  },
+  {
+   "code": "EDI",
+   "nom": "Édition",
+   "ordre": 3,
+   "couleur": "#6b8f5c"
+  }
+ ],
+ "paires": [
+  {
+   "code": "POI",
+   "nom": "POIDS",
+   "chapitre": "SYS",
+   "ordre": 1,
+   "ancien_nom": null,
+   "statut": "stabilisee",
+   "definition": "POIDS évalue le système de règles à deux niveaux : combien le jeu en embrasse (POI1 — Volume), et si les auteurs ont réussi à faire tenir ensemble tout ce que ce volume annonçait — sans trou, sans contradiction (POI2 — Envergure). Faire tenir un système vaste et fortement interconnecté est un accomplissement plus rare que faire tenir un petit système faiblement connecté — POI1 sert donc de point de départ explicite au jugement porté sur POI2. Le souffle, l'« epicness » d'un système ambitieux qui tient malgré son ampleur, n'est pas nommé séparément : il vit dans la mécanique des paires liées elle-même — un POI2 identique « vaut plus » quand POI1 était élevé.",
+   "relation": "liee",
+   "mecanisme": "liee",
+   "na_si_axe1_nul": false
+  },
+  {
+   "code": "PROF",
+   "nom": "PROFONDEUR",
+   "chapitre": "SYS",
+   "ordre": 2,
+   "ancien_nom": null,
+   "statut": "provisoire",
+   "definition": "PROFONDEUR évalue si les décisions d'une partie se ramifient réellement (PROF1), et si le joueur reste en mesure de relier ses choix à leurs effets une fois cette ramification en place (PROF2). C'est une paire liée : piloter un arbre de ramifications large est plus exigeant que piloter un arbre presque plat, donc un PROF2 identique se lit différemment selon le PROF1 de départ.",
+   "relation": "liee",
+   "mecanisme": "liee",
+   "na_si_axe1_nul": false
+  },
+  {
+   "code": "VAR",
+   "nom": "VARIABILITÉ",
+   "chapitre": "SYS",
+   "ordre": 3,
+   "ancien_nom": null,
+   "statut": "provisoire",
+   "definition": "VARIABILITÉ évalue le renouvellement du jeu d'une partie à l'autre : combien de sources font qu'aucune partie ne ressemble tout à fait à la précédente (VAR1), et si ce renouvellement reste bien dosé, ni si aléatoire qu'il annule les décisions, ni si figé qu'il tue le renouvellement (VAR2). Doser plusieurs sources de hasard/variation sans qu'aucune ne prenne le dessus est plus exigeant que doser une seule source — VAR1 sert donc de point de départ explicite au jugement porté sur VAR2.",
+   "relation": "liee",
+   "mecanisme": "liee",
+   "na_si_axe1_nul": true
+  },
+  {
+   "code": "EXIG",
+   "nom": "EXIGENCE",
+   "chapitre": "SYS",
+   "ordre": 4,
+   "ancien_nom": "STIMULATION",
+   "statut": "stabilisee",
+   "definition": "EXIGENCE évalue l'effort mental que le jeu demande (EXIG1 — Stimulation cognitive), et si le jeu restitue clairement le résultat de cet effort (EXIG2 — Gratification). Fournir un retour satisfaisant sur un effort cognitif complexe est plus exigeant que le faire sur une simple réaction immédiate — EXIG1 sert donc de point de départ explicite au jugement porté sur EXIG2.",
+   "relation": "liee",
+   "mecanisme": "liee",
+   "na_si_axe1_nul": false
+  },
+  {
+   "code": "SCAL",
+   "nom": "SCALABILITÉ",
+   "chapitre": "SYS",
+   "ordre": 5,
+   "ancien_nom": null,
+   "statut": "stabilisee",
+   "definition": "SCALABILITÉ évalue le nombre de joueurs pour lequel le jeu est prévu (SCAL1 — Effectif), et si le jeu reste aussi bon sur toute cette plage plutôt que de reposer sur un « sweet spot » étroit (SCAL2 — Constance). Tenir une grande plage est plus exigeant que tenir une petite — SCAL1 sert donc de point de départ explicite au jugement porté sur SCAL2.",
+   "relation": "liee",
+   "mecanisme": "liee",
+   "na_si_axe1_nul": true
+  },
+  {
+   "code": "RYT",
+   "nom": "RYTHME",
+   "chapitre": "EXP",
+   "ordre": 1,
+   "ancien_nom": null,
+   "statut": "stabilisee",
+   "definition": "RYTHME évalue la capacité du jeu à offrir de l'activité au joueur — la charge non-active qu'il subit, que ce soit pendant son propre tour ou pendant celui des autres (RYT1) — et si cette charge est vécue positivement ou négativement (RYT2). Pénalité asymétrique à l'échec : RYT1 mesure un coût subi, pas une ambition ; un RYT1 élevé n'apporte jamais de crédit à RYT2, il aggrave seulement le jugement en cas d'échec.",
+   "relation": "penalite_asymetrique",
+   "mecanisme": "crans5",
+   "na_si_axe1_nul": false
+  },
+  {
+   "code": "MAN",
+   "nom": "MANIPULATION",
+   "chapitre": "EXP",
+   "ordre": 2,
+   "ancien_nom": null,
+   "statut": "stabilisee",
+   "definition": "MANIPULATION évalue la charge physique et administrative que le jeu impose au joueur, avant la partie (mise en place, tri, confection) comme pendant (comptabilité, résolution mécanique, entretien du système) — MAN1 — et comment cette charge est vécue au moment de choisir de jouer, puis pendant la partie — MAN2, de ce qui dissuade carrément à ce qui fait partie du plaisir anticipé. Pénalité asymétrique à l'échec, comme RYTHME : MAN1 mesure un coût subi, pas une ambition ; un MAN1 élevé n'apporte jamais de crédit à MAN2, il aggrave seulement le jugement en cas d'échec.",
+   "relation": "penalite_asymetrique",
+   "mecanisme": "crans5",
+   "na_si_axe1_nul": false
+  },
+  {
+   "code": "THEM",
+   "nom": "THÈME",
+   "chapitre": "EXP",
+   "ordre": 3,
+   "ancien_nom": null,
+   "statut": "provisoire",
+   "definition": "THÈME évalue où se situe le jeu sur le curseur abstrait↔thématique (THEM1), puis si le choix fait à cette position est pleinement réussi (THEM2) — qu'il penche vers l'abstraction pure ou vers l'immersion thématique totale. THEM1 n'est ni une ambition ni un piège : c'est un choix d'auteur neutre, jugé sur son exécution plutôt que sur sa direction.",
+   "relation": "composite",
+   "mecanisme": "composite",
+   "na_si_axe1_nul": false
+  },
+  {
+   "code": "LIEN",
+   "nom": "LIEN",
+   "chapitre": "EXP",
+   "ordre": 4,
+   "ancien_nom": null,
+   "statut": "stabilisee",
+   "definition": "LIEN évalue la nature du rapport que le jeu instaure entre joueurs, de la coopération totale à la confrontation totale (LIEN1), et si ce rapport annoncé survit à l'épreuve du jeu réel plutôt que de s'éroder (LIEN2) — le symptôme commun d'un échec, à n'importe quel point du spectre, étant l'évaporation de l'interdépendance : un jeu coopératif où un joueur alpha décide pour tous, ou un jeu compétitif où personne ne se sent jamais vraiment menacé, échouent de la même façon.",
+   "relation": "promesse",
+   "mecanisme": "independante",
+   "na_si_axe1_nul": false
+  },
+  {
+   "code": "INT",
+   "nom": "INTERACTION",
+   "chapitre": "EXP",
+   "ordre": 5,
+   "ancien_nom": null,
+   "statut": "provisoire",
+   "definition": "INTERACTION évalue à quel point les actions des joueurs s'affectent mutuellement, que l'objectif soit partagé ou non (INT1), et si ce niveau d'interdépendance annoncé se matérialise réellement en jeu plutôt que de rester théorique (INT2).",
+   "relation": "promesse",
+   "mecanisme": "independante",
+   "na_si_axe1_nul": false
+  },
+  {
+   "code": "NEG",
+   "nom": "NÉGOCIATION",
+   "chapitre": "EXP",
+   "ordre": 6,
+   "ancien_nom": null,
+   "statut": "stabilisee",
+   "definition": "NÉGOCIATION évalue l'ampleur de l'espace de négociation qu'offre le jeu, formalisé ou non (NEG1), et si cette négociation, quelle que soit son ampleur, est vécue comme une réussite ou une frustration (NEG2).",
+   "relation": "neutre",
+   "mecanisme": "independante",
+   "na_si_axe1_nul": false
+  },
+  {
+   "code": "MAT",
+   "nom": "MATÉRIEL",
+   "chapitre": "EDI",
+   "ordre": 1,
+   "ancien_nom": null,
+   "statut": "stabilisee",
+   "definition": "MATÉRIEL évalue l'encombrement physique de la boîte (MAT1), et la présence que dégage le matériel qu'elle contient (MAT2), jugée relativement à cet encombrement plutôt que dans l'absolu. Maintenir une belle présence sur un gros volume de composants est plus exigeant que sur une petite boîte — MAT1 sert donc de point de départ explicite au jugement porté sur MAT2.",
+   "relation": "liee",
+   "mecanisme": "liee",
+   "na_si_axe1_nul": false
+  },
+  {
+   "code": "ART",
+   "nom": "ART",
+   "chapitre": "EDI",
+   "ordre": 2,
+   "ancien_nom": null,
+   "statut": "stabilisee",
+   "definition": "ART évalue la richesse du langage visuel fonctionnel (icônes, symboles, codes couleur) que le jeu développe pour communiquer de l'information (ART1), et la réussite esthétique de sa direction artistique (ART2).",
+   "relation": "neutre",
+   "mecanisme": "independante",
+   "na_si_axe1_nul": false
+  },
+  {
+   "code": "ACC",
+   "nom": "ACCESSIBILITÉ",
+   "chapitre": "EDI",
+   "ordre": 3,
+   "ancien_nom": null,
+   "statut": "stabilisee",
+   "definition": "ACCESSIBILITÉ évalue les outils que le jeu fournit pour être compris — pas seulement appris une première fois, mais aussi consulté durablement (ACC1) — et si ces outils suffisent réellement, à l'apprentissage comme à l'usage courant (ACC2). Deux moments distincts, tous deux couverts : la toute première partie (un débutant peut-il s'y mettre seul), et l'usage en cours de partie une fois le jeu connu (un joueur qui a oublié une règle peut-il la retrouver vite, sans interrompre longuement la table). Pondération inverse : plus ACC1 est élevé, plus ACC2 devrait logiquement être facile à réussir — un ACC2 raté malgré un ACC1 élevé est donc un échec plus lourd de sens qu'un ACC2 raté avec peu d'outils fournis.",
+   "relation": "ponderation_inverse",
+   "mecanisme": "independante",
+   "na_si_axe1_nul": false
+  },
+  {
+   "code": "VAL",
+   "nom": "VALEUR",
+   "chapitre": "EDI",
+   "ordre": 4,
+   "ancien_nom": null,
+   "statut": "stabilisee",
+   "definition": "VALEUR évalue le prix du jeu (VAL1), et si ce prix est perçu comme justifié par le contenu (VAL2). VAL1 sert de point de départ explicite au jugement porté sur VAL2 : à VAL2 identique, un VAL1 élevé mérite d'être souligné comme un accomplissement plus rare.",
+   "relation": "liee",
+   "mecanisme": "liee",
+   "na_si_axe1_nul": false
+  }
+ ],
+ "axes": [
+  {
+   "code": "POI1",
+   "paire": "POI",
+   "rang": "1",
+   "nom": "Volume",
+   "nature": "descriptif",
+   "question": "Quelle est l'étendue du système de règles, et à quel point ses parties sont-elles interconnectées ?",
+   "definition": "le nombre de règles et de sous-systèmes qui composent le jeu, et leur degré d'interconnexion — deux règles ne comptent pas pareil si l'une reste isolée et l'autre irrigue trois autres systèmes. Le nombre de dérogations à un principe établi (l'ancien axe COH1) est un symptôme de ce volume, pas une dimension à noter séparément : plus un système est ambitieux, plus il tend à générer ses propres exceptions.",
+   "methode": "Le nombre de pages du livret de règles sert de repère principal, objectif et vérifiable. Le temps d'explication perçu à la table est une donnée complémentaire de calibration, pas un second score : deux jeux de même volume peuvent s'expliquer en des temps différents selon l'organisation du livret, sans que ça change leur POI1.\n- Combien de règles distinctes le livret contient-il, à vue de nez ?\n- Combien de sous-systèmes différents (combat, économie, exploration...) coexistent et interagissent ?\n- Une règle affecte-t-elle typiquement plusieurs autres systèmes, ou reste-t-elle isolée ?\n- Le jeu déroge-t-il souvent à ses propres principes établis, et ces exceptions sont-elles portées par le matériel lui-même ou laissées à la mémoire du joueur ?\n- Donnée de calibration : combien de temps l'explication des règles prend-elle en pratique, à la table ?\nRepère (recalibré en session — l'ancienne grille notait trop haut) :",
+   "echelle": "0-5",
+   "ordre": 1,
+   "nature_detail": "Descriptif"
+  },
+  {
+   "code": "POI2",
+   "paire": "POI",
+   "rang": "2",
+   "nom": "Envergure",
+   "nature": "evaluatif",
+   "question": "Compte tenu du volume du système (POI1), les auteurs ont-ils réussi à le faire tenir ensemble — sans trou, sans contradiction ?",
+   "definition": "la solidité et la cohérence du système une fois en jeu — l'absence de trous (blocage, boucle infinie, interaction cassée, exploit qui trivialise la partie) ET l'absence de contradictions ou d'exceptions arbitraires — indépendamment des questions de clarté (→ ACCESSIBILITÉ) ou d'équilibrage (→ VARIABILITÉ), jugée relativement à POI1 plutôt que dans l'absolu. Une seule note pour ce qui était noté deux fois (REG2, COH2) : trou structurel et contradiction interne sont deux symptômes de la même intégration réussie ou manquée.",
+   "methode": "- Le jeu peut-il se retrouver bloqué (deadlock, absence de coup légal, boucle infinie) ?\n- Existe-t-il une interaction entre règles/cartes qui casse le jeu (pas juste une question de force, une vraie rupture) ?\n- Y a-t-il des règles qui se contredisent dans certains cas de figure, ou des exceptions qui ne suivent aucune logique commune ?\n- Un joueur qui comprend le système de base peut-il déduire correctement une règle qu'il n'a pas encore rencontrée ?\nÉtape 1 — juger l'écart par rapport à ce que POI1 laissait attendre (demi-crans possibles) :\nÉtape 2 — appliquer le mécanisme des paires liées : POI0 = POI1 + écart, sans plafonnement (POI0 peut descendre à −2 ou monter à 7 ; POI1 ne bouge jamais). POI2 = POI0 ramené sur l'échelle 0-5 par une courbe en S (plate aux extrémités, la plus raide au centre) — formule et table de référence en annexe, à la fin du document.",
+   "echelle": "ecart",
+   "ordre": 2,
+   "nature_detail": "Évaluatif, liée à POI1"
+  },
+  {
+   "code": "PROF1",
+   "paire": "PROF",
+   "rang": "1",
+   "nom": "Ramification",
+   "nature": "descriptif",
+   "question": "Une décision affecte-t-elle seulement l'action en cours, ou ouvre-t-elle/ferme-t-elle des choix futurs, en cascade ?",
+   "definition": "la mesure dans laquelle une décision affecte la nature et la quantité des décisions suivantes, qui elles-mêmes affectent les décisions d'après — un arbre potentiellement exponentiel, pas un simple compte d'options disponibles à l'instant présent.",
+   "methode": "Question guide : si je change cette décision, qu'est-ce que ça change dans dix tours ? Rien du tout, ou toute la structure de mes choix à venir ? Le nombre d'options disponibles à l'instant présent (l'ancien axe OPTIONS, aujourd'hui absorbé ici) entre en jeu comme point de départ : plus il y a d'options à un instant donné, plus la ramification qui en découle a de chances d'être large — mais ce n'est qu'un ingrédient parmi d'autres, pas la mesure en elle-même.",
+   "echelle": "0-5",
+   "ordre": 1,
+   "nature_detail": "Descriptif"
+  },
+  {
+   "code": "PROF2",
+   "paire": "PROF",
+   "rang": "2",
+   "nom": "Signifiance",
+   "nature": "evaluatif",
+   "question": "La profondeur décrite par PROF1 est-elle réelle ou feinte — le joueur peut-il retracer l'effet de ses décisions ?",
+   "definition": "si la profondeur est réelle, le joueur observe le résultat de ses décisions sur la durée et peut identifier où un choix différent l'aurait mené. Si elle est feinte ou inexistante, quels que soient le délai et la complexité du résultat, le joueur se sent dépassé — soit par le hasard qui décide à sa place, soit par une complexité insaisissable qui rend la causalité illisible même sans hasard.",
+   "methode": "- Le joueur peut-il, après coup, expliquer pourquoi un résultat est arrivé plutôt qu'un autre ?\n- Peut-il identifier ce qu'un choix différent aurait changé ?\n- Le sentiment dominant est-il la maîtrise (même face à un système complexe), ou l'impression d'être ballotté — par le hasard ou par une complexité qui échappe ?\nÉtape 1 — juger l'écart par rapport à ce que PROF1 laissait attendre, sur l'échelle qualitative des paires liées (demi-crans possibles) :\nÉtape 2 — appliquer le mécanisme des paires liées : PROF0 = PROF1 + écart, sans plafonnement (PROF0 peut descendre à −2 ou monter à 7 ; PROF1 ne bouge jamais). PROF2 = PROF0 ramené sur l'échelle 0-5 par une courbe en S (plate aux extrémités, la plus raide au centre) — formule et table de référence en annexe, à la fin du document.",
+   "echelle": "ecart",
+   "ordre": 2,
+   "nature_detail": "Évaluatif, liée à PROF1"
+  },
+  {
+   "code": "VAR1",
+   "paire": "VAR",
+   "rang": "1",
+   "nom": "Renouvellement",
+   "nature": "descriptif",
+   "question": "Le jeu se renouvelle-t-il, et comment le hasard y contribue-t-il ?",
+   "definition": "le renouvellement du jeu d'une partie à l'autre, et la part que joue le hasard dans ce renouvellement. Frontière importante : VAR capte la variabilité qui ne vient ni des décisions des adversaires (→ LIEN/INTERACTION), ni des décisions du joueur lui-même (→ PROFONDEUR) — matériel, setup, tirages aléatoires. Un jeu déterministe et sans matériel variable (les échecs, par exemple) peut légitimement avoir VAR1=0 : sa richesse de renouvellement vit alors entièrement dans PROFONDEUR, pas ici. Ce n'est pas un défaut du jeu, seulement un axe qui ne s'applique pas à ce qui fait sa valeur.",
+   "methode": "- Le matériel ou le setup change-t-il significativement d'une partie à l'autre (cartes, plateau modulaire, objectifs) ?\n- Quelle part du résultat est influencée par le hasard (dés, pioche) plutôt que par les décisions de n'importe quel joueur ?\n- Deux parties jouées par les mêmes joueurs, avec les mêmes intentions, se ressemblent-elles fortement en dehors de ce que les joueurs décident ?\nRepère : nombre de sources de variation actives (cartes différentes piochées, plateau modulaire, objectifs variables, position de départ, factions, événements aléatoires...).",
+   "echelle": "0-5",
+   "ordre": 1,
+   "nature_detail": "Descriptif"
+  },
+  {
+   "code": "VAR2",
+   "paire": "VAR",
+   "rang": "2",
+   "nom": "Dosage",
+   "nature": "evaluatif",
+   "question": "La variabilité que VAR1 a comptée est-elle la bienvenue, ou dégrade-t-elle le plaisir de jouer ?",
+   "definition": "si la variabilité mesurée par VAR1 améliore ou dégrade le plaisir de jouer — qu'elle vienne du matériel, du hasard, ou d'une contrainte structurelle (ex. une quête individuelle qui pousse à ne pas coopérer) — jugée relativement à VAR1 plutôt que dans l'absolu. Distinct d'LIEN : si une source de variabilité met en péril la promesse relationnelle du jeu (la coopération, la confrontation), c'est LIEN2 qui le sanctionne ; VAR2 juge seulement si elle crée un renouvellement intéressant sans devenir écrasante ou répétitive.",
+   "methode": "- Le jeu est-il parfois perçu comme injuste ou punitif à cause de cette variabilité ?\n- Une position de joueur peut-elle se dégrader arbitrairement à cause d'elle, sans lien avec ses décisions ?\n- Donne-t-elle envie de rejouer pour vivre une histoire différente, ou est-elle à peine perceptible une fois qu'on l'a intégrée ?\nÉtape 1 — juger l'écart par rapport à ce que VAR1 laissait attendre (demi-crans possibles) :\nÉtape 2 — appliquer le mécanisme des paires liées : VAR0 = VAR1 + écart, sans plafonnement (VAR0 peut descendre à −2 ou monter à 7 ; VAR1 ne bouge jamais). VAR2 = VAR0 ramené sur l'échelle 0-5 par une courbe en S (plate aux extrémités, la plus raide au centre) — formule et table de référence en annexe, à la fin du document.",
+   "echelle": "ecart",
+   "ordre": 2,
+   "nature_detail": "Évaluatif, liée à VAR1"
+  },
+  {
+   "code": "EXIG1",
+   "paire": "EXIG",
+   "rang": "1",
+   "nom": "Stimulation cognitive",
+   "nature": "descriptif",
+   "question": "Quel type d'opération mentale le jeu exige-t-il, pas seulement combien ?",
+   "definition": "le type d'opération mentale que le jeu exige — pas un comptage de variables, mais la nature de l'effort : comparaison simple, calcul ponctuel, planification à moyen terme, ou optimisation d'un système complet.",
+   "methode": "- Le jeu demande-t-il du calcul explicite (probabilités, optimisation de ressources) ?\n- Faut-il anticiper plusieurs coups à l'avance, ou planifier sur la durée de la partie ?\n- Les décisions impliquent-elles d'optimiser plusieurs variables interdépendantes à la fois (un « moteur ») ?\nRepère — échelle par type d'opération mentale, pas par comptage :",
+   "echelle": "0-5",
+   "ordre": 1,
+   "nature_detail": "Descriptif"
+  },
+  {
+   "code": "EXIG2",
+   "paire": "EXIG",
+   "rang": "2",
+   "nom": "Gratification",
+   "nature": "evaluatif",
+   "question": "Compte tenu de l'effort exigé par EXIG1, le retour donné au joueur est-il remarquable, attendu ou décevant ?",
+   "definition": "la qualité et la rapidité du retour que le jeu donne sur l'effort fourni — un calcul dont l'effet est visible immédiatement se ressent différemment d'un calcul dont l'effet n'apparaît que bien plus tard, ou jamais — jugée relativement à EXIG1 plutôt que dans l'absolu.",
+   "methode": "- Une décision produit-elle un effet visible immédiatement, ou faut-il attendre plusieurs tours pour le constater ?\n- Un joueur peut-il évaluer la qualité de son coup au moment où il le joue, ou seulement après coup ?\nÉtape 1 — juger l'écart par rapport à ce que EXIG1 laissait attendre (demi-crans possibles) :\nÉtape 2 — appliquer le mécanisme des paires liées : EXIG0 = EXIG1 + écart, sans plafonnement (EXIG0 peut descendre à −2 ou monter à 7 ; EXIG1 ne bouge jamais). EXIG2 = EXIG0 ramené sur l'échelle 0-5 par une courbe en S (plate aux extrémités, la plus raide au centre) — formule et table de référence en annexe, à la fin du document.",
+   "echelle": "ecart",
+   "ordre": 2,
+   "nature_detail": "Évaluatif, liée à EXIG1"
+  },
+  {
+   "code": "SCAL1",
+   "paire": "SCAL",
+   "rang": "1",
+   "nom": "Effectif",
+   "nature": "descriptif",
+   "question": "Pour quel nombre de joueurs le jeu est-il prévu ?",
+   "definition": "le nombre de joueurs pour lequel le jeu est prévu — minimum, maximum, et éventuel effectif « idéal » recommandé par l'éditeur.",
+   "methode": "- Quel est l'effectif minimum et maximum annoncé par l'éditeur ?\n- L'éditeur recommande-t-il un effectif « idéal » distinct du maximum ?\n- Existe-t-il un vrai mode solo dédié (pas juste « jouable à 1 en désactivant des règles ») ?",
+   "echelle": "0-5",
+   "ordre": 1,
+   "nature_detail": "Descriptif"
+  },
+  {
+   "code": "SCAL2",
+   "paire": "SCAL",
+   "rang": "2",
+   "nom": "Constance",
+   "nature": "evaluatif",
+   "question": "Compte tenu de la plage annoncée par SCAL1, la constance de l'expérience sur toute cette plage est-elle remarquable, attendue ou décevante ?",
+   "definition": "dans quelle mesure l'expérience reste comparable d'un bout à l'autre de la plage de joueurs annoncée, plutôt que de ne bien fonctionner qu'à un effectif précis — jugée relativement à SCAL1 plutôt que dans l'absolu.",
+   "methode": "### Méthode de notation (manuelle)\n- Le scaling annoncé par l'éditeur (variantes de règles selon l'effectif, par exemple) est-il un argument de vente qui ne se vérifie pas vraiment à table ?\n- Existe-t-il un effectif nettement moins bon que les autres dans la plage annoncée ?\n- Les joueurs perçoivent-ils une différence notable d'un effectif à l'autre, ou l'expérience reste-t-elle globalement la même ?\nÉtape 1 — juger l'écart par rapport à ce que SCAL1 laissait attendre (demi-crans possibles) :\nÉtape 2 — appliquer le mécanisme des paires liées : SCAL0 = SCAL1 + écart, sans plafonnement (SCAL0 peut descendre à −2 ou monter à 7 ; SCAL1 ne bouge jamais). SCAL2 = SCAL0 ramené sur l'échelle 0-5 par une courbe en S (plate aux extrémités, la plus raide au centre) — formule et table de référence en annexe, à la fin du document.\n### Méthode alternative (référence, pour un futur outil)\nLa méthode manuelle ci-dessus suffit à l'usage humain, y compris sur une plage large (ex. Star Trek: Ascendancy, 1-12 joueurs) — elle ne demande qu'un seul jugement qualitatif, pas une note par effectif. Une méthode plus exacte, mais plus lourde, reste documentée pour un outil qui aurait assez de données pour noter chaque effectif individuellement : noter une qualité q(n) par effectif, pondérer par le nombre de relations entre joueurs r(n) = n(n−1)/2 — le ratage à un effectif élevé pèse alors mécaniquement plus lourd, puisque plus de monde le subit à la fois — puis calculer la moyenne pondérée Σ(r(n)×q(n))/Σ(r(n)). Sur une plage large, grouper les effectifs en 3-5 bandes (ex. « petit » / « moyen » / « grand ») et pondérer chaque bande par la somme des r(n) qu'elle couvre rend cette méthode praticable sans noter chaque effectif un par un.",
+   "echelle": "ecart",
+   "ordre": 2,
+   "nature_detail": "Évaluatif, liée à SCAL1"
+  },
+  {
+   "code": "RYT1",
+   "paire": "RYT",
+   "rang": "1",
+   "nom": "Charge non-active",
+   "nature": "descriptif",
+   "question": "Quelle part de la session un joueur donné passe-t-il sans agir ?",
+   "definition": "la charge non-active pesée à deux endroits distincts — dans le tour du joueur lui-même (les moments où, même pendant son propre tour, il ne décide de rien : résolution automatique, entretien) et dans le tour des autres joueurs (l'attente classique, avec ou sans sollicitation).",
+   "methode": "- Quelle est la durée réelle d'une session, observée en jeu ?\n- À l'intérieur même de son propre tour, quelle proportion est active (décision) plutôt que passive (résolution, entretien) ?\n- Le jeu se joue-t-il en tours séquentiels stricts, ou permet-il des actions simultanées ?\n- Existe-t-il des mécanismes qui sollicitent un joueur hors de son propre tour (réactions, effets qui l'affectent, plateau qui évolue) ?\nRepère qualitatif, croisement des deux sources de charge non-active :",
+   "echelle": "0-5",
+   "ordre": 1,
+   "nature_detail": "Descriptif"
+  },
+  {
+   "code": "RYT2",
+   "paire": "RYT",
+   "rang": "2",
+   "nom": "Vécu",
+   "nature": "evaluatif",
+   "question": "Cette charge non-active (RYT1) est-elle vécue positivement ou négativement ?",
+   "definition": "dans quelle mesure la charge non-active décrite par RYT1 est vécue positivement (mobilisation, attention maintenue) ou négativement (désengagement) — ancré sur des traces concrètes, pas un sentiment général de fluidité.",
+   "methode": "- Les retours mentionnent-ils que le temps a « filé », ou au contraire qu'il a semblé long ?\n- Les retours mentionnent-ils des signes concrets de désengagement (téléphones sortis, joueurs à rappeler à l'ordre) ou au contraire de mobilisation active (suivre, commenter, préparer son prochain coup) ?\n- Ce ressenti varie-t-il significativement selon l'effectif de joueurs ?",
+   "echelle": "crans5",
+   "ordre": 2,
+   "nature_detail": "Évaluatif"
+  },
+  {
+   "code": "MAN1",
+   "paire": "MAN",
+   "rang": "1",
+   "nom": "Charge logistique",
+   "nature": "descriptif",
+   "question": "Quel est le poids physique et administratif du jeu, avant et pendant la partie ?",
+   "definition": "le poids cumulé de la mise en place (tri, confection, installation) et de la gestion en cours de partie (décompte, résolution mécanique, entretien du système) — deux moments distincts d'une même charge imposée au joueur.",
+   "methode": "- La mise en place se limite-t-elle à distribuer quelques éléments, ou nécessite-t-elle un tri/une confection ?\n- Combien de temps dédié la mise en place représente-t-elle par rapport à la durée de la partie ?\n- Sur l'ensemble d'un tour de jeu, combien de temps est consacré au décompte/à la résolution mécanique plutôt qu'à décider ?\n- Cette gestion en cours de partie est-elle stable sur toute la partie, ou concentrée à certains moments (début/fin) ?\nRepère qualitatif, croisement des deux moments :",
+   "echelle": "0-5",
+   "ordre": 1,
+   "nature_detail": "Descriptif"
+  },
+  {
+   "code": "MAN2",
+   "paire": "MAN",
+   "rang": "2",
+   "nom": "Allègement",
+   "nature": "evaluatif",
+   "question": "Compte tenu de la charge décrite par MAN1, l'allègement apporté par le jeu est-il remarquable, attendu ou décevant ?",
+   "definition": "dans quelle mesure la charge décrite par MAN1 influence l'envie de jouer et l'expérience qui suit — d'un frein qui dissuade carrément de sortir la boîte, à un rituel de mise en place devenu lui-même une part du plaisir. Précision : cet axe évalue le jeu tel qu'il est livré, pas l'effet d'une solution tierce non officielle (inserts communautaires, applications non officielles).",
+   "methode": "- La charge pousse-t-elle parfois à choisir un autre jeu plutôt que celui-ci ?\n- Une fois lancée, cette charge reste-t-elle présente à l'esprit, ou s'oublie-t-elle vite une fois en train de jouer ?\n- Fait-elle déjà partie du plaisir anticipé de la soirée, ou seulement de la corvée qui la précède ?",
+   "echelle": "crans5",
+   "ordre": 2,
+   "nature_detail": "Évaluatif"
+  },
+  {
+   "code": "THEM1",
+   "paire": "THEM",
+   "rang": "1",
+   "nom": "Contact thématique",
+   "nature": "descriptif",
+   "question": "Combien de points de contact le jeu établit-il avec son thème ?",
+   "definition": "le nombre de points de contact thématiques — nommage, direction artistique, mécaniques qui miment concrètement le thème plutôt que de simplement le décorer.",
+   "methode": "- Les noms (cartes, lieux, personnages) évoquent-ils l'univers, ou sont-ils génériques ?\n- La direction artistique porte-t-elle le thème de façon cohérente ?\n- Des mécaniques précises miment-elles un geste ou un processus du thème (pas juste un habillage sur un mécanisme neutre) ?\n- Combien de matière narrative (scénarios, événements, textes d'ambiance) le jeu propose-t-il — en gardant à l'esprit que ce volume ne peut structurellement pas dépasser ce que l'intégration thématique elle-même permet ?",
+   "echelle": "0-5",
+   "ordre": 1,
+   "nature_detail": "Descriptif"
+  },
+  {
+   "code": "THEM2",
+   "paire": "THEM",
+   "rang": "2",
+   "nom": "Immersion",
+   "nature": "evaluatif",
+   "question": "Que le jeu soit abstrait, thématique, ou entre les deux, le choix de l'auteur est-il pleinement réussi ?",
+   "definition": "contrairement à une paire liée classique, THEM1 n'est pas ici une ambition à honorer — c'est un curseur neutre entre deux natures de jeu, un choix d'auteur qui n'est fautif ni dans un sens ni dans l'autre. Juger un jeu abstrait sur sa capacité à ressembler à un jeu thématique (ou l'inverse) serait injuste. THEM2 compose donc deux jugements de qualité distincts, chacun pesé selon la position de THEM1 sur ce curseur.",
+   "methode": "### La formule\nTHEM2 = [THEM2b × THEM1 + THEM2a × (5 − THEM1)] / 5\nChaque note intermédiaire pèse proportionnellement à la position de THEM1 sur le curseur abstrait↔thématique. Cas extrêmes : si THEM1=0 (jeu abstrait pur), THEM2=THEM2a — seule compte la qualité de l'abstraction, le thème absent n'entre pour rien dans le jugement. Si THEM1=5 (jeu pleinement thématique), THEM2=THEM2b — seule compte la qualité du thème porté. Entre les deux, les deux qualités se mélangent au prorata.",
+   "echelle": "calcule",
+   "ordre": 2,
+   "nature_detail": "Évaluatif, composite — pas les paires liées classiques"
+  },
+  {
+   "code": "THEM2a",
+   "paire": "THEM",
+   "rang": "2a",
+   "nom": "Qualité de l'abstraction",
+   "nature": "evaluatif",
+   "question": null,
+   "definition": "l'élégance du système pour lui-même, indépendamment de tout habillage. Se juge toujours, même si son poids final sera faible pour un jeu très thématique.",
+   "methode": null,
+   "echelle": "0-5",
+   "ordre": 3
+  },
+  {
+   "code": "THEM2b",
+   "paire": "THEM",
+   "rang": "2b",
+   "nom": "Qualité du thème porté",
+   "nature": "evaluatif",
+   "question": null,
+   "definition": "le test du reskin — le jeu pourrait-il migrer vers un autre univers sans perdre grand-chose de sa logique interne ? Se juge toujours, même si son poids final sera faible pour un jeu très abstrait.",
+   "methode": null,
+   "echelle": "0-5",
+   "ordre": 4
+  },
+  {
+   "code": "LIEN1",
+   "paire": "LIEN",
+   "rang": "1",
+   "nom": "Posture",
+   "nature": "descriptif",
+   "question": "Quelle est la nature du rapport voulu entre les joueurs ?",
+   "definition": "la position du jeu sur le spectre coopération ↔ confrontation.",
+   "methode": "- Les joueurs partagent-ils un objectif commun, ou sont-ils en concurrence ?\n- Existe-t-il un ciblage direct entre joueurs (attaques, sabotage) ?\n- La composition des « camps » est-elle fixe et connue, ou incertaine (alliances mouvantes, traître caché) ?",
+   "echelle": "0-5",
+   "ordre": 1,
+   "nature_detail": "Descriptif"
+  },
+  {
+   "code": "LIEN2",
+   "paire": "LIEN",
+   "rang": "2",
+   "nom": "Dynamique relationnelle",
+   "nature": "evaluatif",
+   "question": "Le rapport annoncé par LIEN1 survit-il à l'épreuve du jeu réel ?",
+   "definition": "si le niveau d'interdépendance ou de confrontation annoncé par LIEN1 résiste au jeu réel, plutôt que de s'éroder ou d'être contourné.",
+   "methode": "- Côté coopératif : un joueur peut-il dicter les coups des autres (syndrome du joueur alpha) ?\n- Côté compétitif : la confrontation annoncée se matérialise-t-elle réellement, ou les joueurs évitent-ils systématiquement le contact (turtling généralisé, coût de conflit dissuasif) ?\n- Les joueurs rapportent-ils avoir vécu le rapport annoncé, ou une expérience largement solitaire malgré tout ?",
+   "echelle": "0-5",
+   "ordre": 2,
+   "nature_detail": "Évaluatif"
+  },
+  {
+   "code": "INT1",
+   "paire": "INT",
+   "rang": "1",
+   "nom": "Interdépendance",
+   "nature": "descriptif",
+   "question": "À quel point les actions des joueurs s'affectent-elles mutuellement ?",
+   "definition": "le niveau d'interdépendance entre les actions des joueurs, que les joueurs partagent un objectif commun ou non.",
+   "methode": "- Une action d'un joueur modifie-t-elle directement les options ou la situation d'un autre ?\n- Existe-t-il une compétition pour des ressources ou des emplacements limités ?\n- Les joueurs peuvent-ils jouer en ignorant largement ce que font les autres ?",
+   "echelle": "0-5",
+   "ordre": 1,
+   "nature_detail": "Descriptif"
+  },
+  {
+   "code": "INT2",
+   "paire": "INT",
+   "rang": "2",
+   "nom": "Justesse",
+   "nature": "evaluatif",
+   "question": "Le niveau d'interdépendance annoncé par INT1 se matérialise-t-il réellement, et de façon méritée ?",
+   "definition": "si l'interdépendance annoncée par INT1 se vit réellement à table, et si elle est perçue comme la conséquence logique d'une course ou d'un choix, plutôt que comme un ciblage arbitraire.",
+   "methode": "- L'interaction annoncée se produit-elle vraiment, ou la géométrie/structure du jeu permet-elle de l'éviter systématiquement ?\n- Quand elle se produit, est-elle perçue comme méritée (une course, un choix stratégique) ou arbitraire ?",
+   "echelle": "0-5",
+   "ordre": 2,
+   "nature_detail": "Évaluatif"
+  },
+  {
+   "code": "NEG1",
+   "paire": "NEG",
+   "rang": "1",
+   "nom": "Espace de négociation",
+   "nature": "descriptif",
+   "question": "Le jeu prévoit-il un mécanisme de négociation formelle, et de quelle ampleur ?",
+   "definition": "l'ampleur de l'espace de négociation entre joueurs, qu'il passe par des règles formelles (échange de ressources, alliances contractuelles) ou par la simple possibilité de s'influencer mutuellement en l'absence de toute règle — à distinguer d'une discussion qui reste purement coopérative (rien à négocier quand les intérêts sont pleinement partagés).",
+   "methode": "- Le jeu prévoit-il des règles explicites d'échange ou de négociation ?\n- Quelle proportion des ressources/éléments du jeu est-elle négociable ?\n- Même sans règle dédiée, les intérêts des joueurs divergent-ils assez pour que la parole ou la pression sociale puissent réellement peser sur une décision ?",
+   "echelle": "0-5",
+   "ordre": 1,
+   "nature_detail": "Descriptif"
+  },
+  {
+   "code": "NEG2",
+   "paire": "NEG",
+   "rang": "2",
+   "nom": "Vécu",
+   "nature": "evaluatif",
+   "question": "La négociation, telle qu'elle existe dans ce jeu, est-elle vécue comme une réussite ou une frustration ?",
+   "definition": "un jugement direct sur la qualité de l'expérience de négociation, quelle que soit son ampleur (NEG1) — toujours applicable, y compris quand l'espace est minime : un espace trop étroit pour ce que les joueurs voudraient en faire peut être vécu comme une vraie frustration, pas seulement comme hors sujet.",
+   "methode": "- La négociation, quelle que soit son ampleur, est-elle une source de plaisir social ou de frustration ?\n- Un joueur domine-t-il systématiquement les échanges, ou l'espace profite-t-il à tous ?",
+   "echelle": "0-5",
+   "ordre": 2,
+   "nature_detail": "Évaluatif"
+  },
+  {
+   "code": "MAT1",
+   "paire": "MAT",
+   "rang": "1",
+   "nom": "Encombrement",
+   "nature": "descriptif",
+   "question": "Quel encombrement la boîte représente-t-elle ?",
+   "definition": "l'encombrement physique de la boîte, rapporté à un repère de rangement courant (l'étagère Kallax, standard du hobby).",
+   "methode": "- La boîte tient-elle sur une étagère standard, ou déborde-t-elle largement ?\n- Combien d'espace la boîte occupe-t-elle comparée aux jeux du même segment de prix ?",
+   "echelle": "0-5",
+   "ordre": 1,
+   "nature_detail": "Descriptif"
+  },
+  {
+   "code": "MAT2",
+   "paire": "MAT",
+   "rang": "2",
+   "nom": "Présence",
+   "nature": "evaluatif",
+   "question": "Compte tenu de l'encombrement (MAT1), le matériel a-t-il la présence qu'on serait en droit d'en attendre ?",
+   "definition": "l'impression physique que dégagent les composants (cartes, pions, plateaux, figurines) — solidité, finition, matériaux — jugée relativement à MAT1 plutôt que dans l'absolu. « Présence » plutôt que « qualité » : ce qu'on cherche à capturer, c'est l'impression d'ampleur méritée (l'anglais dirait mightiness), pas juste l'absence de défaut.",
+   "methode": "- Les cartes, jetons et plateaux sont-ils perçus comme solides ou fragiles ?\n- Le matériel est-il cité comme un argument de vente, ou comme un point faible ?\nÉtape 1 — juger l'écart par rapport à ce que MAT1 laissait attendre (demi-crans possibles) :\nÉtape 2 — appliquer le mécanisme des paires liées : MAT0 = MAT1 + écart, sans plafonnement (MAT0 peut descendre à −2 ou monter à 7 ; MAT1 ne bouge jamais). MAT2 = MAT0 ramené sur l'échelle 0-5 par une courbe en S (plate aux extrémités, la plus raide au centre) — formule et table de référence en annexe, à la fin du document.",
+   "echelle": "ecart",
+   "ordre": 2,
+   "nature_detail": "Évaluatif, liée à MAT1"
+  },
+  {
+   "code": "ART1",
+   "paire": "ART",
+   "rang": "1",
+   "nom": "Style graphique",
+   "nature": "descriptif",
+   "question": "Le jeu développe-t-il un langage visuel fonctionnel, et jusqu'où ?",
+   "definition": "la richesse d'un système d'icônes ou de symboles développé pour communiquer de l'information de jeu, indépendamment de sa réussite esthétique.",
+   "methode": "- Le jeu utilise-t-il des icônes/symboles pour remplacer du texte ?\n- Ce langage visuel est-il cohérent sur l'ensemble des composants, ou limité à certains éléments ?",
+   "echelle": "0-5",
+   "ordre": 1,
+   "nature_detail": "Descriptif"
+  },
+  {
+   "code": "ART2",
+   "paire": "ART",
+   "rang": "2",
+   "nom": "Direction artistique",
+   "nature": "evaluatif",
+   "question": "La direction artistique est-elle perçue comme réussie ?",
+   "definition": "la réussite esthétique perçue de la direction artistique — cohérence, qualité des illustrations, ambiance visuelle.",
+   "methode": "- Les illustrations sont-elles perçues comme cohérentes et de qualité ?\n- La direction artistique est-elle citée comme un point fort ou faible dans les retours ?",
+   "echelle": "0-5",
+   "ordre": 2,
+   "nature_detail": "Évaluatif"
+  },
+  {
+   "code": "ACC1",
+   "paire": "ACC",
+   "rang": "1",
+   "nom": "Documentation",
+   "nature": "descriptif",
+   "question": "Quels outils le jeu fournit-il pour être appris ?",
+   "definition": "la présence et la nature des outils fournis par le jeu lui-même — à l'apprentissage (scénario tutoriel, résumé des règles) comme à la consultation courante (index, table des matières détaillée, fiches de référence organisées pour un usage en cours de partie).",
+   "methode": "- Le jeu propose-t-il un scénario ou une partie spécifiquement conçue pour l'apprentissage ?\n- Existe-t-il des fiches de référence ou résumés fournis en plus du livret complet ?\n- Le livret dispose-t-il d'un index, d'une table des matières détaillée, ou d'un glossaire qui permette de retrouver rapidement une règle précise ?\n- Les tableaux et références fréquemment consultés (combat, exceptions, icônes) sont-ils regroupés à un endroit facile à rouvrir en cours de partie ?",
+   "echelle": "0-5",
+   "ordre": 1,
+   "nature_detail": "Descriptif"
+  },
+  {
+   "code": "ACC2",
+   "paire": "ACC",
+   "rang": "2",
+   "nom": "Clarté",
+   "nature": "evaluatif",
+   "question": "Ces outils (ACC1) suffisent-ils réellement — à l'apprentissage comme à l'usage courant, sans aide extérieure ?",
+   "definition": "dans quelle mesure les outils fournis suffisent à eux seuls — sans vidéo explicative, sans joueur expérimenté pour enseigner, sans deviner — à mener une première partie correctement ET à retrouver rapidement une règle oubliée en cours de partie. C'est la double question que doit résoudre un manuel : permettre de jouer seul, et rester utilisable une fois le jeu su.",
+   "methode": "- Les nouveaux joueurs recourent-ils fréquemment à des ressources externes (vidéos, forums) avant leur première partie ?\n- Le livret seul permet-il une première partie sans erreur majeure de règle ?\n- Un joueur qui a oublié une règle peut-il la retrouver en quelques secondes, sans interrompre longuement la partie ?\n- Les tables et références consultées en cours de partie sont-elles bien placées, ou faut-il fouiller le livret entier ?",
+   "echelle": "0-5",
+   "ordre": 2,
+   "nature_detail": "Évaluatif"
+  },
+  {
+   "code": "VAL1",
+   "paire": "VAL",
+   "rang": "1",
+   "nom": "Prix",
+   "nature": "descriptif",
+   "question": "Dans quelle fourchette de prix le jeu se situe-t-il ?",
+   "definition": "le prix de vente conseillé, rapporté aux fourchettes usuelles du hobby.",
+   "methode": null,
+   "echelle": "0-5",
+   "ordre": 1,
+   "nature_detail": "Descriptif"
+  },
+  {
+   "code": "VAL2",
+   "paire": "VAL",
+   "rang": "2",
+   "nom": "Attractivité",
+   "nature": "evaluatif",
+   "question": "Compte tenu du prix (VAL1), le rapport contenu/prix perçu est-il remarquable, attendu ou décevant ?",
+   "definition": "le rapport perçu entre le contenu (matériel, rejouabilité, durée de vie) et le prix payé, jugé relativement à VAL1 plutôt que dans l'absolu.",
+   "methode": "- La communauté cite-t-elle le jeu comme une bonne ou une mauvaise affaire ?\n- Le contenu (heures de jeu, rejouabilité) est-il perçu comme proportionné au prix payé ?\nÉtape 1 — juger l'écart par rapport à ce que VAL1 laissait attendre (demi-crans possibles) :\nÉtape 2 — appliquer le mécanisme des paires liées : VAL0 = VAL1 + écart, sans plafonnement (VAL0 peut descendre à −2 ou monter à 7 ; VAL1 ne bouge jamais). VAL2 = VAL0 ramené sur l'échelle 0-5 par une courbe en S (plate aux extrémités, la plus raide au centre) — formule et table de référence en annexe, à la fin du document.",
+   "echelle": "ecart",
+   "ordre": 2,
+   "nature_detail": "Évaluatif, liée à VAL1"
+  }
+ ],
+ "paliers": [
+  {
+   "axe": "POI1",
+   "valeur": 0.0,
+   "symbole": null,
+   "libelle": "1-2 pages",
+   "code": "POI1/0"
+  },
+  {
+   "axe": "POI1",
+   "valeur": 1.0,
+   "symbole": null,
+   "libelle": "3-8 pages",
+   "code": "POI1/1"
+  },
+  {
+   "axe": "POI1",
+   "valeur": 2.0,
+   "symbole": null,
+   "libelle": "9-16 pages",
+   "code": "POI1/2"
+  },
+  {
+   "axe": "POI1",
+   "valeur": 3.0,
+   "symbole": null,
+   "libelle": "17-32 pages",
+   "code": "POI1/3"
+  },
+  {
+   "axe": "POI1",
+   "valeur": 4.0,
+   "symbole": null,
+   "libelle": "33-64 pages",
+   "code": "POI1/4"
+  },
+  {
+   "axe": "POI1",
+   "valeur": 5.0,
+   "symbole": null,
+   "libelle": "65+ pages",
+   "code": "POI1/5"
+  },
+  {
+   "axe": "POI2",
+   "valeur": -2,
+   "symbole": "−−",
+   "libelle": "Catastrophe — blocage ou contradiction non résolue qui casse le jeu",
+   "code": "POI2/m2"
+  },
+  {
+   "axe": "POI2",
+   "valeur": -1,
+   "symbole": "−",
+   "libelle": "Trous ou contradictions significatifs, ou système très peu intuitif",
+   "code": "POI2/m1"
+  },
+  {
+   "axe": "POI2",
+   "valeur": 0,
+   "symbole": "=",
+   "libelle": "Sans doute quelques défauts, mais rien ne saute aux yeux",
+   "code": "POI2/0"
+  },
+  {
+   "axe": "POI2",
+   "valeur": 1,
+   "symbole": "+",
+   "libelle": "Grande élégance — simple et efficace, sans fioriture, malgré l'ampleur affichée",
+   "code": "POI2/1"
+  },
+  {
+   "axe": "POI2",
+   "valeur": 2,
+   "symbole": "++",
+   "libelle": "Chef-d'œuvre d'intégration",
+   "code": "POI2/2"
+  },
+  {
+   "axe": "PROF1",
+   "valeur": 0.0,
+   "symbole": null,
+   "libelle": "Une décision n'affecte que l'action en cours, sans conséquence sur les choix suivants",
+   "code": "PROF1/0"
+  },
+  {
+   "axe": "PROF1",
+   "valeur": 1.0,
+   "symbole": null,
+   "libelle": "Effet limité au tour suivant, sans propagation",
+   "code": "PROF1/1"
+  },
+  {
+   "axe": "PROF1",
+   "valeur": 2.0,
+   "symbole": null,
+   "libelle": "Les décisions s'enchaînent sur quelques tours, effet borné dans le temps",
+   "code": "PROF1/2"
+  },
+  {
+   "axe": "PROF1",
+   "valeur": 3.0,
+   "symbole": null,
+   "libelle": "Les décisions ouvrent ou ferment des options sur une portion significative de la partie",
+   "code": "PROF1/3"
+  },
+  {
+   "axe": "PROF1",
+   "valeur": 4.0,
+   "symbole": null,
+   "libelle": "Ramification large — chaque choix change la nature et le nombre des choix futurs",
+   "code": "PROF1/4"
+  },
+  {
+   "axe": "PROF1",
+   "valeur": 5.0,
+   "symbole": null,
+   "libelle": "Arbre exponentiel pleinement réalisé — chaque décision redéfinit substantiellement l'espace des choix à venir jusqu'à la fin de la partie",
+   "code": "PROF1/5"
+  },
+  {
+   "axe": "PROF2",
+   "valeur": -2,
+   "symbole": "−−",
+   "libelle": "Le joueur ne relie jamais une décision à ses conséquences — hasard ou complexité insaisissable, sentiment constant d'être dépassé",
+   "code": "PROF2/m2"
+  },
+  {
+   "axe": "PROF2",
+   "valeur": -1,
+   "symbole": "−",
+   "libelle": "Rarement capable de tracer le lien entre un choix et son effet",
+   "code": "PROF2/m1"
+  },
+  {
+   "axe": "PROF2",
+   "valeur": 0,
+   "symbole": "=",
+   "libelle": "Parfois capable, souvent dans le flou",
+   "code": "PROF2/0"
+  },
+  {
+   "axe": "PROF2",
+   "valeur": 1,
+   "symbole": "+",
+   "libelle": "Retrace clairement la plupart de ses décisions jusqu'à leurs effets, même différés",
+   "code": "PROF2/1"
+  },
+  {
+   "axe": "PROF2",
+   "valeur": 2,
+   "symbole": "++",
+   "libelle": "Chaque décision reste traçable jusqu'à son effet, aussi loin et complexe soit le délai",
+   "code": "PROF2/2"
+  },
+  {
+   "axe": "VAR1",
+   "valeur": 0.0,
+   "symbole": null,
+   "libelle": "0 source (setup identique à chaque partie)",
+   "code": "VAR1/0"
+  },
+  {
+   "axe": "VAR1",
+   "valeur": 1.0,
+   "symbole": null,
+   "libelle": "1 source (ex. juste l'ordre du deck)",
+   "code": "VAR1/1"
+  },
+  {
+   "axe": "VAR1",
+   "valeur": 2.0,
+   "symbole": null,
+   "libelle": "2 sources",
+   "code": "VAR1/2"
+  },
+  {
+   "axe": "VAR1",
+   "valeur": 3.0,
+   "symbole": null,
+   "libelle": "3-4 sources",
+   "code": "VAR1/3"
+  },
+  {
+   "axe": "VAR1",
+   "valeur": 4.0,
+   "symbole": null,
+   "libelle": "5-6 sources",
+   "code": "VAR1/4"
+  },
+  {
+   "axe": "VAR1",
+   "valeur": 5.0,
+   "symbole": null,
+   "libelle": "7+ sources",
+   "code": "VAR1/5"
+  },
+  {
+   "axe": "VAR2",
+   "valeur": -2,
+   "symbole": "−−",
+   "libelle": "Fréquemment mal vécue, le jeu est perçu comme punitif",
+   "code": "VAR2/m2"
+  },
+  {
+   "axe": "VAR2",
+   "valeur": -1,
+   "symbole": "−",
+   "libelle": "Peut dégrader arbitrairement la position d'un joueur",
+   "code": "VAR2/m1"
+  },
+  {
+   "axe": "VAR2",
+   "valeur": 0,
+   "symbole": "=",
+   "libelle": "Dosée — le joueur ne la ressent pas comme particulièrement présente, même si elle existe",
+   "code": "VAR2/0"
+  },
+  {
+   "axe": "VAR2",
+   "valeur": 1,
+   "symbole": "+",
+   "libelle": "Apporte du sel, donne envie de rejouer pour vivre une histoire différente",
+   "code": "VAR2/1"
+  },
+  {
+   "axe": "VAR2",
+   "valeur": 2,
+   "symbole": "++",
+   "libelle": "Fait partie de l'identité du jeu",
+   "code": "VAR2/2"
+  },
+  {
+   "axe": "EXIG1",
+   "valeur": 0.0,
+   "symbole": null,
+   "libelle": "Choix quasi automatique, aucune réflexion nécessaire",
+   "code": "EXIG1/0"
+  },
+  {
+   "axe": "EXIG1",
+   "valeur": 1.0,
+   "symbole": null,
+   "libelle": "Simple comparaison entre quelques options visibles, sans calcul",
+   "code": "EXIG1/1"
+  },
+  {
+   "axe": "EXIG1",
+   "valeur": 2.0,
+   "symbole": null,
+   "libelle": "Suivre plusieurs ressources/paramètres simultanément, sans vrai calcul",
+   "code": "EXIG1/2"
+  },
+  {
+   "axe": "EXIG1",
+   "valeur": 3.0,
+   "symbole": null,
+   "libelle": "Calcul ou estimation de probabilité ponctuel avant une décision",
+   "code": "EXIG1/3"
+  },
+  {
+   "axe": "EXIG1",
+   "valeur": 4.0,
+   "symbole": null,
+   "libelle": "Planification sur plusieurs tours, anticiper les conséquences à moyen terme",
+   "code": "EXIG1/4"
+  },
+  {
+   "axe": "EXIG1",
+   "valeur": 5.0,
+   "symbole": null,
+   "libelle": "Optimisation simultanée de multiples variables interdépendantes (calcul d'un « moteur » complet)",
+   "code": "EXIG1/5"
+  },
+  {
+   "axe": "EXIG2",
+   "valeur": -2,
+   "symbole": "−−",
+   "libelle": "Aucun retour visible sur l'effort, impossible de savoir si on a bien joué avant la fin de partie (ou jamais)",
+   "code": "EXIG2/m2"
+  },
+  {
+   "axe": "EXIG2",
+   "valeur": -1,
+   "symbole": "−",
+   "libelle": "Retour minimal, tardif ou peu clair",
+   "code": "EXIG2/m1"
+  },
+  {
+   "axe": "EXIG2",
+   "valeur": 0,
+   "symbole": "=",
+   "libelle": "Retour visible mais décalé (l'effet n'apparaît que plusieurs tours après)",
+   "code": "EXIG2/0"
+  },
+  {
+   "axe": "EXIG2",
+   "valeur": 1,
+   "symbole": "+",
+   "libelle": "Retour clair et généralement rapide, l'effort se traduit visiblement dans l'état du jeu",
+   "code": "EXIG2/1"
+  },
+  {
+   "axe": "EXIG2",
+   "valeur": 2,
+   "symbole": "++",
+   "libelle": "Retour immédiat, avec un sentiment de maîtrise croissante explicitement rapporté par les joueurs",
+   "code": "EXIG2/2"
+  },
+  {
+   "axe": "SCAL1",
+   "valeur": 0.0,
+   "symbole": null,
+   "libelle": "Solo uniquement",
+   "code": "SCAL1/0"
+  },
+  {
+   "axe": "SCAL1",
+   "valeur": 1.0,
+   "symbole": null,
+   "libelle": "2 joueurs max",
+   "code": "SCAL1/1"
+  },
+  {
+   "axe": "SCAL1",
+   "valeur": 2.0,
+   "symbole": null,
+   "libelle": "3-4 joueurs max",
+   "code": "SCAL1/2"
+  },
+  {
+   "axe": "SCAL1",
+   "valeur": 3.0,
+   "symbole": null,
+   "libelle": "5-6 joueurs max",
+   "code": "SCAL1/3"
+  },
+  {
+   "axe": "SCAL1",
+   "valeur": 4.0,
+   "symbole": null,
+   "libelle": "7-9 joueurs max",
+   "code": "SCAL1/4"
+  },
+  {
+   "axe": "SCAL1",
+   "valeur": 5.0,
+   "symbole": null,
+   "libelle": "10+ joueurs max",
+   "code": "SCAL1/5"
+  },
+  {
+   "axe": "SCAL2",
+   "valeur": -2,
+   "symbole": "−−",
+   "libelle": "Scaling horrible, c'est juste un argument de vente",
+   "code": "SCAL2/m2"
+  },
+  {
+   "axe": "SCAL2",
+   "valeur": -1,
+   "symbole": "−",
+   "libelle": "Scaling médiocre, tolérable seulement si on n'a pas le choix de l'effectif",
+   "code": "SCAL2/m1"
+  },
+  {
+   "axe": "SCAL2",
+   "valeur": 0,
+   "symbole": "=",
+   "libelle": "Scaling correct, on tolère bien que le jeu ne soit pas exactement le même selon l'effectif",
+   "code": "SCAL2/0"
+  },
+  {
+   "axe": "SCAL2",
+   "valeur": 1,
+   "symbole": "+",
+   "libelle": "Bon scaling, les différences entre effectifs sont minimes",
+   "code": "SCAL2/1"
+  },
+  {
+   "axe": "SCAL2",
+   "valeur": 2,
+   "symbole": "++",
+   "libelle": "Scaling remarquable, aucune différence perceptible quel que soit l'effectif",
+   "code": "SCAL2/2"
+  },
+  {
+   "axe": "RYT1",
+   "valeur": 0.0,
+   "symbole": null,
+   "libelle": "Quasi aucune charge non-active, dans son tour ou celui des autres",
+   "code": "RYT1/0"
+  },
+  {
+   "axe": "RYT1",
+   "valeur": 1.0,
+   "symbole": null,
+   "libelle": "Charge non-active minime, ponctuelle",
+   "code": "RYT1/1"
+  },
+  {
+   "axe": "RYT1",
+   "valeur": 2.0,
+   "symbole": null,
+   "libelle": "Charge non-active modérée, dans son tour ou celui des autres, rarement les deux",
+   "code": "RYT1/2"
+  },
+  {
+   "axe": "RYT1",
+   "valeur": 3.0,
+   "symbole": null,
+   "libelle": "Charge non-active notable, dans son tour et celui des autres",
+   "code": "RYT1/3"
+  },
+  {
+   "axe": "RYT1",
+   "valeur": 4.0,
+   "symbole": null,
+   "libelle": "Charge non-active importante, dans son tour et dans celui des autres",
+   "code": "RYT1/4"
+  },
+  {
+   "axe": "RYT1",
+   "valeur": 5.0,
+   "symbole": null,
+   "libelle": "Charge non-active dominante, dans son propre tour comme dans celui des autres",
+   "code": "RYT1/5"
+  },
+  {
+   "axe": "RYT2",
+   "valeur": -2,
+   "symbole": "−−",
+   "libelle": "Désengagement rapporté explicitement, charge vécue comme interminable",
+   "code": "RYT2/m2"
+  },
+  {
+   "axe": "RYT2",
+   "valeur": -1,
+   "symbole": "−",
+   "libelle": "Désengagement occasionnel, ou charge perçue plus lourde que la réalité",
+   "code": "RYT2/m1"
+  },
+  {
+   "axe": "RYT2",
+   "valeur": 0,
+   "symbole": "=",
+   "libelle": "Ni désengagement ni mobilisation notable rapportés, ressenti conforme",
+   "code": "RYT2/0"
+  },
+  {
+   "axe": "RYT2",
+   "valeur": 1,
+   "symbole": "+",
+   "libelle": "Mobilisation active rapportée (suivre, commenter, préparer), charge perçue plus légère",
+   "code": "RYT2/1"
+  },
+  {
+   "axe": "RYT2",
+   "valeur": 2,
+   "symbole": "++",
+   "libelle": "Absence quasi totale de charge perçue, cité comme un modèle sur ce point",
+   "code": "RYT2/2"
+  },
+  {
+   "axe": "MAN1",
+   "valeur": 0.0,
+   "symbole": null,
+   "libelle": "Rien à installer, rien à gérer en cours de partie (tout est décision)",
+   "code": "MAN1/0"
+  },
+  {
+   "axe": "MAN1",
+   "valeur": 1.0,
+   "symbole": null,
+   "libelle": "Mise en place ou gestion minimes, jamais les deux à la fois",
+   "code": "MAN1/1"
+  },
+  {
+   "axe": "MAN1",
+   "valeur": 2.0,
+   "symbole": null,
+   "libelle": "Mise en place simple et gestion ponctuelle en cours de partie",
+   "code": "MAN1/2"
+  },
+  {
+   "axe": "MAN1",
+   "valeur": 3.0,
+   "symbole": null,
+   "libelle": "L'un des deux moments (mise en place ou gestion) est notable, l'autre reste limité",
+   "code": "MAN1/3"
+  },
+  {
+   "axe": "MAN1",
+   "valeur": 4.0,
+   "symbole": null,
+   "libelle": "Mise en place longue ET gestion fréquente en cours de partie",
+   "code": "MAN1/4"
+  },
+  {
+   "axe": "MAN1",
+   "valeur": 5.0,
+   "symbole": null,
+   "libelle": "Mise en place complexe nécessitant une checklist dédiée ET gestion omniprésente qui structure l'expérience",
+   "code": "MAN1/5"
+  },
+  {
+   "axe": "MAN2",
+   "valeur": -2,
+   "symbole": "−−",
+   "libelle": "Incite à ne pas jouer à ce jeu, jamais",
+   "code": "MAN2/m2"
+  },
+  {
+   "axe": "MAN2",
+   "valeur": -1,
+   "symbole": "−",
+   "libelle": "Invite à réfléchir avant de choisir ce jeu — est-ce le bon moment ?",
+   "code": "MAN2/m1"
+  },
+  {
+   "axe": "MAN2",
+   "valeur": 0,
+   "symbole": "=",
+   "libelle": "Considérée comme normale, ce n'est pas un sujet",
+   "code": "MAN2/0"
+  },
+  {
+   "axe": "MAN2",
+   "valeur": 1,
+   "symbole": "+",
+   "libelle": "Permet de démarrer la session agréablement",
+   "code": "MAN2/1"
+  },
+  {
+   "axe": "MAN2",
+   "valeur": 2,
+   "symbole": "++",
+   "libelle": "Si bien pensée, si agréable, qu'elle fait déjà partie du rituel de début de partie — jubilatoire",
+   "code": "MAN2/2"
+  },
+  {
+   "axe": "THEM1",
+   "valeur": 0.0,
+   "symbole": null,
+   "libelle": "Aucun habillage thématique (jeu abstrait assumé)",
+   "code": "THEM1/0"
+  },
+  {
+   "axe": "THEM1",
+   "valeur": 1.0,
+   "symbole": null,
+   "libelle": "Nommage seul, sans direction artistique cohérente",
+   "code": "THEM1/1"
+  },
+  {
+   "axe": "THEM1",
+   "valeur": 2.0,
+   "symbole": null,
+   "libelle": "Nommage et direction artistique cohérents, aucune mécanique thématisée",
+   "code": "THEM1/2"
+  },
+  {
+   "axe": "THEM1",
+   "valeur": 3.0,
+   "symbole": null,
+   "libelle": "Quelques mécaniques miment concrètement le thème, matière narrative éparse si elle existe",
+   "code": "THEM1/3"
+  },
+  {
+   "axe": "THEM1",
+   "valeur": 4.0,
+   "symbole": null,
+   "libelle": "La majorité des mécaniques sont thématisées, matière narrative présente et cohérente",
+   "code": "THEM1/4"
+  },
+  {
+   "axe": "THEM1",
+   "valeur": 5.0,
+   "symbole": null,
+   "libelle": "Toutes les mécaniques, jusque dans le détail, portent le thème ; matière narrative dense (scénarios, événements, textes d'ambiance)",
+   "code": "THEM1/5"
+  },
+  {
+   "axe": "THEM2a",
+   "valeur": 0.0,
+   "symbole": null,
+   "libelle": "Système abstrait décousu, aucune élégance perçue",
+   "code": "THEM2a/0"
+  },
+  {
+   "axe": "THEM2a",
+   "valeur": 1.0,
+   "symbole": null,
+   "libelle": "Abstraction fonctionnelle mais sans caractère propre",
+   "code": "THEM2a/1"
+  },
+  {
+   "axe": "THEM2a",
+   "valeur": 2.0,
+   "symbole": null,
+   "libelle": "Abstraction correcte, sans plus",
+   "code": "THEM2a/2"
+  },
+  {
+   "axe": "THEM2a",
+   "valeur": 3.0,
+   "symbole": null,
+   "libelle": "Abstraction élégante, appréciée pour elle-même",
+   "code": "THEM2a/3"
+  },
+  {
+   "axe": "THEM2a",
+   "valeur": 4.0,
+   "symbole": null,
+   "libelle": "Abstraction remarquable, saluée comme un modèle du genre",
+   "code": "THEM2a/4"
+  },
+  {
+   "axe": "THEM2a",
+   "valeur": 5.0,
+   "symbole": null,
+   "libelle": "Abstraction fascinante, citée comme une référence",
+   "code": "THEM2a/5"
+  },
+  {
+   "axe": "THEM2b",
+   "valeur": 0.0,
+   "symbole": null,
+   "libelle": "Reskin total possible sans aucune perte, le thème est un vernis pur",
+   "code": "THEM2b/0"
+  },
+  {
+   "axe": "THEM2b",
+   "valeur": 1.0,
+   "symbole": null,
+   "libelle": "Reskin très largement possible, quelques détails mineurs à ajuster",
+   "code": "THEM2b/1"
+  },
+  {
+   "axe": "THEM2b",
+   "valeur": 2.0,
+   "symbole": null,
+   "libelle": "Reskin possible sur l'essentiel, quelques mécaniques résisteraient",
+   "code": "THEM2b/2"
+  },
+  {
+   "axe": "THEM2b",
+   "valeur": 3.0,
+   "symbole": null,
+   "libelle": "Reskin partiel, plusieurs mécaniques centrales résisteraient",
+   "code": "THEM2b/3"
+  },
+  {
+   "axe": "THEM2b",
+   "valeur": 4.0,
+   "symbole": null,
+   "libelle": "Reskin échouerait sur l'essentiel, seuls des réglages annexes resteraient neutres",
+   "code": "THEM2b/4"
+  },
+  {
+   "axe": "THEM2b",
+   "valeur": 5.0,
+   "symbole": null,
+   "libelle": "Reskin impossible sans détruire la logique du jeu",
+   "code": "THEM2b/5"
+  },
+  {
+   "axe": "LIEN1",
+   "valeur": 0.0,
+   "symbole": null,
+   "libelle": "Coopération totale, objectif entièrement partagé",
+   "code": "LIEN1/0"
+  },
+  {
+   "axe": "LIEN1",
+   "valeur": 1.0,
+   "symbole": null,
+   "libelle": "Coopération avec une pointe de compétition indirecte",
+   "code": "LIEN1/1"
+  },
+  {
+   "axe": "LIEN1",
+   "valeur": 2.0,
+   "symbole": null,
+   "libelle": "Compétition indirecte (courses aux ressources, sans ciblage)",
+   "code": "LIEN1/2"
+  },
+  {
+   "axe": "LIEN1",
+   "valeur": 3.0,
+   "symbole": null,
+   "libelle": "Confrontation directe ponctuelle",
+   "code": "LIEN1/3"
+  },
+  {
+   "axe": "LIEN1",
+   "valeur": 4.0,
+   "symbole": null,
+   "libelle": "Confrontation directe fréquente",
+   "code": "LIEN1/4"
+  },
+  {
+   "axe": "LIEN1",
+   "valeur": 5.0,
+   "symbole": null,
+   "libelle": "Chacun pour soi à chaque action, ciblage direct permanent",
+   "code": "LIEN1/5"
+  },
+  {
+   "axe": "LIEN2",
+   "valeur": 0.0,
+   "symbole": null,
+   "libelle": "Un joueur dicte systématiquement les coups des autres (alpha total), ou la confrontation annoncée n'est quasiment jamais vécue malgré les règles (turtling généralisé)",
+   "code": "LIEN2/0"
+  },
+  {
+   "axe": "LIEN2",
+   "valeur": 1.0,
+   "symbole": null,
+   "libelle": "Le syndrome de l'alpha ou l'évitement systématique de la confrontation est documenté comme fréquent, dans la majorité des parties",
+   "code": "LIEN2/1"
+  },
+  {
+   "axe": "LIEN2",
+   "valeur": 2.0,
+   "symbole": null,
+   "libelle": "Apparaît occasionnellement, sans devenir la norme des parties",
+   "code": "LIEN2/2"
+  },
+  {
+   "axe": "LIEN2",
+   "valeur": 3.0,
+   "symbole": null,
+   "libelle": "Rarement observé ; quand ça arrive, la table s'auto-corrige (les joueurs s'en agacent et rectifient)",
+   "code": "LIEN2/3"
+  },
+  {
+   "axe": "LIEN2",
+   "valeur": 4.0,
+   "symbole": null,
+   "libelle": "Cas isolés rapportés, jamais présentés comme un problème récurrent",
+   "code": "LIEN2/4"
+  },
+  {
+   "axe": "LIEN2",
+   "valeur": 5.0,
+   "symbole": null,
+   "libelle": "Jamais rapporté : le rapport annoncé (coopération réelle ou confrontation réelle) se vit pleinement à chaque partie",
+   "code": "LIEN2/5"
+  },
+  {
+   "axe": "INT1",
+   "valeur": 0.0,
+   "symbole": null,
+   "libelle": "Chacun dans son coin, aucune action n'affecte les autres",
+   "code": "INT1/0"
+  },
+  {
+   "axe": "INT1",
+   "valeur": 1.0,
+   "symbole": null,
+   "libelle": "Interaction minime, occasionnelle",
+   "code": "INT1/1"
+  },
+  {
+   "axe": "INT1",
+   "valeur": 2.0,
+   "symbole": null,
+   "libelle": "Compétition pour des ressources communes, sans ciblage direct",
+   "code": "INT1/2"
+  },
+  {
+   "axe": "INT1",
+   "valeur": 3.0,
+   "symbole": null,
+   "libelle": "Interaction régulière, plusieurs points de friction par partie",
+   "code": "INT1/3"
+  },
+  {
+   "axe": "INT1",
+   "valeur": 4.0,
+   "symbole": null,
+   "libelle": "Interaction fréquente, la plupart des tours en tiennent compte",
+   "code": "INT1/4"
+  },
+  {
+   "axe": "INT1",
+   "valeur": 5.0,
+   "symbole": null,
+   "libelle": "Chaque action de chaque joueur avantage ou pénalise les autres",
+   "code": "INT1/5"
+  },
+  {
+   "axe": "INT2",
+   "valeur": 0.0,
+   "symbole": null,
+   "libelle": "L'interaction annoncée ne se matérialise presque jamais, ou est systématiquement vécue comme arbitraire",
+   "code": "INT2/0"
+  },
+  {
+   "axe": "INT2",
+   "valeur": 1.0,
+   "symbole": null,
+   "libelle": "Se matérialise rarement, ou souvent perçue comme injuste",
+   "code": "INT2/1"
+  },
+  {
+   "axe": "INT2",
+   "valeur": 2.0,
+   "symbole": null,
+   "libelle": "Se matérialise parfois, perception mitigée",
+   "code": "INT2/2"
+  },
+  {
+   "axe": "INT2",
+   "valeur": 3.0,
+   "symbole": null,
+   "libelle": "Se matérialise globalement comme annoncé, perçue comme généralement méritée",
+   "code": "INT2/3"
+  },
+  {
+   "axe": "INT2",
+   "valeur": 4.0,
+   "symbole": null,
+   "libelle": "Se matérialise fidèlement, perçue comme méritée",
+   "code": "INT2/4"
+  },
+  {
+   "axe": "INT2",
+   "valeur": 5.0,
+   "symbole": null,
+   "libelle": "Se matérialise fidèlement et est systématiquement perçue comme la conséquence logique du jeu",
+   "code": "INT2/5"
+  },
+  {
+   "axe": "NEG1",
+   "valeur": 0.0,
+   "symbole": null,
+   "libelle": "Silence total et vérifiable imposé par la règle — cas extrême, quasi inexistant dans le hobby",
+   "code": "NEG1/0"
+  },
+  {
+   "axe": "NEG1",
+   "valeur": 1.0,
+   "symbole": null,
+   "libelle": "Espace minime et résiduel — même un jeu à information cachée en laisse toujours un peu (signaux indirects, discussion hors-tour)",
+   "code": "NEG1/1"
+  },
+  {
+   "axe": "NEG1",
+   "valeur": 2.0,
+   "symbole": null,
+   "libelle": "Espace modéré, formel ou informel — négociable sur certains choix, sans structurer l'ensemble de la partie",
+   "code": "NEG1/2"
+  },
+  {
+   "axe": "NEG1",
+   "valeur": 3.0,
+   "symbole": null,
+   "libelle": "Négociation fréquente, portée par une règle ou par la table elle-même, sur une partie significative des décisions",
+   "code": "NEG1/3"
+  },
+  {
+   "axe": "NEG1",
+   "valeur": 4.0,
+   "symbole": null,
+   "libelle": "Négociation quasi continue — le groupe négocie la plupart des décisions importantes",
+   "code": "NEG1/4"
+  },
+  {
+   "axe": "NEG1",
+   "valeur": 5.0,
+   "symbole": null,
+   "libelle": "Négociation omniprésente et structurante, formalisée ou non — rien ne se décide sans passer par un échange entre joueurs",
+   "code": "NEG1/5"
+  },
+  {
+   "axe": "NEG2",
+   "valeur": 0.0,
+   "symbole": null,
+   "libelle": "Vécue négativement — frustrante, déséquilibrée, ou dominée par un joueur qui écrase les autres",
+   "code": "NEG2/0"
+  },
+  {
+   "axe": "NEG2",
+   "valeur": 1.0,
+   "symbole": null,
+   "libelle": "En dessous du plaisir attendu, souvent citée comme un point faible",
+   "code": "NEG2/1"
+  },
+  {
+   "axe": "NEG2",
+   "valeur": 2.0,
+   "symbole": null,
+   "libelle": "Correcte, sans être un temps fort",
+   "code": "NEG2/2"
+  },
+  {
+   "axe": "NEG2",
+   "valeur": 3.0,
+   "symbole": null,
+   "libelle": "Appréciée, ajoute une vraie dimension sociale au jeu",
+   "code": "NEG2/3"
+  },
+  {
+   "axe": "NEG2",
+   "valeur": 4.0,
+   "symbole": null,
+   "libelle": "Un des points forts cités du jeu",
+   "code": "NEG2/4"
+  },
+  {
+   "axe": "NEG2",
+   "valeur": 5.0,
+   "symbole": null,
+   "libelle": "Jubilatoire — l'un des meilleurs exemples du genre",
+   "code": "NEG2/5"
+  },
+  {
+   "axe": "MAT1",
+   "valeur": 0.0,
+   "symbole": null,
+   "libelle": "Format poche, tient dans une main",
+   "code": "MAT1/0"
+  },
+  {
+   "axe": "MAT1",
+   "valeur": 1.0,
+   "symbole": null,
+   "libelle": "Petite boîte, format carte à jouer ou équivalent",
+   "code": "MAT1/1"
+  },
+  {
+   "axe": "MAT1",
+   "valeur": 2.0,
+   "symbole": null,
+   "libelle": "Boîte moyenne standard",
+   "code": "MAT1/2"
+  },
+  {
+   "axe": "MAT1",
+   "valeur": 3.0,
+   "symbole": null,
+   "libelle": "Grosse boîte, dépasse le format standard",
+   "code": "MAT1/3"
+  },
+  {
+   "axe": "MAT1",
+   "valeur": 4.0,
+   "symbole": null,
+   "libelle": "Très grosse boîte, occupe un espace de rangement notable",
+   "code": "MAT1/4"
+  },
+  {
+   "axe": "MAT1",
+   "valeur": 5.0,
+   "symbole": null,
+   "libelle": "Format hors norme, l'exemple qui vient spontanément à l'esprit quand on parle de jeu trop gros pour l'étagère",
+   "code": "MAT1/5"
+  },
+  {
+   "axe": "MAT2",
+   "valeur": -2,
+   "symbole": "−−",
+   "libelle": "Matériel perçu comme fragile ou décevant, en total décalage avec l'ampleur annoncée",
+   "code": "MAT2/m2"
+  },
+  {
+   "axe": "MAT2",
+   "valeur": -1,
+   "symbole": "−",
+   "libelle": "En-dessous du standard attendu compte tenu du format",
+   "code": "MAT2/m1"
+  },
+  {
+   "axe": "MAT2",
+   "valeur": 0,
+   "symbole": "=",
+   "libelle": "Qualité correcte, à la hauteur de ce que le format laissait espérer",
+   "code": "MAT2/0"
+  },
+  {
+   "axe": "MAT2",
+   "valeur": 1,
+   "symbole": "+",
+   "libelle": "Qualité qui dépasse les attentes fixées par le format",
+   "code": "MAT2/1"
+  },
+  {
+   "axe": "MAT2",
+   "valeur": 2,
+   "symbole": "++",
+   "libelle": "Qualité exceptionnelle, un exploit de fabrication compte tenu de l'ampleur",
+   "code": "MAT2/2"
+  },
+  {
+   "axe": "ART1",
+   "valeur": 0.0,
+   "symbole": null,
+   "libelle": "Aucun langage visuel fonctionnel, tout passe par le texte",
+   "code": "ART1/0"
+  },
+  {
+   "axe": "ART1",
+   "valeur": 1.0,
+   "symbole": null,
+   "libelle": "Quelques icônes ponctuelles",
+   "code": "ART1/1"
+  },
+  {
+   "axe": "ART1",
+   "valeur": 2.0,
+   "symbole": null,
+   "libelle": "Un système d'icônes cohérent sur une partie des composants",
+   "code": "ART1/2"
+  },
+  {
+   "axe": "ART1",
+   "valeur": 3.0,
+   "symbole": null,
+   "libelle": "Système d'icônes développé sur la majorité des composants",
+   "code": "ART1/3"
+  },
+  {
+   "axe": "ART1",
+   "valeur": 4.0,
+   "symbole": null,
+   "libelle": "Langage visuel riche, quasiment tout communiqué par icônes",
+   "code": "ART1/4"
+  },
+  {
+   "axe": "ART1",
+   "valeur": 5.0,
+   "symbole": null,
+   "libelle": "Langage visuel poussé jusqu'au moindre détail, un vrai vocabulaire à part entière",
+   "code": "ART1/5"
+  },
+  {
+   "axe": "ART2",
+   "valeur": 0.0,
+   "symbole": null,
+   "libelle": "Direction artistique critiquée, perçue comme un point faible",
+   "code": "ART2/0"
+  },
+  {
+   "axe": "ART2",
+   "valeur": 1.0,
+   "symbole": null,
+   "libelle": "En-dessous du standard du segment",
+   "code": "ART2/1"
+  },
+  {
+   "axe": "ART2",
+   "valeur": 2.0,
+   "symbole": null,
+   "libelle": "Correcte, sans remarque particulière",
+   "code": "ART2/2"
+  },
+  {
+   "axe": "ART2",
+   "valeur": 3.0,
+   "symbole": null,
+   "libelle": "Cohérente et plaisante, sans être remarquable",
+   "code": "ART2/3"
+  },
+  {
+   "axe": "ART2",
+   "valeur": 4.0,
+   "symbole": null,
+   "libelle": "Visuel réussi, cohérent, régulièrement salué",
+   "code": "ART2/4"
+  },
+  {
+   "axe": "ART2",
+   "valeur": 5.0,
+   "symbole": null,
+   "libelle": "Citée comme une référence esthétique du genre",
+   "code": "ART2/5"
+  },
+  {
+   "axe": "ACC1",
+   "valeur": 0.0,
+   "symbole": null,
+   "libelle": "Aucun outil, ni pour l'apprentissage ni pour la consultation — seulement le livret complet, sans index",
+   "code": "ACC1/0"
+  },
+  {
+   "axe": "ACC1",
+   "valeur": 1.0,
+   "symbole": null,
+   "libelle": "Un résumé ou une fiche de référence en plus du livret, ou un index sommaire",
+   "code": "ACC1/1"
+  },
+  {
+   "axe": "ACC1",
+   "valeur": 2.0,
+   "symbole": null,
+   "libelle": "Plusieurs aides de référence dédiées, correctement organisées pour la consultation",
+   "code": "ACC1/2"
+  },
+  {
+   "axe": "ACC1",
+   "valeur": 3.0,
+   "symbole": null,
+   "libelle": "Résumé/aide de référence dédiée bien conçue, ET un index ou une table des matières détaillée",
+   "code": "ACC1/3"
+  },
+  {
+   "axe": "ACC1",
+   "valeur": 4.0,
+   "symbole": null,
+   "libelle": "Scénario ou partie spécifiquement conçue pour l'apprentissage, en plus d'outils de consultation bien pensés",
+   "code": "ACC1/4"
+  },
+  {
+   "axe": "ACC1",
+   "valeur": 5.0,
+   "symbole": null,
+   "libelle": "Parcours d'apprentissage complet ET outils de consultation exemplaires (index détaillé, fiches regroupées, rien à chercher longtemps)",
+   "code": "ACC1/5"
+  },
+  {
+   "axe": "ACC2",
+   "valeur": 0.0,
+   "symbole": null,
+   "libelle": "Le livret seul est jugé insuffisant pour apprendre, ET une règle oubliée est difficile à retrouver",
+   "code": "ACC2/0"
+  },
+  {
+   "axe": "ACC2",
+   "valeur": 1.0,
+   "symbole": null,
+   "libelle": "Première partie approximative ; retrouver une règle en cours de partie prend du temps",
+   "code": "ACC2/1"
+  },
+  {
+   "axe": "ACC2",
+   "valeur": 2.0,
+   "symbole": null,
+   "libelle": "Première partie correcte, quelques points flous ; consultation courante possible mais pas fluide",
+   "code": "ACC2/2"
+  },
+  {
+   "axe": "ACC2",
+   "valeur": 3.0,
+   "symbole": null,
+   "libelle": "Première partie sereine dans l'ensemble ; une règle oubliée se retrouve sans trop chercher",
+   "code": "ACC2/3"
+  },
+  {
+   "axe": "ACC2",
+   "valeur": 4.0,
+   "symbole": null,
+   "libelle": "Première partie sereine et fidèle ; consultation courante rapide (index ou fiches efficaces)",
+   "code": "ACC2/4"
+  },
+  {
+   "axe": "ACC2",
+   "valeur": 5.0,
+   "symbole": null,
+   "libelle": "Les outils suffisent pleinement à l'apprentissage ET à la consultation — rien à chercher longtemps, à aucun moment",
+   "code": "ACC2/5"
+  },
+  {
+   "axe": "VAL1",
+   "valeur": 0.0,
+   "symbole": null,
+   "libelle": "< 20 €",
+   "code": "VAL1/0"
+  },
+  {
+   "axe": "VAL1",
+   "valeur": 1.0,
+   "symbole": null,
+   "libelle": "20-40 €",
+   "code": "VAL1/1"
+  },
+  {
+   "axe": "VAL1",
+   "valeur": 2.0,
+   "symbole": null,
+   "libelle": "40-70 €",
+   "code": "VAL1/2"
+  },
+  {
+   "axe": "VAL1",
+   "valeur": 3.0,
+   "symbole": null,
+   "libelle": "70-120 €",
+   "code": "VAL1/3"
+  },
+  {
+   "axe": "VAL1",
+   "valeur": 4.0,
+   "symbole": null,
+   "libelle": "120-200 €",
+   "code": "VAL1/4"
+  },
+  {
+   "axe": "VAL1",
+   "valeur": 5.0,
+   "symbole": null,
+   "libelle": "> 200 €",
+   "code": "VAL1/5"
+  },
+  {
+   "axe": "VAL2",
+   "valeur": -2,
+   "symbole": "−−",
+   "libelle": "Perçu comme une arnaque, très largement surévalué",
+   "code": "VAL2/m2"
+  },
+  {
+   "axe": "VAL2",
+   "valeur": -1,
+   "symbole": "−",
+   "libelle": "Perçu comme cher pour ce qu'il offre",
+   "code": "VAL2/m1"
+  },
+  {
+   "axe": "VAL2",
+   "valeur": 0,
+   "symbole": "=",
+   "libelle": "Prix jugé correct, sans être un argument de vente",
+   "code": "VAL2/0"
+  },
+  {
+   "axe": "VAL2",
+   "valeur": 1,
+   "symbole": "+",
+   "libelle": "Bon rapport contenu/prix, cité positivement",
+   "code": "VAL2/1"
+  },
+  {
+   "axe": "VAL2",
+   "valeur": 2,
+   "symbole": "++",
+   "libelle": "Excellente affaire, régulièrement citée comme référence de rapport qualité/prix",
+   "code": "VAL2/2"
+  }
+ ],
+ "notes": [
+  {
+   "paire": "POI",
+   "axe": null,
+   "type": "statut",
+   "texte": "Statut : stabilisée — fusion de deux anciennes paires (RÈGLES et COHÉRENCE), renommée en session (ex-AMBITION) : « poids » reprend la notion de weight de BGG, presque objective, plutôt qu'« ambition » qui supposait une intention dans la tête de l'auteur. Trio de noms retenu : POIDS (paire) / VOLUME (axe descriptif) / ENVERGURE (axe évaluatif) — trois libellés distincts.",
+   "code": "POI/statut/1",
+   "ordre": 1
+  },
+  {
+   "paire": "PROF",
+   "axe": null,
+   "type": "statut",
+   "texte": "Statut : provisoire — définitions entièrement redéfinies en session par rapport à la version native du référentiel (DEP/SIG). L'ancienne définition de SIG (diversité stratégique documentée) a été jugée distincte de ce que mesure vraiment PROF2 pour Pierre et Vincent ; elle est abandonnée au profit de la définition ci-dessous plutôt que conservée comme un axe séparé.",
+   "code": "PROF/statut/1",
+   "ordre": 1
+  },
+  {
+   "paire": "PROF",
+   "axe": null,
+   "type": "absorption",
+   "texte": "Absorption : l'ancienne paire TEMP (ex-HORIZON, structure partie unique / campagne / legacy) est dissoute et rejoint PROFONDEUR — une campagne est un arbre de ramifications qui s'étend sur plusieurs sessions plutôt que sur un seul tour. TEMP1 devient une précision méthodologique dans PROF1 (l'horizon de ramification peut être intra-partie ou inter-sessions) ; TEMP2 se fond dans PROF2 (la progression de campagne est-elle vraiment pilotée par le joueur, ou n'est-elle qu'un vernis cosmétique). Fusion actée en session, pas encore illustrée par un exemple de campagne retravaillé sous cet angle.",
+   "code": "PROF/absorption/1",
+   "ordre": 1
+  },
+  {
+   "paire": "VAR",
+   "axe": null,
+   "type": "statut",
+   "texte": "Statut : provisoire — paire liée acceptée avec hésitation en classification (les sources de variabilité n'interagissent pas forcément entre elles comme le font des décisions de joueur, contrairement à PROFONDEUR). Méthode transposée au mécanisme des paires liées, à revalider sur un exemple réel qui teste franchement le plafonnement.",
+   "code": "VAR/statut/1",
+   "ordre": 1
+  },
+  {
+   "paire": "VAR",
+   "axe": "VAR1",
+   "type": "absorption",
+   "texte": "Absorption : l'ancienne paire OPTIONS (asymétrie du choix de départ — faction, personnage) est dissoute et rejoint VAR comme une source de variation parmi d'autres : le choix de départ est une des façons dont deux parties ne se ressemblent pas. Voir aussi PROFONDEUR, qui absorbe le nombre d'options disponibles à un instant donné.",
+   "code": "VAR/absorption/1",
+   "ordre": 1
+  },
+  {
+   "paire": "VAR",
+   "axe": "VAR2",
+   "type": "absorption",
+   "texte": "Absorption : l'équité entre options de départ (ancien OPT2) se juge maintenant ici, sous l'angle « peut-elle dégrader arbitrairement la position d'un joueur » — une faction déséquilibrée n'est jamais qu'une variabilité mal dosée, du même ordre qu'un tirage de cartes trop punitif.",
+   "code": "VAR/absorption/2",
+   "ordre": 2
+  },
+  {
+   "paire": "VAR",
+   "axe": "VAR2",
+   "type": "regle",
+   "texte": "Cas particulier : si VAR1 = 0 (aucune source de variation externe aux décisions des joueurs, ex. les échecs), VAR2 est non applicable — exclu de la moyenne de chapitre, comme pour NÉGOCIATION quand NEG1 est nul.",
+   "code": "VAR/regle/1",
+   "ordre": 1
+  },
+  {
+   "paire": "EXIG",
+   "axe": null,
+   "type": "statut",
+   "texte": "Statut : stabilisée — paire liée. Cas fondateur du mécanisme (analogie initiale : la note artistique du patinage récompense la difficulté visée, pas seulement l'exécution).",
+   "code": "EXIG/statut/1",
+   "ordre": 1
+  },
+  {
+   "paire": "SCAL",
+   "axe": null,
+   "type": "statut",
+   "texte": "Statut : stabilisée — paire liée (comme POIDS et VALEUR), tranchée en session après un aller-retour : une plage de joueurs large est une forme de versatilité, donc une ambition qui mérite d'être récompensée si le jeu la tient — comme un prix élevé mérite d'être récompensé s'il est justifié (VALEUR). Un jeu à plage étroite (les échecs, un 2-joueurs pur) n'est pas puni pour autant : il plafonne bas sur SCAL2 parce qu'il y a structurellement moins de terrain où sa constance pourrait s'effondrer, pas parce que le choix de conception est fautif. Le pondérage par profil PRISMEplayer neutralisera cet axe pour les profils qui n'accordent aucune valeur à la polyvalence d'effectif.",
+   "code": "SCAL/statut/1",
+   "ordre": 1
+  },
+  {
+   "paire": "SCAL",
+   "axe": null,
+   "type": "solo",
+   "texte": "Volet solo, tranché en session : désaccord réglé entre l'ancienne doctrine (« le solo ne compte jamais », vraie avec la formule pondérée par r(n), reléguée en annexe) et le mécanisme principal actuel (la courbe en S, qui n'exclut plus rien structurellement). Décision : l'exclusion du solo devient un choix définitionnel, pas un artefact de calcul. SCAL1 se note sur la plage multijoueur (2+) même quand un mode solo coexiste ; SCAL1 = 0 (« Solo uniquement ») reste réservé aux jeux strictement solo, sans aucun mode multijoueur — auquel cas SCAL2 est non applicable (une plage à un seul point n'a rien à quoi rester constant). Quand solo et multijoueur coexistent, la qualité du solo ne compte pas dans SCALABILITÉ — elle se lit via LIEN (qualité d'un éventuel automate) et MANIPULATION (coût administratif du bot).",
+   "code": "SCAL/solo/1",
+   "ordre": 1
+  },
+  {
+   "paire": "RYT",
+   "axe": null,
+   "type": "statut",
+   "texte": "Statut : stabilisée sur le fond, nom actualisé en session (ex-ATTENTE, puis ex-ACTIVITÉ) — RYTHME retenu, pour la généalogie (ce qui reste de l'ancien chapitre Rythme après la fusion en Expérience) et parce que le mot porte mieux l'alternance temps actif/temps passif qu'« Activité », qui mesurait en fait l'absence d'activité. Toujours fusion de DURÉE et DOWNTIME. Mécanisme inchangé : pénalité asymétrique à l'échec, comme MANIPULATION. Définition de RYT1 affinée en session : la charge non-active se pèse à deux endroits distincts — dans le tour du joueur lui-même, et dans le tour des autres joueurs — plutôt que comme un simple croisement durée×sollicitation.",
+   "code": "RYT/statut/1",
+   "ordre": 1
+  },
+  {
+   "paire": "RYT",
+   "axe": "RYT2",
+   "type": "consigne",
+   "texte": "Consigne de rédaction : si RYT2 est jugé « −− » ou « − » et RYT1 ≥ 4, le signaler explicitement comme un échec aggravé par la charge investie.",
+   "code": "RYT/consigne/1",
+   "ordre": 1
+  },
+  {
+   "paire": "MAN",
+   "axe": null,
+   "type": "statut",
+   "texte": "Statut : stabilisée — fusion actée de deux anciennes paires (MANIPULATION, qui vivait dans Système, et GESTION, qui vivait dans Rythme) : une charge subie par le joueur, avant la partie (mise en place) comme pendant (comptabilité). MAN2 reformulée en session : le vocabulaire d'« outillage » présupposait qu'il fallait un outil pour bien noter, pénalisant à tort les petits jeux qui n'ont simplement rien à outiller. Reformulé autour de l'effet de la charge sur l'envie de jouer (dissuade / fait réfléchir / normal / agréable / jubilatoire) — se relativise de lui-même à MAN1, sans avoir besoin de le préciser à chaque palier.",
+   "code": "MAN/statut/1",
+   "ordre": 1
+  },
+  {
+   "paire": "MAN",
+   "axe": "MAN2",
+   "type": "consigne",
+   "texte": "Consigne de rédaction : si MAN2 est jugé « −− » ou « − » et MAN1 ≥ 4, le signaler explicitement comme un échec aggravé par la charge investie.",
+   "code": "MAN/consigne/1",
+   "ordre": 1
+  },
+  {
+   "paire": "THEM",
+   "axe": null,
+   "type": "statut",
+   "texte": "Statut : provisoire — relation entre les axes redéfinie une seconde fois en session : ni paire liée, ni « risque accru », mais un mécanisme composite propre à cette paire (voir THEM2) — THEM1 est un curseur neutre entre deux natures de jeu (abstrait ↔ thématique), jamais une ambition à honorer dans un seul sens. Migrée depuis l'ancien pôle Connexion.",
+   "code": "THEM/statut/1",
+   "ordre": 1
+  },
+  {
+   "paire": "THEM",
+   "axe": null,
+   "type": "absorption",
+   "texte": "Absorption : LORE (ex-paire séparée, volume et qualité de la matière narrative) est dissoute et rejoint THÈME. Logique : sans intégration thématique, il n'y a rien à raconter — LOR1 ne pouvait structurellement jamais dépasser THEM1. Le volume narratif devient une composante de THEM1, sa qualité perçue une composante de THEM2, plutôt que deux axes séparés.",
+   "code": "THEM/absorption/1",
+   "ordre": 1
+  },
+  {
+   "paire": "THEM",
+   "axe": "THEM2",
+   "type": "regle",
+   "texte": "Les deux notes intermédiaires (THEM2a, THEM2b) sont toujours demandées, même quand leur poids final sera faible — le coût de notation est négligeable (deux jugements plutôt qu'un) et le calcul reste automatique une fois les deux valeurs connues.",
+   "code": "THEM/regle/1",
+   "ordre": 1
+  },
+  {
+   "paire": "LIEN",
+   "axe": null,
+   "type": "statut",
+   "texte": "Statut : stabilisée sur le fond, nom actualisé en session (ex-RELATION, puis ex-ADVERSITÉ) — a absorbé SOLIDARITÉ (ex-Équipes, dissoute faute de cas réel testé : sur les quatre jeux évalués, l'incertitude d'alliance valait toujours 0). Formulation retenue pour cette absorption : LIEN1 garde son échelle 0-5 pour les jeux à composition fixe ; un jeu à composition incertaine (alliances mouvantes, traître caché) se note en ajoutant une mention libre à côté du chiffre plutôt qu'une valeur d'échelle à part — ex. « LIEN1 = 3 (incertain : alliances mouvantes) ». Orthogonale à INTERACTION : LIEN mesure la nature du rapport, INTERACTION sa quantité.",
+   "code": "LIEN/statut/1",
+   "ordre": 1
+  },
+  {
+   "paire": "LIEN",
+   "axe": null,
+   "type": "solo",
+   "texte": "Volet solo : s'il n'y a aucun automate, LIEN1 = 0 (rien à mesurer, non applicable) — aucune posture réelle n'est simulée. S'il y a un automate, LIEN1 mesure le niveau de confrontation ou de coopération qu'il incarne (même échelle 0-5), et LIEN2 juge si cette posture simulée tient à l'épreuve du jeu réel — le bot joue-t-il vraiment son rôle annoncé, ou est-ce mécanique et prévisible au point de ne tromper personne.",
+   "code": "LIEN/solo/1",
+   "ordre": 1
+  },
+  {
+   "paire": "LIEN",
+   "axe": "LIEN1",
+   "type": "historique",
+   "texte": "Historique du nom : RAPPORT capturait bien le sens (neutre entre coopération et compétition) mais jugé ambigu/inélégant ; ADVERSITÉ conservé un temps faute de mieux, penchait vers le conflit ; LIEN retenu en session — court, neutre, sans connotation de coopération ni de confrontation.",
+   "code": "LIEN/historique/1",
+   "ordre": 1
+  },
+  {
+   "paire": "INT",
+   "axe": null,
+   "type": "statut",
+   "texte": "Statut : provisoire — entièrement redéfinie en session (ex-CHOC). Orthogonale à LIEN : INTERACTION mesure la quantité d'interdépendance entre actions, indépendamment de la nature alliée ou hostile des joueurs.",
+   "code": "INT/statut/1",
+   "ordre": 1
+  },
+  {
+   "paire": "INT",
+   "axe": null,
+   "type": "solo",
+   "texte": "Volet solo : non applicable si le bot suit un script fixe, indifférent à ce que fait le joueur. Mais un bot qui réagit réellement aux actions du joueur (pas seulement un tirage aléatoire ou une table fixe) crée une vraie interdépendance joueur↔système, évaluable sur ce rapport plutôt que sur celui entre joueurs humains.",
+   "code": "INT/solo/1",
+   "ordre": 1
+  },
+  {
+   "paire": "INT",
+   "axe": null,
+   "type": "reserve",
+   "texte": "En réserve : Pierre se demande si INTERACTION et NÉGOCIATION méritent le même poids dans la moyenne finale qu'un axe aussi structurant que PROFONDEUR — question de pondération par paire, pas de définition. Mise de côté pour la session dédiée à la pondération globale du modèle, avec le sujet déjà identifié sur LIEN/INTERACTION (« le poids final n'est pas élevé, genre 5% »).",
+   "code": "INT/reserve/1",
+   "ordre": 1
+  },
+  {
+   "paire": "NEG",
+   "axe": null,
+   "type": "statut",
+   "texte": "Statut : stabilisée — NEG1 mesure une ampleur pure (plus de distinction formel/informel comme critère de palier, redevenue un simple détail de justification) : chaque espace non bloqué par la règle compte comme un espace de négociation, y compris minime. NEG2 n'est plus une vérification de promesse (« le poids annoncé se confirme-t-il ») mais un jugement direct de qualité vécue, toujours applicable — même un espace minime peut être vécu comme une vraie frustration plutôt que comme hors sujet (ex. The Crew).",
+   "code": "NEG/statut/1",
+   "ordre": 1
+  },
+  {
+   "paire": "NEG",
+   "axe": null,
+   "type": "solo",
+   "texte": "Volet solo : non applicable si le bot suit un script fixe, indifférent à ce que fait le joueur — personne avec qui négocier. Mais si le jeu fournit un substitut système qui joue le rôle de la négociation sous une autre forme (une mécanique d'influence, par exemple, comme dans John Company), NEG1/NEG2 restent évaluables, jugés sur le rapport joueur↔système plutôt que joueur↔joueur.",
+   "code": "NEG/solo/1",
+   "ordre": 1
+  },
+  {
+   "paire": "MAT",
+   "axe": null,
+   "type": "statut",
+   "texte": "Statut : stabilisée — reclassée en paire liée en session (initialement jugée neutre) : rester magnifique sur un gros volume de matériel est un accomplissement plus rare que sur une petite boîte — 50 grammes magnifiques et 9 kilos magnifiques ne se valent pas. Même logique que POIDS, VALEUR et SCALABILITÉ.",
+   "code": "MAT/statut/1",
+   "ordre": 1
+  },
+  {
+   "paire": "ART",
+   "axe": null,
+   "type": "statut",
+   "texte": "Statut : stabilisée — neutre. La richesse fonctionnelle d'un langage visuel et la réussite esthétique sont jugées indépendantes : un système d'icônes riche peut être moche, un système minimal peut être superbe.",
+   "code": "ART/statut/1",
+   "ordre": 1
+  },
+  {
+   "paire": "ACC",
+   "axe": null,
+   "type": "statut",
+   "texte": "Statut : stabilisée — pondération inverse. Élargie en session pour absorber la moitié « édition » de l'ancienne paire CLA (dissoute, l'autre moitié ayant rejoint POIDS en Système) : la vraie question qu'elle pose est « l'éditeur a-t-il produit une documentation qui permet de jouer sans aide extérieure » — c'est le rôle même du manuel.",
+   "code": "ACC/statut/1",
+   "ordre": 1
+  },
+  {
+   "paire": "ACC",
+   "axe": "ACC2",
+   "type": "consigne",
+   "texte": "Consigne de rédaction : si ACC2 ≤ 2 alors qu'ACC1 ≥ 4, le signaler comme un échec d'autant plus notable que les outils fournis semblaient suffisants sur le papier.",
+   "code": "ACC/consigne/1",
+   "ordre": 1
+  },
+  {
+   "paire": "VAL",
+   "axe": null,
+   "type": "statut",
+   "texte": "Statut : stabilisée — paire liée. VAL2 renommée en session (collision avec le nom de la paire, ex-« Valeur ») ; « Attractivité » retenu définitivement (candidats écartés en route : Affaire, Satisfaction, Rentabilité, Mérite, Justesse, Compte, Balance, Solde). Un jeu cher jugé « excellente affaire » est plus méritant qu'un jeu bon marché jugé pareil — la barre de justification économique monte avec le prix.",
+   "code": "VAL/statut/1",
+   "ordre": 1
+  }
+ ],
+ "jeux": [
+  {
+   "code": "gloomhaven",
+   "nom": "Gloomhaven"
+  },
+  {
+   "code": "high-frontier-4-all",
+   "nom": "High Frontier 4 All"
+  },
+  {
+   "code": "flip-7",
+   "nom": "Flip 7"
+  },
+  {
+   "code": "la-guerre-de-l-anneau",
+   "nom": "La Guerre de l'Anneau"
+  },
+  {
+   "code": "the-crew",
+   "nom": "The Crew"
+  }
+ ],
+ "exemples": [
+  {
+   "code": "POI1/gloomhaven",
+   "axe": "POI1",
+   "jeu": "gloomhaven",
+   "valeur": 4.2,
+   "symbole": null,
+   "valeur_texte": "4,2",
+   "remarque": null,
+   "justification": "Le livret de règles avoisine la quarantaine de pages (hors extensions de règles par classe), et l'explication complète à une table novice prend en général autour de deux heures — un volume notable, mais qui ne sature pas la grille recalibrée (33-64 pages).",
+   "amorce": "« On n'apprend pas Gloomhaven en une soirée, on l'apprivoise sur plusieurs scénarios — et chaque exception a son mot à dire, jamais à charge du joueur de s'en souvenir. »",
+   "ordre": 1
+  },
+  {
+   "code": "POI2/gloomhaven",
+   "axe": "POI2",
+   "jeu": "gloomhaven",
+   "valeur": 4.03,
+   "symbole": null,
+   "valeur_texte": "4,03",
+   "remarque": null,
+   "justification": "Écart jugé « = » : après des centaines de scénarios documentés par la communauté, aucun trou structurel majeur n'a survécu bien longtemps sans correction officielle, et la cohérence globale reste solide malgré l'abondance d'exceptions — ni plus ni moins que ce que le volume laissait attendre. POI0 = 4,2+0 = 4,2 → POI2 ≈ 4,03 (table en annexe).",
+   "amorce": "« Le système tient exactement à la hauteur de ce qu'il annonçait — ce qui, pour une machine aussi dense et truffée d'exceptions, n'allait déjà pas de soi. »",
+   "ordre": 2
+  },
+  {
+   "code": "POI1/high-frontier-4-all",
+   "axe": "POI1",
+   "jeu": "high-frontier-4-all",
+   "valeur": 5.0,
+   "symbole": null,
+   "valeur_texte": "5",
+   "remarque": "estimation — non noté formellement en session",
+   "justification": "Rulebook dense couvrant plusieurs modules combinés, largement au-delà du seuil des 65 pages recalibré, et un système qui découle directement de la mécanique orbitale réelle plutôt que de règles arbitraires.",
+   "amorce": "« Le livret ne se feuillette pas, il s'étudie. »",
+   "ordre": 3
+  },
+  {
+   "code": "POI2/high-frontier-4-all",
+   "axe": "POI2",
+   "jeu": "high-frontier-4-all",
+   "valeur": 5.0,
+   "symbole": null,
+   "valeur_texte": "5",
+   "remarque": null,
+   "justification": "Rigueur presque mathématique, aucun trou ni contradiction documentés après des décennies d'itération par le concepteur — un accomplissement remarquable (écart « ++ »). POI0 = 5+2 = 7 → POI2 = 5,00 (borne haute de la courbe, atteinte proprement).",
+   "amorce": "« Chaque règle se déduit d'une loi physique plutôt que d'une décision de design isolée — la solidité n'est pas un accident, c'est une conséquence. »",
+   "ordre": 4
+  },
+  {
+   "code": "PROF1/gloomhaven",
+   "axe": "PROF1",
+   "jeu": "gloomhaven",
+   "valeur": 5.0,
+   "symbole": null,
+   "valeur_texte": "5",
+   "remarque": null,
+   "justification": "Jouer deux cartes les rend indisponibles jusqu'au repos, sauf à sacrifier une potion pour les récupérer plus tôt ; le moment choisi pour se reposer redéfinit à son tour toute la main suivante. Chaque décision ouvre ou ferme des chaînes de décisions sur plusieurs tours, en cascade.",
+   "amorce": "« Choisir deux cartes, ce n'est jamais choisir deux cartes : c'est décider de quoi on se privera dans trois tours, et à quel prix on pourra changer d'avis. »",
+   "ordre": 5
+  },
+  {
+   "code": "PROF2/gloomhaven",
+   "axe": "PROF2",
+   "jeu": "gloomhaven",
+   "valeur": 5.0,
+   "symbole": null,
+   "valeur_texte": "5",
+   "remarque": null,
+   "justification": "Le joueur sait précisément pourquoi telle carte n'est plus disponible, et peut identifier ce qu'un autre choix de repos aurait changé — un accomplissement remarquable (écart « ++ »). PROF0 = 5+2 = 7 → PROF2 = 5,00 (borne haute de la courbe, atteinte proprement, sans ambiguïté cette fois).",
+   "amorce": "« Rien n'arrive par accident dans Gloomhaven : chaque carte absente de la main a un responsable, et ce responsable, c'est toujours une décision qu'on a prise deux tours plus tôt. »",
+   "ordre": 6
+  },
+  {
+   "code": "PROF1/flip-7",
+   "axe": "PROF1",
+   "jeu": "flip-7",
+   "valeur": 0.0,
+   "symbole": null,
+   "valeur_texte": "0",
+   "remarque": null,
+   "justification": "Dire « encore » ou « stop » n'affecte que le tour en cours : la décision ne ferme ni n'ouvre aucun choix futur, elle se referme sur elle-même immédiatement.",
+   "amorce": "« Chaque tour de Flip 7 naît et meurt sans laisser de trace sur le suivant. »",
+   "ordre": 7
+  },
+  {
+   "code": "PROF2/flip-7",
+   "axe": "PROF2",
+   "jeu": "flip-7",
+   "valeur": 0.0,
+   "symbole": null,
+   "valeur_texte": "0",
+   "remarque": null,
+   "justification": "Le joueur ne pilote rien : que la carte suivante soit bonne ou fatale ne dépend d'aucun choix antérieur, seulement de la pioche. Impossible de retracer un effet à une décision, puisqu'il n'y a essentiellement pas de décision à tracer.",
+   "amorce": "« Dire « encore », c'est fermer les yeux et espérer — jamais calculer. »",
+   "ordre": 8
+  },
+  {
+   "code": "VAR1/gloomhaven",
+   "axe": "VAR1",
+   "jeu": "gloomhaven",
+   "valeur": 4.0,
+   "symbole": null,
+   "valeur_texte": "4",
+   "remarque": null,
+   "justification": "Paquet de modificateurs d'attaque, cartes de monstres mêlées, decks de loot, scénarios ramifiés, quêtes personnelles secrètes : le renouvellement vient de 5-6 sources distinctes.",
+   "amorce": "« Le renouvellement vient de partout à la fois, sans jamais reposer sur un seul mécanisme. »",
+   "ordre": 9
+  },
+  {
+   "code": "VAR2/gloomhaven",
+   "axe": "VAR2",
+   "jeu": "gloomhaven",
+   "valeur": 3.89,
+   "symbole": null,
+   "valeur_texte": "3,89",
+   "remarque": null,
+   "justification": "Écart jugé « = » : le paquet de modificateurs retire ses pires cartes à mesure qu'elles tombent, pour qu'une malchance ne s'acharne jamais deux fois de suite. VAR0 = 4+0 = 4 → VAR2 ≈ 3,89 (table en annexe).",
+   "amorce": "« Le hasard ne décide jamais tout seul : il est distillé avec justesse, jamais laissé livré à lui-même. »",
+   "ordre": 10
+  },
+  {
+   "code": "VAR1/flip-7",
+   "axe": "VAR1",
+   "jeu": "flip-7",
+   "valeur": 1.0,
+   "symbole": null,
+   "valeur_texte": "1",
+   "remarque": null,
+   "justification": "Une seule vraie source de variation : l'ordre de pioche du deck de cartes numérotées.",
+   "amorce": "« Une seule source de hasard, mais elle suffit à tout faire basculer. »",
+   "ordre": 11
+  },
+  {
+   "code": "VAR2/flip-7",
+   "axe": "VAR2",
+   "jeu": "flip-7",
+   "valeur": 0.12,
+   "symbole": null,
+   "valeur_texte": "0,12",
+   "remarque": null,
+   "justification": "Écart jugé « −− » : le hasard domine entièrement l'issue de chaque tour, au point d'annuler toute décision. VAR0 = 1−2 = −1 → VAR2 ≈ 0,12 (table en annexe) ; VAR1 reste à 1, inchangé.",
+   "amorce": "« Une seule source de hasard, mais elle règne sans partage sur tout ce qui arrive. »",
+   "ordre": 12
+  },
+  {
+   "code": "EXIG1/gloomhaven",
+   "axe": "EXIG1",
+   "jeu": "gloomhaven",
+   "valeur": 5.0,
+   "symbole": null,
+   "valeur_texte": "5",
+   "remarque": null,
+   "justification": "Deux cartes à choisir sur dix, leur ordre, l'initiative qui en découle, la fatigue à ne pas franchir, la position à anticiper avant même que la carte soit posée : un moteur à plusieurs variables interdépendantes à faire tourner à chaque tour.",
+   "amorce": "« Ce n'est pas une décision, c'est un moteur à plusieurs variables interdépendantes à faire tourner à chaque tour. »",
+   "ordre": 13
+  },
+  {
+   "code": "EXIG2/gloomhaven",
+   "axe": "EXIG2",
+   "jeu": "gloomhaven",
+   "valeur": 4.51,
+   "symbole": null,
+   "valeur_texte": "4,51",
+   "remarque": null,
+   "justification": "Écart jugé « = » : chaque carte jouée produit un effet immédiat et lisible sur le plateau, et la progression du personnage donne un sentiment de maîtrise qui grandit clairement d'une partie à l'autre. EXIG0 = 5+0 = 5 → EXIG2 ≈ 4,51 (table en annexe).",
+   "amorce": "« On sait dans la seconde si le tour était bien joué — rarement besoin d'attendre la fin de la partie pour le comprendre. »",
+   "ordre": 14
+  },
+  {
+   "code": "EXIG1/high-frontier-4-all",
+   "axe": "EXIG1",
+   "jeu": "high-frontier-4-all",
+   "valeur": 5.0,
+   "symbole": null,
+   "valeur_texte": "5",
+   "remarque": null,
+   "justification": "Trajectoire, masse, poussée, carburant, brevets à enchaîner : un calcul de plusieurs variables interdépendantes à chaque manœuvre, au plafond de l'échelle.",
+   "amorce": "« Chaque lancement se calcule comme un problème d'ingénierie, jamais comme un réflexe. »",
+   "ordre": 15
+  },
+  {
+   "code": "EXIG2/high-frontier-4-all",
+   "axe": "EXIG2",
+   "jeu": "high-frontier-4-all",
+   "valeur": 1.98,
+   "symbole": null,
+   "valeur_texte": "1,98",
+   "remarque": null,
+   "justification": "Écart jugé largement « −− » : l'exigence cognitive est maximale, mais le retour est souvent différé de plusieurs tours — un lancement se juge parfois bien après la manœuvre qui l'a préparé. EXIG0 = 5−3 = 2 → EXIG2 ≈ 1,98 (table en annexe).",
+   "amorce": "« On calcule juste, et on attend, parfois longtemps, de savoir si on avait raison. »",
+   "ordre": 16
+  },
+  {
+   "code": "SCAL2/gloomhaven",
+   "axe": "SCAL2",
+   "jeu": "gloomhaven",
+   "valeur": 3.02,
+   "symbole": null,
+   "valeur_texte": "3,02",
+   "remarque": "valeur approchée; à valider par Pierre",
+   "justification": "SCAL1 = 2 (3-4 joueurs max). Le jeu est généralement salué comme solide sur toute sa plage, avec un léger surcroît de downtime à 4 joueurs plutôt qu'un vrai décrochage — cohérent avec un écart « + » : SCAL0 = 2+1 = 3 → SCAL2 ≈ 3,02 (table en annexe).",
+   "amorce": "« D'un bout à l'autre de sa plage, Gloomhaven reste fondamentalement le même jeu — juste un peu plus dense à mesure que la table se remplit. »",
+   "ordre": 17
+  },
+  {
+   "code": "RYT1/gloomhaven",
+   "axe": "RYT1",
+   "jeu": "gloomhaven",
+   "valeur": 3.0,
+   "symbole": null,
+   "valeur_texte": "3",
+   "remarque": null,
+   "justification": "Partie longue (1h30 à plus de 2h), mais peu de charge passive à l'intérieur même du tour du joueur (chaque carte jouée produit un effet à décider) ; côté tour des autres, le plateau bouge même hors de son propre tour (monstres, éléments) : charge non-active modérée, ni négligeable ni écrasante. Vécue positivement — le décompte de fatigue et l'enchaînement des cartes font que le temps file, même si la mobilisation pendant le tour des autres n'est jamais citée comme une qualité qui saute aux yeux.",
+   "amorce": null,
+   "ordre": 18
+  },
+  {
+   "code": "RYT2/gloomhaven",
+   "axe": "RYT2",
+   "jeu": "gloomhaven",
+   "valeur": null,
+   "symbole": "+",
+   "valeur_texte": "« + »",
+   "remarque": "exemple reconstruit à partir des anciennes évaluations DURÉE/DOWNTIME, pas encore rescoré sous cette forme affinée",
+   "justification": "Partie longue (1h30 à plus de 2h), mais peu de charge passive à l'intérieur même du tour du joueur (chaque carte jouée produit un effet à décider) ; côté tour des autres, le plateau bouge même hors de son propre tour (monstres, éléments) : charge non-active modérée, ni négligeable ni écrasante. Vécue positivement — le décompte de fatigue et l'enchaînement des cartes font que le temps file, même si la mobilisation pendant le tour des autres n'est jamais citée comme une qualité qui saute aux yeux.",
+   "amorce": null,
+   "ordre": 19
+  },
+  {
+   "code": "MAN1/gloomhaven",
+   "axe": "MAN1",
+   "jeu": "gloomhaven",
+   "valeur": 5.0,
+   "symbole": null,
+   "valeur_texte": "5",
+   "remarque": null,
+   "justification": "Sortir la boîte, c'est trier des jetons, déployer des plateaux de monstres, retrouver le bon paquet de cartes — et une fois en jeu, décompte de fatigue, gestion des conditions, activation des monstres un par un : la charge est lourde des deux côtés.",
+   "amorce": "« Sortir la boîte, c'est déjà un petit projet en soi — et la partie elle-même ne relâche jamais vraiment la pression administrative. »",
+   "ordre": 20
+  },
+  {
+   "code": "MAN2/gloomhaven",
+   "axe": "MAN2",
+   "jeu": "gloomhaven",
+   "valeur": null,
+   "symbole": "−",
+   "valeur_texte": "« − »",
+   "remarque": null,
+   "justification": "Avant de lancer une session, la question « on a vraiment le temps ce soir ? » se pose presque toujours — la mise en place et la comptabilité en cours de partie pèsent assez pour freiner le choix, sans jamais aller jusqu'à dissuader complètement d'y jouer. Une fois lancée, la partie fait vite oublier cette hésitation de départ.",
+   "amorce": "« On hésite toujours un peu avant de la sortir, cette boîte — jamais assez pour renoncer, juste assez pour vérifier l'heure. »",
+   "ordre": 21
+  },
+  {
+   "code": "THEM1/gloomhaven",
+   "axe": "THEM1",
+   "jeu": "gloomhaven",
+   "valeur": 4.0,
+   "symbole": null,
+   "valeur_texte": "4",
+   "remarque": null,
+   "justification": "L'auteur ne cherche pas à faire optimiser des compteurs déguisés en cartes : il cherche à faire vivre des combats opérationnels, et il y parvient. La majorité des mécaniques thématisent réellement le combat.",
+   "amorce": "« Le nommage porte l'univers à chaque carte, et la majorité des mécaniques en font tout autant. »",
+   "ordre": 22
+  },
+  {
+   "code": "THEM2/gloomhaven",
+   "axe": "THEM2",
+   "jeu": "gloomhaven",
+   "valeur": 3.8,
+   "symbole": null,
+   "valeur_texte": "3,8",
+   "remarque": "THEM2b=4, THEM2a=3, à revalider par Pierre",
+   "justification": "THEM2b (thème porté) = 4 : le reskin échouerait sur l'essentiel — fatigue, initiative par carte, combos élémentaires sont pensés comme des simulations de combat, pas comme un système neutre repeint en fantasy. THEM2a (abstraction) = 3 : même dépouillé de son thème, le moteur de gestion de main reste correct sans être exceptionnel. THEM2 = [4×4 + 3×1] / 5 = 19/5 = 3,8 — tiré presque entièrement vers THEM2b puisque THEM1=4 est proche du maximum thématique.",
+   "amorce": "« La défausse de cartes simule une vraie épuisement tactique en plein combat, pas un habillage plaqué après coup. »",
+   "ordre": 23
+  },
+  {
+   "code": "LIEN1/gloomhaven",
+   "axe": "LIEN1",
+   "jeu": "gloomhaven",
+   "valeur": 1.0,
+   "symbole": null,
+   "valeur_texte": "1",
+   "remarque": null,
+   "justification": "Un objectif commun, jamais de ciblage entre joueurs — la coopération est totale, avec juste une pointe de friction sur qui récupère quel butin.",
+   "amorce": "« La coopération est totale, avec juste une pointe de friction sur le butin. »",
+   "ordre": 24
+  },
+  {
+   "code": "LIEN2/gloomhaven",
+   "axe": "LIEN2",
+   "jeu": "gloomhaven",
+   "valeur": 4.0,
+   "symbole": null,
+   "valeur_texte": "4",
+   "remarque": null,
+   "justification": "La promesse coopérative est tenue sans triche : positionnement, ordre d'initiative et combos de dégâts élémentaires exigent une coordination réelle, rarement l'œuvre d'un seul joueur qui déciderait pour la table.",
+   "amorce": "« La coopération tient réellement sa promesse — rarement l'œuvre d'un seul joueur qui déciderait pour tous. »",
+   "ordre": 25
+  },
+  {
+   "code": "LIEN1/la-guerre-de-l-anneau",
+   "axe": "LIEN1",
+   "jeu": "la-guerre-de-l-anneau",
+   "valeur": 5.0,
+   "symbole": null,
+   "valeur_texte": "5",
+   "remarque": null,
+   "justification": "Confrontation directe totale entre deux camps aux règles et objectifs radicalement différents.",
+   "amorce": "« Chacun pour soi, sans la moindre ambiguïté sur qui est l'ennemi. »",
+   "ordre": 26
+  },
+  {
+   "code": "LIEN2/la-guerre-de-l-anneau",
+   "axe": "LIEN2",
+   "jeu": "la-guerre-de-l-anneau",
+   "valeur": 5.0,
+   "symbole": null,
+   "valeur_texte": "5",
+   "remarque": null,
+   "justification": "La confrontation directe promise est pleinement au rendez-vous, régulièrement citée comme l'un des meilleurs duels asymétriques du hobby.",
+   "amorce": "« La confrontation promise est pleinement au rendez-vous, sans jamais s'émousser. »",
+   "ordre": 27
+  },
+  {
+   "code": "INT1/gloomhaven",
+   "axe": "INT1",
+   "jeu": "gloomhaven",
+   "valeur": 3.0,
+   "symbole": null,
+   "valeur_texte": "3",
+   "remarque": null,
+   "justification": "Le choix d'un coéquipier — sa position, sa cible, son initiative — force en permanence à ajuster son propre plan ; on ne joue jamais complètement seul dans son coin.",
+   "amorce": "« On ne joue jamais complètement seul dans son coin. »",
+   "ordre": 28
+  },
+  {
+   "code": "INT2/gloomhaven",
+   "axe": "INT2",
+   "jeu": "gloomhaven",
+   "valeur": 4.0,
+   "symbole": null,
+   "valeur_texte": "4",
+   "remarque": null,
+   "justification": "Puisque tout le monde vise le même objectif, cette adaptation ne sonne jamais comme une punition arbitraire — elle découle toujours d'une nécessité tactique partagée.",
+   "amorce": "« L'adaptation permanente aux autres ne sonne jamais comme une punition arbitraire. »",
+   "ordre": 29
+  },
+  {
+   "code": "NEG1/gloomhaven",
+   "axe": "NEG1",
+   "jeu": "gloomhaven",
+   "valeur": 4.0,
+   "symbole": null,
+   "valeur_texte": "4",
+   "remarque": null,
+   "justification": "Le groupe négocie en permanence, sans aucune règle qui l'y oblige : quoi faire, qui fait quoi, dans quel ordre, qui prend le coup pour l'équipe. Rien n'est formalisé, mais quasiment aucune décision importante ne se prend sans en discuter d'abord.",
+   "amorce": "« Personne ne l'exige, et pourtant presque rien ne se décide seul dans son coin. »",
+   "ordre": 30
+  },
+  {
+   "code": "NEG2/gloomhaven",
+   "axe": "NEG2",
+   "jeu": "gloomhaven",
+   "valeur": 4.0,
+   "symbole": null,
+   "valeur_texte": "4",
+   "remarque": null,
+   "justification": "Cette négociation constante est l'un des grands plaisirs cités du jeu — construire un plan à plusieurs, ajuster à la volée, sans qu'un joueur ne finisse par dicter systématiquement aux autres quoi faire.",
+   "amorce": "« Le plan ne survit jamais intact au premier tour, et c'est très bien comme ça — on le refait ensemble. »",
+   "ordre": 31
+  },
+  {
+   "code": "NEG1/flip-7",
+   "axe": "NEG1",
+   "jeu": "flip-7",
+   "valeur": 1.0,
+   "symbole": null,
+   "valeur_texte": "1",
+   "remarque": null,
+   "justification": "Aucune règle de négociation — mais dire « stop » ou « encore » touche directement les autres joueurs, dont les intérêts divergent du sien. Chauffer le joueur actif (« vas-y, tente le coup ! » ou « arrête, tu vas tout perdre ! ») reste un espace minime et ponctuel, pas une négociation qui structure la partie.",
+   "amorce": "« Aucune règle ne le prévoit, mais toute la table s'y met pour vous pousser à tenter le sort. »",
+   "ordre": 32
+  },
+  {
+   "code": "NEG2/flip-7",
+   "axe": "NEG2",
+   "jeu": "flip-7",
+   "valeur": 3.0,
+   "symbole": null,
+   "valeur_texte": "3",
+   "remarque": null,
+   "justification": "Cette pression sociale, bien que minime, est généralement bien vécue — elle ajoute un sel social au jeu plutôt que de le plomber, même si son intensité dépend surtout du groupe autour de la table, pas du jeu lui-même.",
+   "amorce": "« Le jeu ne dit jamais aux autres joueurs de vous pousser à sauter — il n'en a pas besoin. »",
+   "ordre": 33
+  },
+  {
+   "code": "NEG1/high-frontier-4-all",
+   "axe": "NEG1",
+   "jeu": "high-frontier-4-all",
+   "valeur": 4.0,
+   "symbole": null,
+   "valeur_texte": "4",
+   "remarque": null,
+   "justification": "La négociation est quasi continue : sites, brevets, technologies, la plupart des décisions importantes se négocient entre joueurs.",
+   "amorce": "« Presque rien, dans cette partie, n'échappe à la table des négociations. »",
+   "ordre": 34
+  },
+  {
+   "code": "NEG2/high-frontier-4-all",
+   "axe": "NEG2",
+   "jeu": "high-frontier-4-all",
+   "valeur": 4.0,
+   "symbole": null,
+   "valeur_texte": "4",
+   "remarque": null,
+   "justification": "Cette négociation omniprésente est régulièrement citée comme l'un des points forts du jeu — un vrai plaisir social, pas seulement une case de règles cochée.",
+   "amorce": "« Ce qui se décide à cette table compte autant que ce qui se calcule. »",
+   "ordre": 35
+  },
+  {
+   "code": "NEG1/the-crew",
+   "axe": "NEG1",
+   "jeu": "the-crew",
+   "valeur": 1.0,
+   "symbole": null,
+   "valeur_texte": "1",
+   "remarque": null,
+   "justification": "L'information cachée est imposée par la règle, qui interdit toute communication explicite sur son jeu — mais un espace résiduel subsiste : signaux indirects tolérés, discussion hors-tour sur la stratégie générale, sans jamais révéler sa main.",
+   "amorce": "« On ne peut rien dire de sa main — alors on essaie de tout dire avec le reste. »",
+   "ordre": 36
+  },
+  {
+   "code": "NEG2/the-crew",
+   "axe": "NEG2",
+   "jeu": "the-crew",
+   "valeur": 1.0,
+   "symbole": null,
+   "valeur_texte": "1",
+   "remarque": null,
+   "justification": "Cet espace résiduel est souvent vécu comme frustrant plutôt que comme un vrai plaisir : les joueurs comprennent et acceptent pourquoi la règle interdit d'en dire plus (le jeu ne fonctionnerait plus sinon), mais l'envie de négocier davantage — et l'impossibilité de le faire — reste un vrai regret, pas juste un non-sujet.",
+   "amorce": "« On accepte la règle du silence, on ne s'en console pas tout à fait. »",
+   "ordre": 37
+  },
+  {
+   "code": "MAT1/gloomhaven",
+   "axe": "MAT1",
+   "jeu": "gloomhaven",
+   "valeur": 4.0,
+   "symbole": null,
+   "valeur_texte": "4",
+   "remarque": null,
+   "justification": "La boîte à elle seule dépasse largement un espace Kallax standard — c'est même l'exemple qui vient spontanément à l'esprit quand on parle de jeu trop gros pour l'étagère.",
+   "amorce": "« C'est même l'exemple qui vient spontanément à l'esprit quand on parle de jeu trop gros pour l'étagère. »",
+   "ordre": 38
+  },
+  {
+   "code": "MAT2/gloomhaven",
+   "axe": "MAT2",
+   "jeu": "gloomhaven",
+   "valeur": 3.89,
+   "symbole": null,
+   "valeur_texte": "3,89",
+   "remarque": null,
+   "justification": "Écart jugé « = » : standees solides, tuiles épaisses, système d'autocollants pensé pour durer une campagne entière — une qualité tenue sur un très gros volume de composants, sans être exceptionnelle pour autant. MAT0 = 4+0 = 4 → MAT2 ≈ 3,89 (table en annexe).",
+   "amorce": "« Tenir la qualité sur un tel volume de composants n'allait pas de soi — et elle tient, sans jamais flancher. »",
+   "ordre": 39
+  },
+  {
+   "code": "ART1/gloomhaven",
+   "axe": "ART1",
+   "jeu": "gloomhaven",
+   "valeur": 5.0,
+   "symbole": null,
+   "valeur_texte": "5",
+   "remarque": null,
+   "justification": "Les cartes d'action ne racontent presque rien en texte : tout passe par un système d'icônes — éléments, états, cibles — développé jusque dans le moindre recoin du jeu.",
+   "amorce": "« Un vrai langage à part entière, développé jusque dans le moindre recoin du jeu. »",
+   "ordre": 40
+  },
+  {
+   "code": "ART2/gloomhaven",
+   "axe": "ART2",
+   "jeu": "gloomhaven",
+   "valeur": 4.0,
+   "symbole": null,
+   "valeur_texte": "4",
+   "remarque": null,
+   "justification": "Les illustrations peintes posent une ambiance sombre et cohérente d'un bout à l'autre de la boîte — plaisant et maîtrisé, sans être la révélation esthétique du genre.",
+   "amorce": "« Plaisant et maîtrisé, sans être la révélation esthétique du genre. »",
+   "ordre": 41
+  },
+  {
+   "code": "ACC1/gloomhaven",
+   "axe": "ACC1",
+   "jeu": "gloomhaven",
+   "valeur": 4.0,
+   "symbole": null,
+   "valeur_texte": "4",
+   "remarque": null,
+   "justification": "Le tout premier scénario de la boîte est conçu comme une partie guidée, pensée pour enseigner les mécaniques une à une plutôt que de jeter le joueur dans le grand bain. Côté consultation, les cartes de monstres et de capacités servent déjà de fiches de référence en cours de partie — mais le livret de règles lui-même n'a pas d'index détaillé pour les cas particuliers.",
+   "amorce": "« Le premier scénario ne teste pas le joueur, il l'enseigne. »",
+   "ordre": 42
+  },
+  {
+   "code": "ACC2/gloomhaven",
+   "axe": "ACC2",
+   "jeu": "gloomhaven",
+   "valeur": 2.0,
+   "symbole": null,
+   "valeur_texte": "2",
+   "remarque": null,
+   "justification": "Malgré cet effort, une bonne partie des nouvelles tables finit par consulter une vidéo explicative avant sa première session — le livret seul laisse rarement une première partie totalement sereine. Et une fois le jeu connu, retrouver une clarification précise (une interaction de cartes, un cas de siège) demande souvent de fouiller le livret faute d'index fourni — un réflexe fréquent consiste à chercher la réponse en ligne plutôt que dans le livret.",
+   "amorce": "« Le tutoriel tend la main, mais beaucoup de tables la lâchent en route pour une vidéo YouTube. »",
+   "ordre": 43
+  },
+  {
+   "code": "VAL1/gloomhaven",
+   "axe": "VAL1",
+   "jeu": "gloomhaven",
+   "valeur": 4.0,
+   "symbole": null,
+   "valeur_texte": "4",
+   "remarque": null,
+   "justification": "Un ticket d'entrée qui se situe carrément dans le haut de gamme des jeux de société.",
+   "amorce": "« Un ticket d'entrée qui se situe carrément dans le haut de gamme. »",
+   "ordre": 44
+  },
+  {
+   "code": "VAL2/gloomhaven",
+   "axe": "VAL2",
+   "jeu": "gloomhaven",
+   "valeur": 4.51,
+   "symbole": null,
+   "valeur_texte": "4,51",
+   "remarque": null,
+   "justification": "Écart jugé « + » : rapporté aux dizaines, voire centaines d'heures de campagne que la boîte contient, la communauté le cite régulièrement comme l'un des meilleurs rapports contenu/prix du hobby. VAL0 = 4+1 = 5 → VAL2 ≈ 4,51 (table en annexe).",
+   "amorce": "« Rapporté aux centaines d'heures que la boîte contient, l'un des meilleurs rapports contenu/prix du hobby. »",
+   "ordre": 45
+  }
+ ],
+ "textes": [
+  {
+   "code": "presentation",
+   "section": "Présentation",
+   "titre": null,
+   "contenu": "PRISMEgame\nModop littéraire\n*Guide de rédaction pour l'évaluation et la description littéraire d'un jeu*\nDocument de travail vivant, construit paire d'axe par paire d'axe, au fil des sessions de Pierre et Claude. Chaque paire est marquée d'un statut de maturité — certaines sont stabilisées, d'autres restent provisoires en attendant une session dédiée.\nDestiné à Vincent et Pierre : ce document doit permettre d'appliquer PRISMEgame à un jeu sans avoir vécu les sessions qui l'ont produit.",
+   "ordre": 1
+  },
+  {
+   "code": "comment-utiliser-ce-document",
+   "section": "Comment utiliser ce document",
+   "titre": null,
+   "contenu": "Pour chaque paire d'axes, ce document fournit :\n- la définition de la paire dans son ensemble ;\n- l'axe 1 (descriptif) : sa définition et sa méthode de notation, avec une grille de génération de la valeur (comment on l'observe concrètement sur un jeu) ;\n- l'axe 2 (évaluatif) : sa définition et sa méthode de notation, éventuellement dérivée du niveau de l'axe 1 selon la relation établie entre les deux ;\n- des exemples chiffrés et justifiés, avec une amorce de texte littéraire pour chaque cas.\nLe document se termine par la structure des tables de synthèse (par axe, par chapitre, et l'évaluation finale hors croisement avec le profil joueur).",
+   "ordre": 2
+  },
+  {
+   "code": "comment-utiliser-ce-document-statuts-de-maturite-utilises",
+   "section": "Comment utiliser ce document",
+   "titre": "Statuts de maturité utilisés",
+   "contenu": "- Stabilisée — définition, échelle et relation entre les deux axes actées en session.\n- Provisoire — relation entre les deux axes actée en principe, mais échelle ou formulation encore à affiner.\n- En ballotage — la nature même de la relation reste en discussion ; à ne pas utiliser tel quel sans relecture.",
+   "ordre": 3
+  },
+  {
+   "code": "comment-utiliser-ce-document-le-volet-solo",
+   "section": "Comment utiliser ce document",
+   "titre": "Le volet solo",
+   "contenu": "Règle générale : une paire pensée pour l'interaction entre joueurs humains ne devient pas automatiquement non applicable en solo. L'interaction ne disparaît pas quand un bot remplace les autres joueurs — elle change de partenaire (joueur↔joueur devient joueur↔système). Si le jeu fournit un substitut système qui joue réellement ce rôle (même sous une autre forme — une mécanique d'influence à la place d'une négociation, par exemple, comme dans John Company), l'axe reste évaluable, jugé sur le rapport joueur↔jeu plutôt que joueur↔joueur. Ce n'est que lorsqu'aucun substitut n'existe — le bot suit un script fixe, indifférent à ce que fait le joueur — que l'axe redevient non applicable.\nConvention d'écriture : quand un axe est non applicable en solo, l'indiquer explicitement dans une note « Volet solo » propre à la paire (voir LIEN, INTERACTION, NÉGOCIATION, SCALABILITÉ pour des exemples), plutôt que de laisser la question sans réponse.",
+   "ordre": 4
+  },
+  {
+   "code": "comment-utiliser-ce-document-les-relations-entre-axe-descriptif-et-axe-evaluatif",
+   "section": "Comment utiliser ce document",
+   "titre": "Les relations entre axe descriptif et axe évaluatif",
+   "contenu": "Cinq relations générales ont été identifiées à ce jour entre un axe 1 et son axe 2, plus un mécanisme propre à une paire (THÈME) qui ne rentre dans aucune des cinq :\n- Neutre — les deux notes sont indépendantes.\n- Liée — l'axe 1 sert de point de départ explicite au jugement porté sur l'axe 2 : on ne demande pas « ce résultat est-il bon dans l'absolu », mais « ce résultat est-il remarquable, attendu ou décevant, compte tenu du niveau annoncé par l'axe 1 ». Mécanisme détaillé ci-dessous.\n- Pénalité asymétrique à l'échec — l'axe 1 mesure un coût subi par le joueur ; un échec sur l'axe 2 pèse d'autant plus lourd que ce coût est élevé. Traitée en prose dans la synthèse, sans formule de calcul (voir note ci-dessous).\n- Pondération inverse — un axe 1 élevé facilite l'axe 2 plutôt qu'il ne le complique.\n- Promesse qui doit survivre à l'épreuve du jeu réel — l'axe 1 annonce une position, l'axe 2 vérifie si elle tient une fois la partie en cours.\n- Composite, propre à une paire (THÈME) — quand l'axe 1 n'est ni une ambition ni un coût mais un curseur neutre entre deux natures possibles, l'axe 2 peut composer deux notes de qualité distinctes, chacune pesée selon la position de l'axe 1 sur ce curseur. Voir la formule détaillée dans THÈME.\n> Note : une formule de calcul pour la pénalité asymétrique a été testée puis abandonnée (effet réel trop étroit, risque de confusion entre la note affichée et une note recalculée en coulisses). La pénalité se traduit en prose dans la synthèse, jamais par un second chiffre.",
+   "ordre": 5
+  },
+  {
+   "code": "comment-utiliser-ce-document-mecanisme-des-paires-liees",
+   "section": "Comment utiliser ce document",
+   "titre": "Mécanisme des paires liées",
+   "contenu": "Pour une paire liée (ex. POIDS), la note finale de l'axe 2 se construit en trois temps plutôt que par un calcul opaque :\n- 1. Noter l'axe 1 sur sa grille (0-5), comme pour toute paire.\n- 2. Juger le résultat de l'axe 2 relativement à ce que l'axe 1 laissait attendre, sur une échelle qualitative à 5 crans : −− (très en-dessous de l'attente) — − (en-dessous) — = (conforme, rien ne saute aux yeux) — + (élégance, au-dessus de l'attente) — ++ (accomplissement remarquable). Des demi-crans sont possibles.\n- 3. Calculer la valeur intermédiaire X0 = axe 1 + écart, sans plafonnement : X0 peut descendre à −2 ou monter à 7, l'axe 1 ne bouge jamais. Ramener X0 sur l'échelle 0-5 par une courbe en S (formule et table de référence en annexe) plutôt qu'un plafond brutal : plate aux deux extrémités, la plus raide au centre — ça évite la fois qu'un plafonnement écrasait deux jeux très différents sur le même chiffre, et la fois qu'une simple règle de trois éloignait l'axe 2 de l'axe 1 même quand l'écart était neutre.\nExemple : axe 1 = 4,2, écart jugé « + » (+1) → X0 = 5,2 → axe 2 ≈ 4,6 (lu dans la table de référence en annexe).",
+   "ordre": 6
+  },
+  {
+   "code": "structure-des-tables-de-synthese",
+   "section": "Structure des tables de synthèse",
+   "titre": null,
+   "contenu": "Une fois toutes les paires notées et justifiées pour un jeu donné, l'article se construit en trois niveaux emboîtés.",
+   "ordre": 7
+  },
+  {
+   "code": "structure-des-tables-de-synthese-1-table-par-paire-par-chapitre",
+   "section": "Structure des tables de synthèse",
+   "titre": "1. Table par paire (par chapitre)",
+   "contenu": "Une ligne par paire d'axes du chapitre, trois colonnes :\n- Axe — le titre de la paire (ex. POIDS, PROFONDEUR...) ;\n- Note — la ou les notes retenues (axe 1 si pertinent pour l'article, et/ou axe 2) ;\n- Article — le texte littéraire correspondant, rédigé à partir de la justification et de l'amorce.",
+   "ordre": 8
+  },
+  {
+   "code": "structure-des-tables-de-synthese-2-note-de-chapitre",
+   "section": "Structure des tables de synthèse",
+   "titre": "2. Note de chapitre",
+   "contenu": "Moyenne des seuls axes évaluatifs (suffixe 2) du chapitre — les axes descriptifs nourrissent l'article mais pas la note de qualité, sauf dans les cas de mérite accru direct où le niveau de l'axe 1 doit être rappelé en commentaire à côté de la moyenne plutôt qu'inclus dans son calcul. Un axe évaluatif sans objet (son pendant descriptif à 0) est exclu de la moyenne plutôt que noté par défaut.\nChaque chapitre se clôt par une synthèse en prose qui exploite les points les plus significatifs — pas un résumé de toutes les paires, une sélection de ce qui distingue vraiment ce jeu.",
+   "ordre": 9
+  },
+  {
+   "code": "structure-des-tables-de-synthese-3-evaluation-finale",
+   "section": "Structure des tables de synthèse",
+   "titre": "3. Évaluation finale",
+   "contenu": "Moyenne des notes de chapitre (Système, Expérience, Édition — Rythme et Connexion fusionnés en Expérience en session) — moyenne des moyennes, pas moyenne pondérée sur le nombre total d'axes évaluatifs (les deux méthodes ont été comparées ; la moyenne des moyennes a été retenue).\nCette évaluation finale reste volontairement \"neutre\" : elle ne croise pas encore le résultat avec un profil joueur PRISMEplayer particulier — ce croisement fait l'objet d'un traitement séparé, hors du périmètre de ce modop.",
+   "ordre": 10
+  },
+  {
+   "code": "annexe-formule-et-table-de-reference-des-paires-liees",
+   "section": "Annexe — Formule et table de référence des paires liées",
+   "titre": null,
+   "contenu": "Concerne les sept paires liées : POIDS, PROFONDEUR, VARIABILITÉ, EXIGENCE, SCALABILITÉ, MATÉRIEL, VALEUR. Ne concerne pas les paires indépendantes (pénalité asymétrique, promesse tenue, composite) qui n'utilisent pas ce mécanisme.",
+   "ordre": 11
+  },
+  {
+   "code": "annexe-formule-et-table-de-reference-des-paires-liees-la-formule",
+   "section": "Annexe — Formule et table de référence des paires liées",
+   "titre": "La formule",
+   "contenu": "Étape 1 — X0 = axe 1 + écart (−−=−2, −=−1, ==0, +=+1, ++=+2). Sans plafonnement : X0 va de −2 à 7. L'axe 1 ne bouge jamais, quel que soit le résultat.\nÉtape 2 — ramener X0 sur l'échelle 0-5 par une courbe en S plutôt qu'une règle de trois : plate aux deux extrémités (un écart extrême a moins d'effet marginal près des bornes), la plus raide au centre (c'est là qu'un même écart pèse le plus). Avec t = (X0 + 2) / 9 :\n*Si t ≤ 0,5 : axe 2 = 5 × 2 × t²*\n*Si t > 0,5 : axe 2 = 5 × [1 − 2 × (1−t)²]*\nLes deux morceaux se rejoignent exactement à t=0,5 (X0=2,5), sans cassure. Cette courbe résout les deux défauts qu'on avait rencontrés en testant le prototype : un plafonnement brutal confondait des jeux très différents sur le même chiffre aux extrêmes (ex. un jeu correct et un jeu jugé arnaque pouvaient tous deux finir à 0) ; une simple règle de trois (rescale linéaire) éloignait l'axe 2 de l'axe 1 même quand l'écart choisi était neutre (« = » ne redonnait pas axe 2 ≈ axe 1, sauf pile au milieu de l'échelle).",
+   "ordre": 12
+  },
+  {
+   "code": "annexe-formule-et-table-de-reference-des-paires-liees-table-de-reference",
+   "section": "Annexe — Formule et table de référence des paires liées",
+   "titre": "Table de référence",
+   "contenu": "Pour lecture à la main, sans calcul : croiser la valeur de l'axe 1 (ligne) avec l'écart choisi (colonne) donne directement l'axe 2.\n> Décidée en session après plusieurs itérations : d'abord un plafonnement avec correction de l'axe 1 (abandonné : confondait des jeux différents aux extrêmes), puis un rescale linéaire (abandonné : faisait dériver « = » loin de l'axe 1), enfin cette courbe en S. Les « cas non résolus » notés plus tôt dans ce document (que faire quand l'axe 1 est à sa borne) sont résolus par construction : l'axe 1 ne se corrige plus jamais, il n'y a donc plus de borne à lui faire respecter.",
+   "ordre": 13
+  }
+ ]
+}
