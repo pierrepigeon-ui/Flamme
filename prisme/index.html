@@ -98,7 +98,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px} .field{display:block;margi
   <p class="msg" id="login-msg" role="status"></p></form></dialog>
 
 <script>
-const VERSION = { numero:"1.1", date:"2026-10-03 21:48" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"1.2", date:"2026-10-03 22:12" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -146,6 +146,7 @@ async function afficherEspace(){
     : "Vous n'avez pas encore enregistré de profil de joueur : commencez par le questionnaire.";
   let t = dernier ? tuile("fiche.html", "Mon profil de joueur", "Vos moteurs, votre archétype, votre moment") : "";
   t += tuile("questionnaire.html", "Questionnaire du joueur", dernier ? "Revoir ou modifier vos réponses" : "Vingt-cinq situations de jeu, dix minutes");
+  if (["proprietaire","editeur","evaluateur"].includes(role)) t += tuile("evaluation.html", "Évaluer un jeu", "Remplir ou reprendre une fiche PRISMEgame");
   if (role) t += tuile("console.html", ["proprietaire","editeur"].includes(role) ? "Console" : "Le modèle",
                        ["proprietaire","editeur"].includes(role) ? "Parcourir et éditer le modèle PRISME" : "Parcourir le modèle PRISME");
   if (role === "proprietaire") t += tuile("../index.html", "Flamme Bleue", "L'autre univers de l'Arpenteur");

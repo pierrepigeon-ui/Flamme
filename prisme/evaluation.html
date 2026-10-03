@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PRISME — Évaluer un jeu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+<style>
+:root{--ink:#1B2430;--muted:#5B6573;--line:#DDE1E7;--paper:#F6F5F1;--panel:#FFFFFF;--accent:#3D2645;--ok:#1E7A46;--warn:#9A5B00;--err:#B42318;
+  --SYS:#4f6b8f;--EXP:#7a5c8f;--EDI:#6b8f5c;
+  --serif:"Source Serif 4",Georgia,"Times New Roman",serif;--sans:"IBM Plex Sans","Segoe UI",Arial,sans-serif}
+@media (prefers-color-scheme: dark){:root{--ink:#E6E9EE;--muted:#9AA4B2;--line:#2C3542;--paper:#11161D;--panel:#171D25;--accent:#C9B4D2;--ok:#5CC98A;--warn:#E0A84A;--err:#F2837A;--SYS:#8aa6cc;--EXP:#b49ccc;--EDI:#9cc58c}}
+*{box-sizing:border-box} html{scroll-padding-top:70px} html,body{margin:0} body{background:var(--paper);color:var(--ink);font:15px/1.5 var(--sans);padding-bottom:90px}
+button,input,select{font:inherit;color:inherit} :focus-visible{outline:2px solid #3B6FE0;outline-offset:2px} .hidden{display:none!important}
+a{color:inherit}
+.barre{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px 20px;font-size:13px;color:var(--muted)} .barre a{text-decoration:none}
+.btn{border:1px solid var(--ink);background:var(--ink);color:var(--panel);padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:500}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)} .btn:disabled{opacity:.4;cursor:default}
+.wrap{max-width:860px;margin:0 auto;padding:0 20px}
+h1{font:600 34px/1.15 var(--serif);margin:6px 0 4px}
+.aide{color:var(--muted);font-size:14px;max-width:70ch;margin:0 0 12px}
+.choix{display:flex;gap:10px;flex-wrap:wrap;align-items:end;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:12px 0}
+.choix label{display:block;font-size:13px;color:var(--muted)} .choix select,.choix input{padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--paper);min-width:240px}
+.msg{font-size:14px} .msg.err{color:var(--err)} .msg.ok{color:var(--ok)}
+table.fiches{border-collapse:collapse;width:100%;font-size:14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+table.fiches th{text-align:left;font-weight:500;color:var(--muted);border-bottom:1px solid var(--line);padding:8px 12px}
+table.fiches td{border-bottom:1px solid var(--line);padding:9px 12px} table.fiches tr.f{cursor:pointer} table.fiches tr.f:hover{background:var(--paper)}
+.badge{font:500 11.5px var(--sans);border:1px solid currentColor;border-radius:3px;padding:0 5px}
+.badge.finale{color:var(--ok)} .badge.brouillon{color:var(--warn)}
+
+/* barre de la fiche */
+#barre-fiche{position:sticky;top:0;z-index:20;background:var(--paper);border-bottom:2px solid var(--ink);padding:9px 20px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+#barre-fiche .jeu{font:600 18px var(--serif)}
+#barre-fiche .prog{flex:1 1 140px;height:8px;background:var(--line);border-radius:4px;overflow:hidden;min-width:100px}
+#barre-fiche .prog span{display:block;height:100%;background:var(--accent);width:0}
+#barre-fiche select{padding:4px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+#etat{font-size:13px;color:var(--muted);min-width:150px}
+
+.chapitre h2{font:600 22px var(--serif);color:var(--chap);margin:30px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--chap);display:flex;gap:10px;align-items:baseline}
+.chapitre h2 .moy{margin-left:auto;font:500 15px var(--sans);color:var(--muted)}
+.paire{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:12px;scroll-margin-top:70px}
+.paire.faite{border-left:4px solid var(--ok)}
+.paire .tete{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.paire h3{font:600 19px var(--serif);margin:0}
+.paire .meca{font-size:12.5px;color:var(--muted);font-style:italic}
+.na{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--muted);margin:6px 0 10px;padding-bottom:8px;border-bottom:1px dashed var(--line)}
+.paire.sans-objet .axes,.paire.sans-objet .res{opacity:.35;pointer-events:none}
+.axes{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.pile{display:flex;flex-direction:column;gap:14px}
+.axe .titre{font-weight:600;font-size:14px} .axe .q{font:italic 14px/1.4 var(--serif);color:var(--muted);margin:2px 0 6px}
+.ligne{display:flex;gap:10px;align-items:center}
+.piste{flex:1;min-width:0}
+.piste input{width:100%;margin:0;display:block;accent-color:var(--accent);cursor:pointer}
+.piste input.vierge{opacity:.4}
+.piste input::-webkit-slider-thumb{width:16px} .piste input::-moz-range-thumb{width:16px}
+.grad{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);padding:0 8px}
+.num{font-variant-numeric:tabular-nums;font-weight:600;min-width:2.6em;text-align:right;color:var(--accent)}
+.palier{font-size:13.5px;margin-top:5px;min-height:2.6em;line-height:1.4} .palier .vide{color:var(--muted);font-style:italic}
+.reperes{font-size:12.5px;color:var(--muted);font-style:italic;margin-top:3px}
+.res{margin-top:12px;padding-top:9px;border-top:1px dashed var(--line);font-size:14px;color:var(--muted)} .res b{color:var(--ink);font-size:16px}
+#pied{position:fixed;left:0;right:0;bottom:0;background:var(--paper);border-top:2px solid var(--ink);padding:9px 20px;display:flex;gap:26px;justify-content:center;flex-wrap:wrap;z-index:15}
+#pied div{text-align:center} #pied small{display:block;font-size:12px;color:var(--muted)} #pied b{font-size:18px;font-variant-numeric:tabular-nums} #pied .final b{font-size:22px;color:var(--accent)}
+.version{font-size:12px;color:var(--muted);text-align:right;margin:26px 0 0}
+@media (max-width:640px){ .axes{grid-template-columns:1fr} h1{font-size:28px} .choix select,.choix input{min-width:0;width:100%} }
+</style>
+</head>
+<body>
+<div class="barre"><a href="index.html">← Accueil PRISME</a><span id="qui"></span></div>
+
+<section id="accueil" class="wrap">
+  <h1>Évaluer un jeu</h1>
+  <p class="aide">Choisis un jeu : s'il a déjà une fiche à ton nom, elle s'ouvre là où tu l'avais laissée. Chaque réponse est enregistrée automatiquement.</p>
+  <div class="choix">
+    <div><label for="sel-jeu">Jeu</label><select id="sel-jeu"></select></div>
+    <div id="bloc-nouveau" class="hidden"><label for="nouveau-jeu">Nom du nouveau jeu</label><input id="nouveau-jeu" type="text"></div>
+    <button class="btn" id="ouvrir" type="button">Ouvrir la fiche</button>
+    <span class="msg" id="msg-accueil"></span>
+  </div>
+  <div id="mes-fiches"></div>
+</section>
+
+<section id="fiche" class="hidden">
+  <div id="barre-fiche">
+    <button class="btn ghost" id="retour" type="button">← Mes fiches</button>
+    <span class="jeu" id="titre-jeu"></span>
+    <span class="prog"><span id="prog"></span></span><span id="prog-txt" style="font-size:13px;color:var(--muted)"></span>
+    <select id="aller" aria-label="Aller à une paire"><option value="">Aller à…</option></select>
+    <label style="font-size:13px;display:flex;gap:6px;align-items:center"><input type="checkbox" id="finale"> Fiche finale</label>
+    <span id="etat"></span>
+  </div>
+  <div class="wrap" id="grille"></div>
+</section>
+<div id="pied" class="hidden"></div>
+<div class="wrap"><p class="version" id="version"></p></div>
+
+<script>
+const VERSION = { numero:"1.0", date:"2026-10-03 22:12" };   // à incrémenter à chaque livraison
+const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
+const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const norm = s => String(s ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+const slug = s => norm(s).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const fmt = (v, d = 1) => Number(v).toFixed(d).replace(".", ",");
+$("#version").textContent = `Évaluation des jeux ${VERSION.numero}, version du ${VERSION.date.replace(/(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d)/,"$3/$2/$1 à $4h$5")}`;
+
+const M = {};            // le modèle PRISMEgame, lu dans la base
+let user = null, role = null;
+let fiche = null;        // { id, jeu, statut } ; id nul tant que rien n'est saisi
+let saisie = {};         // axe -> { valeur, sans_objet }
+let enAttente = new Set(), minuteur = null;
+
+/* courbe en S des paires liées : X0 = axe 1 + écart (-2..7), ramené sur 0..5 */
+function courbeS(x0){ const t = (x0 + 2) / 9; return t <= .5 ? 10 * t * t : 5 * (1 - 2 * (1 - t) * (1 - t)); }
+
+/* ---------------- démarrage ---------------- */
+let demarre = false;
+sb.auth.onAuthStateChange((_e, session) => {
+  user = session?.user || null;
+  $("#qui").textContent = user ? user.email : "Non connecté";
+  if (!demarre){ demarre = true; setTimeout(demarrer, 0); }
+});
+async function demarrer(){
+  if (!user){ $("#accueil").innerHTML = '<h1>Évaluer un jeu</h1><p class="aide">Connecte-toi depuis l\'<a href="index.html">accueil PRISME</a> pour évaluer un jeu.</p>'; return; }
+  const { data: r } = await sb.rpc("prisme_mon_role"); role = r;
+  if (!["proprietaire","editeur","evaluateur"].includes(role)){
+    $("#accueil").innerHTML = '<h1>Évaluer un jeu</h1><p class="aide">Ton compte n\'a pas le rôle d\'évaluateur dans PRISME. Le propriétaire peut te l\'attribuer.</p>'; return;
+  }
+  const lire = (t, o) => sb.from(t).select("*").order(o);
+  const res = await Promise.all([lire("prisme_chapitres","ordre"), lire("prisme_paires","ordre"), lire("prisme_axes","ordre"),
+    lire("prisme_paliers","valeur"), lire("prisme_exemples","ordre"), lire("prisme_jeux","nom")]);
+  const err = res.find(x => x.error); if (err){ $("#msg-accueil").className = "msg err"; $("#msg-accueil").textContent = "Lecture du modèle impossible : " + err.error.message; return; }
+  [M.chapitres, M.paires, M.axes, M.paliers, M.exemples, M.jeux] = res.map(x => x.data);
+  M.paires.sort((a, b) => M.chapitres.find(c => c.code === a.chapitre).ordre - M.chapitres.find(c => c.code === b.chapitre).ordre || a.ordre - b.ordre);
+  remplirJeux(); afficherMesFiches();
+}
+
+/* ---------------- choix du jeu, mes fiches ---------------- */
+function remplirJeux(choix){
+  $("#sel-jeu").innerHTML = `<option value="">Choisir un jeu…</option>` + M.jeux.map(j => `<option value="${esc(j.code)}">${esc(j.nom)}</option>`).join("") +
+    `<option value="__nouveau">+ Ajouter un jeu…</option>`;
+  if (choix) $("#sel-jeu").value = choix;
+}
+$("#sel-jeu").addEventListener("change", () => $("#bloc-nouveau").classList.toggle("hidden", $("#sel-jeu").value !== "__nouveau"));
+$("#ouvrir").addEventListener("click", async () => {
+  const m = $("#msg-accueil"); m.className = "msg"; m.textContent = "";
+  let code = $("#sel-jeu").value;
+  if (code === "__nouveau"){
+    const nom = $("#nouveau-jeu").value.trim();
+    if (!nom){ m.className = "msg err"; m.textContent = "Indique le nom du jeu."; return; }
+    code = slug(nom);
+    if (!M.jeux.some(j => j.code === code)){
+      const { data, error } = await sb.from("prisme_jeux").insert({ code, nom }).select();
+      if (error){ m.className = "msg err"; m.textContent = "Ajout du jeu refusé : " + error.message; return; }
+      M.jeux.push(data[0]); M.jeux.sort((a, b) => a.nom.localeCompare(b.nom, "fr"));
+    }
+    remplirJeux(code); $("#bloc-nouveau").classList.add("hidden"); $("#nouveau-jeu").value = "";
+  }
+  if (!code){ m.className = "msg err"; m.textContent = "Choisis un jeu."; return; }
+  const { data } = await sb.from("prisme_evaluations").select("*").eq("evaluateur", user.id).eq("jeu", code).order("modifie_le", { ascending:false }).limit(1);
+  ouvrirFiche(data?.[0] || { id:null, jeu:code, statut:"brouillon" });
+});
+async function afficherMesFiches(){
+  const { data: evals } = await sb.from("prisme_evaluations").select("*").eq("evaluateur", user.id).order("modifie_le", { ascending:false });
+  if (!evals?.length){ $("#mes-fiches").innerHTML = '<p class="aide">Tu n\'as encore évalué aucun jeu.</p>'; return; }
+  const { data: vals } = await sb.from("prisme_evaluation_valeurs").select("evaluation,axe,valeur,sans_objet").in("evaluation", evals.map(e => e.id));
+  $("#mes-fiches").innerHTML = `<h2 style="font:600 20px var(--serif);margin:22px 0 8px">Mes fiches</h2>
+    <table class="fiches"><thead><tr><th>Jeu</th><th>État</th><th>Paires remplies</th><th>Note finale</th><th>Dernière modification</th></tr></thead><tbody>
+    ${evals.map(e => { const s = {}; (vals || []).filter(v => v.evaluation === e.id).forEach(v => s[v.axe] = v); const c = calculer(s);
+      return `<tr class="f" data-id="${esc(e.id)}"><td><b>${esc(M.jeux.find(j => j.code === e.jeu)?.nom || e.jeu)}</b></td>
+        <td><span class="badge ${esc(e.statut)}">${e.statut === "finale" ? "finale" : "brouillon"}</span></td>
+        <td>${c.faites} / ${M.paires.length}</td><td>${c.finale == null ? "—" : fmt(c.finale, 2)}</td>
+        <td>${new Date(e.modifie_le).toLocaleString("fr-FR")}</td></tr>`; }).join("")}</tbody></table>`;
+  document.querySelectorAll("#mes-fiches tr.f").forEach(tr => tr.addEventListener("click", () => ouvrirFiche(evals.find(e => e.id === tr.dataset.id))));
+}
+
+/* ---------------- ouvrir une fiche ---------------- */
+async function ouvrirFiche(f){
+  fiche = { ...f }; saisie = {}; enAttente = new Set();
+  if (f.id){
+    const { data } = await sb.from("prisme_evaluation_valeurs").select("*").eq("evaluation", f.id);
+    (data || []).forEach(v => saisie[v.axe] = { valeur: v.valeur == null ? null : Number(v.valeur), sans_objet: v.sans_objet });
+  }
+  $("#accueil").classList.add("hidden"); $("#fiche").classList.remove("hidden"); $("#pied").classList.remove("hidden");
+  $("#titre-jeu").textContent = M.jeux.find(j => j.code === f.jeu)?.nom || f.jeu;
+  $("#finale").checked = f.statut === "finale";
+  $("#etat").textContent = f.id ? "Fiche reprise." : "Nouvelle fiche : elle sera créée à la première réponse.";
+  construireGrille(); recalculer(); window.scrollTo(0, 0);
+}
+$("#retour").addEventListener("click", async () => {
+  if (enAttente.size){ clearTimeout(minuteur); await enregistrer(); }
+  $("#fiche").classList.add("hidden"); $("#pied").classList.add("hidden"); $("#accueil").classList.remove("hidden");
+  afficherMesFiches();
+});
+
+/* ---------------- la grille ---------------- */
+const axesDe = code => M.axes.filter(a => a.paire === code).sort((a, b) => a.ordre - b.ordre);
+const paliersDe = code => M.paliers.filter(p => p.axe === code).sort((a, b) => a.valeur - b.valeur);
+const MECA = { liee:"paire liée : l'axe 2 juge l'écart à l'attente", independante:"deux notes indépendantes", crans5:"axe 2 en cinq crans", composite:"note composite" };
+
+function curseur(axe, mode){   // mode : "0-5" ou "ecart"
+  const ecart = mode === "ecart", s = saisie[axe.code], v = s?.valeur;
+  const min = ecart ? -2 : 0, max = ecart ? 2 : 5, milieu = ecart ? 0 : 2.5;
+  const reps = M.exemples.filter(x => x.axe === axe.code && x.valeur_texte)
+    .map(x => `${esc(M.jeux.find(j => j.code === x.jeu)?.nom || x.jeu)} ${esc(x.valeur_texte)}`);
+  const grad = ecart ? ["−−","−","=","+","++"] : ["0","1","2","3","4","5"];
+  return `<div class="axe" data-axe="${esc(axe.code)}">
+    <div class="titre">${esc(axe.code)} — ${esc(axe.nom)}</div>${axe.question ? `<div class="q">${esc(axe.question)}</div>` : ""}
+    <div class="ligne"><div class="piste"><input type="range" min="${min}" max="${max}" step="0.1" value="${v ?? milieu}" class="${v == null ? "vierge" : ""}" data-axe="${esc(axe.code)}" aria-label="${esc(axe.nom)}">
+      <div class="grad">${grad.map(g => `<span>${g}</span>`).join("")}</div></div><span class="num">${v == null ? "—" : fmt(v)}</span></div>
+    <div class="palier"></div>${reps.length ? `<div class="reperes">Repères : ${reps.join(", ")}</div>` : ""}</div>`;
+}
+function construireGrille(){
+  let h = ""; $("#aller").innerHTML = '<option value="">Aller à…</option>';
+  M.chapitres.forEach(c => {
+    const ps = M.paires.filter(p => p.chapitre === c.code);
+    h += `<div class="chapitre" style="--chap:var(--${c.code})"><h2>${esc(c.nom)}<span class="moy" id="moy-${c.code}"></span></h2>`;
+    ps.forEach(p => {
+      const ax = axesDe(p.code), a1 = ax.find(a => a.rang === "1"), a2 = ax.find(a => a.rang === "2");
+      const so = ax.some(a => saisie[a.code]?.sans_objet);
+      let corps;
+      if (p.mecanisme === "composite"){
+        corps = curseur(a1, "0-5") + `<div class="pile">${ax.filter(a => a.rang === "2a" || a.rang === "2b").map(a => curseur(a, "0-5")).join("")}</div>`;
+      } else {
+        corps = curseur(a1, "0-5") + curseur(a2, (p.mecanisme === "liee" || p.mecanisme === "crans5") ? "ecart" : "0-5");
+      }
+      h += `<div class="paire${so ? " sans-objet" : ""}" id="p-${esc(p.code)}" data-paire="${esc(p.code)}">
+        <div class="tete"><h3>${esc(p.nom)}</h3><span class="meca">${MECA[p.mecanisme] || ""}</span></div>
+        <label class="na"><input type="checkbox" data-na="${esc(p.code)}" ${so ? "checked" : ""}> Sans objet pour ce jeu (exclu de la moyenne)</label>
+        <div class="axes">${corps}</div><div class="res" id="res-${esc(p.code)}"></div></div>`;
+      $("#aller").insertAdjacentHTML("beforeend", `<option value="p-${esc(p.code)}">${esc(c.nom)} — ${esc(p.nom)}</option>`);
+    });
+    h += "</div>";
+  });
+  $("#grille").innerHTML = h;
+  document.querySelectorAll(".axe").forEach(majPalier);
+}
+function majPalier(div){
+  const code = div.dataset.axe, s = saisie[code], ps = paliersDe(code), el = div.querySelector(".palier");
+  if (!ps.length){ el.innerHTML = ""; return; }
+  const v = s?.valeur ?? Number(div.querySelector("input").value);
+  const p = ps.reduce((a, b) => Math.abs(b.valeur - v) < Math.abs(a.valeur - v) ? b : a);
+  const lib = `${esc(p.symbole || fmt(p.valeur, 0))} : ${esc(p.libelle)}`;
+  el.innerHTML = s?.valeur == null ? `<span class="vide">Palier le plus proche : ${lib}</span>` : lib;
+}
+$("#aller").addEventListener("change", e => { if (e.target.value) document.getElementById(e.target.value).scrollIntoView({ behavior:"smooth" }); e.target.value = ""; });
+
+/* ---------------- calcul ---------------- */
+function calculer(s){
+  const parChap = {}; let faites = 0;
+  M.paires.forEach(p => {
+    const ax = axesDe(p.code), val = r => s[ax.find(a => a.rang === r)?.code]?.valeur;
+    const so = ax.some(a => s[a.code]?.sans_objet);
+    let note = null, complete = false;
+    if (so){ complete = true; }
+    else if (p.mecanisme === "composite"){
+      const t1 = val("1"), a = val("2a"), b = val("2b");
+      if (t1 != null && a != null && b != null){ note = (b * t1 + a * (5 - t1)) / 5; complete = true; }
+    } else {
+      const v1 = val("1"), v2 = val("2");
+      if (v1 != null && p.na_si_axe1_nul && Math.round(v1) === 0){ complete = true; }
+      else if (v1 != null && v2 != null){
+        note = p.mecanisme === "liee" ? courbeS(v1 + v2) : p.mecanisme === "crans5" ? 2.5 + v2 * 1.25 : v2;
+        complete = true;
+      }
+    }
+    if (complete) faites++;
+    (parChap[p.chapitre] ??= []).push({ p, note, so, complete });
+  });
+  const moy = L => { const n = L.filter(x => x.note != null).map(x => x.note); return n.length ? n.reduce((a, b) => a + b, 0) / n.length : null; };
+  const chap = Object.fromEntries(Object.entries(parChap).map(([c, L]) => [c, moy(L)]));
+  const cs = Object.values(chap).filter(x => x != null);
+  return { parChap, chap, finale: cs.length ? cs.reduce((a, b) => a + b, 0) / cs.length : null, faites };
+}
+function recalculer(){
+  const c = calculer(saisie);
+  Object.values(c.parChap).flat().forEach(({ p, note, so, complete }) => {
+    const el = document.getElementById("res-" + p.code);
+    el.innerHTML = so ? "Sans objet pour ce jeu." : note != null ? `Note retenue : <b>${fmt(note, 2)}</b>` :
+      complete ? "Axe 2 sans objet : l'axe 1 vaut 0." : "En attente des deux notes.";
+    document.getElementById("p-" + p.code).classList.toggle("faite", complete);
+  });
+  M.chapitres.forEach(ch => { const v = c.chap[ch.code]; $("#moy-" + ch.code).textContent = v == null ? "" : fmt(v, 2) + " / 5"; });
+  $("#prog").style.width = (c.faites / M.paires.length * 100) + "%";
+  $("#prog-txt").textContent = `${c.faites} / ${M.paires.length}`;
+  $("#pied").innerHTML = M.chapitres.map(ch => `<div><small>${esc(ch.nom)}</small><b>${c.chap[ch.code] == null ? "—" : fmt(c.chap[ch.code], 2)}</b></div>`).join("") +
+    `<div class="final"><small>Évaluation finale</small><b>${c.finale == null ? "—" : fmt(c.finale, 2)}</b></div>`;
+}
+
+/* ---------------- saisie et enregistrement automatique ---------------- */
+$("#grille").addEventListener("input", e => {
+  if (e.target.type !== "range") return;
+  const code = e.target.dataset.axe, v = Number(e.target.value);
+  saisie[code] = { valeur: v, sans_objet: saisie[code]?.sans_objet || false };
+  e.target.classList.remove("vierge");
+  e.target.closest(".axe").querySelector(".num").textContent = fmt(v);
+  majPalier(e.target.closest(".axe")); recalculer(); planifier(code);
+});
+$("#grille").addEventListener("change", e => {
+  if (!e.target.dataset.na) return;
+  const p = e.target.dataset.na, on = e.target.checked;
+  axesDe(p).forEach(a => { saisie[a.code] = { valeur: saisie[a.code]?.valeur ?? null, sans_objet: on }; planifier(a.code); });
+  document.getElementById("p-" + p).classList.toggle("sans-objet", on); recalculer();
+});
+$("#finale").addEventListener("change", async e => {
+  fiche.statut = e.target.checked ? "finale" : "brouillon";
+  if (!fiche.id){ await enregistrer(true); return; }
+  const { error } = await sb.from("prisme_evaluations").update({ statut: fiche.statut }).eq("id", fiche.id);
+  $("#etat").textContent = error ? "Changement refusé : " + error.message : (fiche.statut === "finale" ? "Fiche marquée finale." : "Fiche repassée en brouillon.");
+});
+function planifier(code){
+  enAttente.add(code); $("#etat").textContent = "Enregistrement…";
+  clearTimeout(minuteur); minuteur = setTimeout(enregistrer, 1200);
+}
+async function enregistrer(forcer){
+  if (!fiche.id){
+    const { data, error } = await sb.from("prisme_evaluations").insert({ jeu: fiche.jeu, statut: fiche.statut, version_appli: VERSION.numero }).select();
+    if (error){ $("#etat").textContent = "Création de la fiche refusée : " + error.message; return; }
+    fiche.id = data[0].id;
+  }
+  const codes = [...enAttente]; enAttente = new Set();
+  if (codes.length){
+    const lignes = codes.map(c => ({ evaluation: fiche.id, axe: c, valeur: saisie[c].valeur, sans_objet: saisie[c].sans_objet }));
+    const { error } = await sb.from("prisme_evaluation_valeurs").upsert(lignes, { onConflict: "evaluation,axe" });
+    if (error){ codes.forEach(c => enAttente.add(c)); $("#etat").textContent = "Enregistrement impossible : " + error.message + ". Nouvel essai à la prochaine réponse."; return; }
+    await sb.from("prisme_evaluations").update({ version_appli: VERSION.numero }).eq("id", fiche.id);   // met à jour la date de la fiche
+  }
+  $("#etat").textContent = "Enregistré à " + new Date().toLocaleTimeString("fr-FR", { hour:"2-digit", minute:"2-digit" }).replace(":", "h") + ".";
+}
+window.addEventListener("beforeunload", e => { if (enAttente.size){ e.preventDefault(); e.returnValue = ""; } });
+</script>
+</body>
+</html>

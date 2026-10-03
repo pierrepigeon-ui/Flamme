@@ -63,10 +63,10 @@ nav .navlink:hover{background:var(--hover);color:var(--ink)}
 #backup-info.late{color:var(--warn)}
 
 main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(260px,330px) 1fr}
-#list-pane{border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;background:var(--panel)}
+#list-pane,#p-list-pane{border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;background:var(--panel)}
 .filters{padding:12px 14px;border-bottom:1px solid var(--line)}
 .filters input{width:100%;padding:7px 10px;border:1px solid var(--line);border-radius:6px;background:var(--paper)}
-#list{overflow:auto;flex:1;margin:0;padding:4px 0}
+#list,#p-list{overflow:auto;flex:1;margin:0;padding:4px 0}
 .chap-title{font:600 13px var(--sans);color:var(--chap);padding:12px 14px 4px;border-top:1px solid var(--line)}
 .chap-title:first-child{border-top:0}
 .item{display:grid;grid-template-columns:52px 1fr;gap:0 8px;padding:7px 14px;cursor:pointer;border-left:3px solid transparent}
@@ -79,7 +79,7 @@ main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(260px,330px) 
 .badge.provisoire,.badge.en_attente{color:var(--warn)}
 .badge.ballotage{color:var(--err)}
 
-#edit-pane{overflow:auto;min-height:0}
+#edit-pane,#p-edit-pane{overflow:auto;min-height:0}
 .band{height:10px;background:var(--line)}
 .editor{max-width:860px;padding:22px 32px 64px}
 .editor h2{font:600 30px/1.2 var(--serif);margin:10px 0 2px}
@@ -148,8 +148,8 @@ dialog h2{font:600 22px var(--serif);margin:0 0 16px}
 
 @media (max-width:760px){
   main{grid-template-columns:1fr}
-  #edit-pane{position:fixed;inset:0;background:var(--paper);z-index:5}
-  #edit-pane.closed{display:none}
+  #edit-pane,#p-edit-pane{position:fixed;inset:0;background:var(--paper);z-index:5}
+  #edit-pane.closed,#p-edit-pane.closed{display:none}
   .grid2,.grid3{grid-template-columns:1fr}
   .editor{padding:16px}
   .back{display:inline-block!important}
@@ -190,18 +190,28 @@ dialog h2{font:600 22px var(--serif);margin:0 0 16px}
     <h1 class="wordmark">PRISME</h1>
     <p class="signature">Le modèle d'évaluation des jeux</p>
     <nav role="tablist"><a class="navlink" href="index.html">Accueil</a>
-      <button role="tab" aria-selected="true" data-tab="modele">Modèle</button>
+      <button role="tab" aria-selected="false" data-tab="player">PRISMEplayer</button>
+      <button role="tab" aria-selected="true" data-tab="modele">PRISMEgame</button>
       <button role="tab" aria-selected="false" data-tab="textes">Textes généraux</button>
       <button role="tab" aria-selected="false" data-tab="jeux">Jeux</button>
       <button role="tab" aria-selected="false" data-tab="journal" id="tab-journal" class="hidden">Journal</button>
       <button role="tab" aria-selected="false" data-tab="resultats" id="tab-resultats" class="hidden">Résultats</button>
       <button role="tab" aria-selected="false" data-tab="personnes" id="tab-personnes" class="hidden">Personnes</button>
       <a class="navlink" href="questionnaire.html">Questionnaire</a>
+      <a class="navlink" href="evaluation.html" id="lien-evaluer">Évaluer un jeu</a>
       <a class="navlink hidden" href="../index.html" id="lien-flamme">Flamme Bleue</a>
     </nav>
     <div class="who"><span id="backup-info"></span><button class="btn ghost hidden" id="backup" type="button">Sauvegarder PRISME</button><span id="who"></span><button class="btn ghost" id="mdp" type="button">Mon mot de passe</button><button class="btn ghost" id="logout" type="button">Se déconnecter</button></div>
   </header>
 
+  <main id="view-player" class="hidden">
+    <aside id="p-list-pane"><div id="p-list" role="listbox" aria-label="PRISMEplayer"></div></aside>
+    <section id="p-edit-pane" class="closed">
+      <button class="btn ghost back" id="p-back" type="button">Retour à la liste</button>
+      <div class="band" id="p-band"></div>
+      <div id="p-editor-host"><p class="empty">Choisis les moteurs, un archétype (avec ses profils et sous-profils) ou les questions du questionnaire.</p></div>
+    </section>
+  </main>
   <main id="view-modele">
     <aside id="list-pane">
       <div class="filters"><input type="search" id="q" placeholder="Chercher une paire, un axe, un mot du texte" aria-label="Rechercher"></div>
@@ -223,7 +233,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 16px}
 
 <script>
 /* ================= configuration ================= */
-const VERSION = { numero:"1.3", date:"2026-10-03 22:00" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"1.4", date:"2026-10-03 22:10" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 
@@ -244,9 +254,14 @@ const OPTIONS = {
   echelle:  { "0-5":"0 à 5", ecart:"écart −− à ++", crans5:"5 crans −− à ++", calcule:"calculée" },
   type:     { statut:"statut", solo:"volet solo", absorption:"absorption", consigne:"consigne de rédaction", historique:"historique", reserve:"en réserve", regle:"règle", note:"note" }
 };
-const TABLES = { prisme_chapitres:"chapitre", prisme_paires:"paire", prisme_axes:"axe", prisme_paliers:"palier",
+const TABLES = { prisme_player_moteurs:"moteur", prisme_player_archetypes:"archétype", prisme_player_profils:"profil",
+                 prisme_player_sous_profils:"sous-profil", prisme_player_questions:"question", prisme_chapitres:"chapitre", prisme_paires:"paire", prisme_axes:"axe", prisme_paliers:"palier",
                  prisme_notes:"encadré", prisme_jeux:"jeu", prisme_exemples:"exemple", prisme_textes:"texte", prisme_roles:"rôle" };
-const LIBELLES = { nom:"Nom", statut:"Statut", relation:"Relation entre les axes", mecanisme:"Calcul", na_si_axe1_nul:"Axe 2 sans objet si l'axe 1 vaut 0",
+const LIBELLES = { devise1:"Devise (1re partie)", devise2:"Devise (2e partie)", citation:"Citation",
+  couleur:"Couleur (fond clair)", couleur_sombre:"Couleur (fond sombre)", climax_phase:"Phase du climax (si dominant)",
+  climax_jalon:"Jalon du climax (vide = transversal)", duree_apogee:"Durée d'apogée", fragilite:"Fragilité (si rejeté)",
+  percu:"Peut être perçu comme", adore:"Adore", deteste:"Déteste", reproche:"On lui reproche",
+  texte_a:"Réponse A", texte_b:"Réponse B", nom:"Nom", statut:"Statut", relation:"Relation entre les axes", mecanisme:"Calcul", na_si_axe1_nul:"Axe 2 sans objet si l'axe 1 vaut 0",
   ancien_nom:"Ancien nom", definition:"Définition", nature:"Nature", nature_detail:"Nature (précision)", echelle:"Échelle",
   question:"Question centrale", methode:"Méthode de notation", libelle:"Libellé", type:"Type", texte:"Texte", axe:"Rattaché à",
   jeu:"Jeu", valeur:"Valeur chiffrée", symbole:"Symbole", valeur_texte:"Valeur affichée", remarque:"Remarque",
@@ -269,6 +284,13 @@ sb.auth.onAuthStateChange((_evt, session) => {
   else { state.user = null; $("#app").classList.add("hidden"); $("#login").classList.remove("hidden"); }
 });
 
+async function chargerPlayer(){
+  const lire = t => sb.from(t).select("*").order("ordre");
+  const r = await Promise.all([lire("prisme_player_moteurs"), lire("prisme_player_archetypes"), lire("prisme_player_profils"),
+    lire("prisme_player_sous_profils"), sb.from("prisme_player_questions").select("*").order("numero")]);
+  const err = r.find(x => x.error); if (err) throw err.error;
+  [state.p_moteurs, state.p_archetypes, state.p_profils, state.p_sous_profils, state.p_questions] = r.map(x => x.data);
+}
 async function chargerModele(){
   const lire = t => sb.from(t).select("*");
   const r = await Promise.all([
@@ -296,7 +318,7 @@ async function demarrer(){
     $("#editor-host").innerHTML = `<p class="empty">Ton compte est connecté, mais il n'a pas de rôle dans PRISME. Le propriétaire doit t'en attribuer un dans l'onglet Personnes.</p>`;
     $("#list").innerHTML = ""; return;
   }
-  try { await chargerModele(); }
+  try { await Promise.all([chargerModele(), chargerPlayer()]); }
   catch (e){ $("#editor-host").innerHTML = `<p class="empty">Lecture de la base impossible : ${esc(e.message)}. Les scripts 01 et 02 ont-ils bien été exécutés ?</p>`; return; }
   afficherListe();
 }
@@ -305,8 +327,8 @@ async function demarrer(){
 document.querySelectorAll("nav [role=tab]").forEach(b => b.addEventListener("click", () => {
   if (blocsModifies() && !confirm("Des modifications n'ont pas été enregistrées. Les abandonner ?")) return;
   document.querySelectorAll("nav [role=tab]").forEach(x => x.setAttribute("aria-selected", x === b));
-  ["modele","textes","jeux","journal","personnes","resultats"].forEach(t => $("#view-" + t).classList.toggle("hidden", t !== b.dataset.tab));
-  ({ textes:afficherTextes, jeux:afficherJeux, journal:afficherJournal, personnes:afficherPersonnes, resultats:afficherResultats })[b.dataset.tab]?.();
+  ["player","modele","textes","jeux","journal","personnes","resultats"].forEach(t => $("#view-" + t).classList.toggle("hidden", t !== b.dataset.tab));
+  ({ player:afficherListeP, textes:afficherTextes, jeux:afficherJeux, journal:afficherJournal, personnes:afficherPersonnes, resultats:afficherResultats })[b.dataset.tab]?.();
 }));
 
 /* ================= liste des paires ================= */
@@ -427,11 +449,14 @@ document.addEventListener("click", async e => {
   el.querySelector(".stamp").innerHTML = stamp(data[0]);
   m.className = "msg ok"; m.textContent = "Enregistré.";
   if (b.table === "prisme_paires") afficherListe();
+  if (b.table.startsWith("prisme_player")) afficherListeP();
 });
-const LISTE = { prisme_paires:"paires", prisme_axes:"axes", prisme_paliers:"paliers", prisme_notes:"notes", prisme_jeux:"jeux", prisme_exemples:"exemples", prisme_textes:"textes" };
+const LISTE = { prisme_player_moteurs:"p_moteurs", prisme_player_archetypes:"p_archetypes", prisme_player_profils:"p_profils",
+                prisme_player_sous_profils:"p_sous_profils", prisme_player_questions:"p_questions", prisme_paires:"paires", prisme_axes:"axes", prisme_paliers:"paliers", prisme_notes:"notes", prisme_jeux:"jeux", prisme_exemples:"exemples", prisme_textes:"textes" };
 function majLocal(table, row){ const L = state[LISTE[table]]; const i = L.findIndex(x => x.code === row.code); if (i >= 0) L[i] = row; else L.push(row); }
 function retirerLocal(table, code){ const L = state[LISTE[table]]; const i = L.findIndex(x => x.code === code); if (i >= 0) L.splice(i, 1); }
 function rafraichir(){
+  if (!$("#view-player").classList.contains("hidden")){ if (state.currentP){ const c = state.currentP; state.currentP = null; ouvrirP(c, true); } return; }
   if (!$("#view-modele").classList.contains("hidden") && state.current){ const c = state.current; state.current = null; ouvrir(c, true); }
   else if (!$("#view-textes").classList.contains("hidden")) afficherTextes();
   else if (!$("#view-jeux").classList.contains("hidden")) afficherJeux();
@@ -508,6 +533,63 @@ function ouvrir(code, force){
     state.exemples.push(data[0]); ouvrir(code, true);
   }));
   if (state.role === "proprietaire") historique(code, axes.map(a => a.code));
+}
+
+/* ================= PRISMEplayer ================= */
+const nomMoteur = c => state.p_moteurs.find(m => m.code === c)?.nom || c;
+function afficherListeP(){
+  const it = (code, titre, sous, coul) => `<div class="item" role="option" tabindex="0" data-pcode="${esc(code)}" style="--chap:${coul}" aria-selected="${state.currentP === code}">
+    <span class="code">${esc(code.length > 4 ? "" : code)}</span><span><span class="nom">${esc(titre)}</span><br><span class="sous">${esc(sous)}</span></span></div>`;
+  $("#p-list").innerHTML =
+    `<div class="chap-title" style="--chap:var(--muted)">Les fondations</div>` +
+    it("moteurs", "Les cinq moteurs", state.p_moteurs.map(m => m.nom).join(", "), "var(--muted)") +
+    it("questions", "Le questionnaire", state.p_questions.length + " questions", "var(--muted)") +
+    `<div class="chap-title" style="--chap:var(--muted)">Les dix archétypes</div>` +
+    state.p_archetypes.map(a => it(a.code, a.nom, state.p_profils.filter(p => p.archetype === a.code).map(p => p.nom).join(", "), a.couleur)).join("");
+}
+$("#p-list").addEventListener("click", e => { const it = e.target.closest(".item"); if (it) ouvrirP(it.dataset.pcode); });
+$("#p-list").addEventListener("keydown", e => { if (e.key === "Enter"){ const it = e.target.closest(".item"); if (it) ouvrirP(it.dataset.pcode); } });
+$("#p-back").addEventListener("click", () => $("#p-edit-pane").classList.add("closed"));
+
+function ouvrirP(code, force){
+  if (!force && state.currentP && blocsModifies() && !confirm("Des modifications n'ont pas été enregistrées. Les abandonner ?")) return;
+  state.currentP = code; afficherListeP();
+  $("#p-edit-pane").classList.remove("closed");
+  let h, coul = "var(--line)";
+  if (code === "moteurs"){
+    h = `<h2>Les cinq moteurs</h2><p class="aide">Le climax dépend de la couleur dominante d'un sous-profil, la fragilité de la couleur rejetée par un profil : les modifier ici change les 60 sous-profils et les 20 profils concernés.</p>` +
+      state.p_moteurs.map(m => `<h3 style="border-top-color:${esc(m.couleur)}">${esc(m.nom)} <span class="badge" style="color:var(--muted)">${esc(m.valeur)}</span></h3>` +
+        bloc("prisme_player_moteurs", m, r => `
+          <div class="grid2">${champ("nom", r.nom)}${champ("valeur", r.valeur, { label:"Valeur d'origine" })}</div>
+          <div class="grid3">${champ("devise1", r.devise1)}${champ("devise2", r.devise2)}${champ("citation", r.citation)}</div>
+          ${champ("texte", r.texte, { type:"area" })}
+          <div class="grid3">${champ("climax_phase", r.climax_phase)}${champ("climax_jalon", r.climax_jalon, { type:"number" })}${champ("duree_apogee", r.duree_apogee)}</div>
+          ${champ("fragilite", r.fragilite, { type:"area" })}
+          <div class="grid2">${champ("couleur", r.couleur)}${champ("couleur_sombre", r.couleur_sombre)}</div>`)).join("");
+  } else if (code === "questions"){
+    h = `<h2>Le questionnaire</h2><p class="aide">Les moteurs associés à chaque réponse et le caractère obligatoire ne se modifient pas ici : ils font l'équilibre du questionnaire (chaque moteur pèse 20 points au total).</p>` +
+      state.p_questions.map(q => `<h3>Question ${q.numero}${q.obligatoire ? ' <span class="badge" style="color:var(--warn)">obligatoire</span>' : ""}</h3>` +
+        bloc("prisme_player_questions", q, r => `
+          ${champ("texte", r.texte, { type:"area", label:"Situation" })}
+          <div class="grid2">${champ("texte_a", r.texte_a, { type:"area", label:"Réponse A : " + r.code_a.split("").map(nomMoteur).join(" + ") })}
+            ${champ("texte_b", r.texte_b, { type:"area", label:"Réponse B : " + r.code_b.split("").map(nomMoteur).join(" + ") })}</div>`)).join("");
+  } else {
+    const a = state.p_archetypes.find(x => x.code === code); if (!a) return;
+    coul = a.couleur;
+    const profs = state.p_profils.filter(p => p.archetype === code);
+    h = `<div class="meta"><span>Archétype</span><span>${a.code.split("").map(nomMoteur).join(", ")}</span></div><h2>${esc(a.nom)}</h2>` +
+      bloc("prisme_player_archetypes", a, r => `
+        <div class="grid2">${champ("nom", r.nom)}${champ("devise", r.devise, { label:"Devise" })}</div>
+        ${champ("texte", r.texte, { type:"area" })}${champ("percu", r.percu, { type:"area" })}${champ("couleur", r.couleur, { label:"Couleur dans la rosace" })}`) +
+      profs.map(p => `<h3 style="border-top-color:${esc(a.couleur)}">Profil ${esc(p.nom)} <span class="badge" style="color:var(--muted)">rejette ${esc(nomMoteur(p.rejetee))}</span></h3>` +
+        bloc("prisme_player_profils", p, r => champ("nom", r.nom)) +
+        `<p class="aide">Décrochage (vient du moteur rejeté, à modifier dans « Les cinq moteurs ») : ${esc(state.p_moteurs.find(m => m.code === p.rejetee)?.fragilite)}</p>` +
+        state.p_sous_profils.filter(sp => sp.profil === p.code).map(sp => `<h4>${esc(sp.nom)} : dominante ${esc(nomMoteur(sp.dominante))}</h4>` +
+          bloc("prisme_player_sous_profils", sp, r => `${champ("nom", r.nom)}
+            <div class="grid3">${champ("adore", r.adore, { type:"area" })}${champ("deteste", r.deteste, { type:"area" })}${champ("reproche", r.reproche, { type:"area" })}</div>`, { cls:"ex-bloc" })).join("")).join("");
+  }
+  $("#p-band").style.background = coul;
+  $("#p-editor-host").innerHTML = `<div class="editor" style="--chap:${coul}">${peutEcrire() ? "" : '<p class="readonly-note">Lecture seule : ton rôle ne permet pas de modifier le modèle.</p>'}${h}</div>`;
 }
 
 /* ================= textes généraux ================= */
@@ -705,7 +787,8 @@ function exporterResultats(nomDe){
 }
 
 /* ================= sauvegarde (propriétaire) ================= */
-const TABLES_SAUVEGARDE = ["prisme_chapitres","prisme_paires","prisme_axes","prisme_paliers","prisme_notes","prisme_jeux",
+const TABLES_SAUVEGARDE = ["prisme_player_moteurs","prisme_player_archetypes","prisme_player_profils","prisme_player_sous_profils",
+                           "prisme_player_questions","prisme_player_resultats","prisme_chapitres","prisme_paires","prisme_axes","prisme_paliers","prisme_notes","prisme_jeux",
                            "prisme_exemples","prisme_textes","prisme_roles","prisme_evaluations","prisme_evaluation_valeurs"];
 async function lireTout(table, filtre){
   const tout = [], pas = 1000;
