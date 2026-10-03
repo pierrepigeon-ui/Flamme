@@ -352,6 +352,8 @@ button:focus-visible,
 #enregistrement button { margin-top:6px; padding:8px 14px; border-radius:6px; border:1px solid var(--bleu-interface); background:var(--bleu-interface); color:#fff; cursor:pointer; font-size:13px; }
 #enregistrement button:disabled { opacity:.5; cursor:default; }
 #enregistrement .ok { color:#1E7A46; } #enregistrement .err { color:#B42318; }
+#etat-reprise { margin:8px 0 0; font-size:13px; color:#1E4E79; background:#EEF4FB; border-radius:6px; padding:6px 10px; }
+#etat-reprise a, #enregistrement a { color: var(--bleu-interface); }
 #version { margin-top:18px; font-size:12px; color:#6B7280; text-align:right; }
 
 @media (max-width: 1000px) {
@@ -394,9 +396,10 @@ button:focus-visible,
     <p><strong class="rouge">Questions 1 à 10 (obligatoires)</strong> : choisissez l'option qui vous ressemble le plus à table, pas celle que vous préférez en théorie.</p>
     <p><strong>Questions 11 à 25 (facultatives)</strong> : répondez si une des deux options vous parle, sinon passez à la suivante.</p>
     <div id="progression"></div>
+    <p id="etat-reprise" hidden></p>
 
     <div id="actions">
-      <button class="btn-reset" type="button" onclick="recommencer()">Recommencer</button>
+      <button class="btn-reset" type="button" onclick="recommencer()" title="Nouvelle passation : la précédente reste enregistrée">Recommencer</button>
     </div>
   </header>
 
@@ -438,7 +441,7 @@ button:focus-visible,
 var ordreCouleurs = ["W", "U", "B", "R", "G"];
 
 /* Version de cette page : à incrémenter à chaque livraison */
-var VERSION = { numero: "1.1", date: "2026-10-03 20:37" };
+var VERSION = { numero: "1.2", date: "2026-10-03 21:50" };
 var SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 var SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -556,6 +559,9 @@ function mettreAJourSelection() {
 
 function recommencer() {
   reponses = {};
+  document.getElementById("etat-reprise").hidden = true;
+  dernierEnvoi = null;
+  resultatId = null;   // le prochain résultat complet sera une nouvelle passation ; l'ancienne reste dans l'historique
   mettreAJourSelection();
   actualiserResultats();
   window.scrollTo(0, 0);
@@ -842,7 +848,19 @@ async function chargerModele() {
   });
 }
 
-/* ===================== Enregistrement du résultat ===================== */
+/* ===================== Enregistrement automatique ===================== */
+// Une passation = une ligne en base. Tant qu'on modifie ses réponses, on met à
+// jour la même ligne ; « Recommencer » en ouvre une nouvelle.
+var resultatId = null, dernierEnvoi = null, minuteur = null;
+
+// JSON aux clés triées : la base renvoie les clés dans un autre ordre que celui de l'envoi
+function cleStable(o) {
+  if (Array.isArray(o)) return "[" + o.map(cleStable).join(",") + "]";
+  if (o && typeof o === "object") return "{" + Object.keys(o).sort().map(function(k) { return JSON.stringify(k) + ":" + cleStable(o[k]); }).join(",") + "}";
+  return JSON.stringify(o);
+}
+function heure(d) { return d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }).replace(":", "h"); }
+function lienFiche() { return resultatId ? ' <a href="fiche.html?resultat=' + resultatId + '">Voir ma fiche de joueur</a>' : ""; }
 
 function afficherEnregistrement(codes, calcul, classement) {
   var zone = document.getElementById("enregistrement");
@@ -851,20 +869,51 @@ function afficherEnregistrement(codes, calcul, classement) {
     zone.innerHTML = 'Pour garder ce résultat, <a href="index.html">connectez-vous depuis l\'accueil</a> puis revenez ici.';
     return;
   }
-  zone.innerHTML = '<span>Ce résultat peut être gardé dans votre compte.</span><br>' +
-    '<button type="button" id="btn-enregistrer">Enregistrer mon résultat</button> <span id="msg-enregistrer"></span>';
-  document.getElementById("btn-enregistrer").onclick = async function() {
-    var b = this, m = document.getElementById("msg-enregistrer");
-    b.disabled = true; m.className = ""; m.textContent = "Enregistrement…";
-    var arrondis = {};
-    Object.keys(calcul.pourcentages).forEach(function(c) { arrondis[c] = Math.round(calcul.pourcentages[c] * 10) / 10; });
-    var res = await sb.from("prisme_player_resultats").insert({
-      reponses: reponses, scores: arrondis, classement: classement.join(""),
-      sous_profil: codes.sousprofil, version_questionnaire: VERSION.numero
-    });
-    if (res.error) { m.className = "err"; m.textContent = "Enregistrement refusé : " + res.error.message; b.disabled = false; return; }
-    m.className = "ok"; m.textContent = "Résultat enregistré.";
-  };
+  var arrondis = {};
+  Object.keys(calcul.pourcentages).forEach(function(c) { arrondis[c] = Math.round(calcul.pourcentages[c] * 10) / 10; });
+  var envoi = { reponses: reponses, scores: arrondis, classement: classement.join(""),
+                sous_profil: codes.sousprofil, version_questionnaire: VERSION.numero };
+  var cle = cleStable(envoi);
+  if (cle === dernierEnvoi) {      // rien de nouveau depuis le dernier enregistrement
+    if (!document.getElementById("etat-enregistrement"))
+      zone.innerHTML = '<span id="etat-enregistrement" class="ok">Résultat enregistré.' + lienFiche() + '</span>';
+    return;
+  }
+  zone.innerHTML = '<span id="etat-enregistrement">Enregistrement…</span>';
+  clearTimeout(minuteur);
+  minuteur = setTimeout(function() { enregistrer(envoi, cle); }, 1200);   // attend que la personne ait fini de cliquer
+}
+
+async function enregistrer(envoi, cle) {
+  var res;
+  if (resultatId) {
+    res = await sb.from("prisme_player_resultats").update(Object.assign({ passe_le: new Date().toISOString() }, envoi))
+                  .eq("id", resultatId).select("id");
+  } else {
+    res = await sb.from("prisme_player_resultats").insert(envoi).select("id");
+  }
+  var etat = document.getElementById("etat-enregistrement");
+  if (res.error || !res.data || !res.data.length) {
+    if (etat) { etat.className = "err"; etat.textContent = "Enregistrement impossible : " + (res.error ? res.error.message : "résultat introuvable") + ". Vos réponses restent à l'écran."; }
+    return;
+  }
+  resultatId = res.data[0].id;
+  dernierEnvoi = cle;
+  if (etat) { etat.className = "ok"; etat.innerHTML = "Enregistré automatiquement à " + heure(new Date()) + "." + lienFiche(); }
+}
+
+// À l'ouverture : une personne connectée retrouve sa dernière passation
+async function reprendreDernierResultat() {
+  if (!utilisateur) return null;
+  var r = await sb.from("prisme_player_resultats").select("id,passe_le,reponses,scores,classement,sous_profil,version_questionnaire")
+                  .eq("user_id", utilisateur.id).order("passe_le", { ascending: false }).limit(1);
+  var dernier = r.data && r.data[0];
+  if (!dernier) return null;
+  reponses = dernier.reponses || {};
+  resultatId = dernier.id;
+  dernierEnvoi = cleStable({ reponses: reponses, scores: dernier.scores, classement: dernier.classement,
+                             sous_profil: dernier.sous_profil, version_questionnaire: dernier.version_questionnaire });
+  return dernier;
 }
 
 /* ===================== Démarrage ===================== */
@@ -872,16 +921,29 @@ function afficherEnregistrement(codes, calcul, classement) {
 document.getElementById("version").textContent = "Questionnaire du joueur " + VERSION.numero + ", version du " +
   VERSION.date.replace(/(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d)/, "$3/$2/$1 à $4h$5");
 
-sb.auth.onAuthStateChange(function(_e, session) {
-  utilisateur = session ? session.user : null;
-  document.getElementById("qui").textContent = utilisateur ? utilisateur.email : "Non connecté";
-  if (questions.length) actualiserResultats();
+// On attend à la fois le modèle et l'état de connexion avant d'afficher quoi que ce soit
+var connexionConnue = new Promise(function(resolve) {
+  sb.auth.onAuthStateChange(function(_e, session) {
+    var avant = utilisateur && utilisateur.id;
+    utilisateur = session ? session.user : null;
+    document.getElementById("qui").textContent = utilisateur ? utilisateur.email : "Non connecté";
+    if (!utilisateur) { resultatId = null; dernierEnvoi = null; }
+    resolve();
+    if (questions.length && (utilisateur && utilisateur.id) !== avant) actualiserResultats();
+  });
 });
 
-chargerModele().then(function() {
+Promise.all([chargerModele(), connexionConnue]).then(async function() {
+  var dernier = await reprendreDernierResultat();
   afficherQuestions();
   mettreAJourSelection();
   actualiserResultats();
+  if (dernier) {
+    var etat = document.getElementById("etat-reprise");
+    etat.hidden = false;
+    etat.innerHTML = "Vos réponses du " + new Date(dernier.passe_le).toLocaleDateString("fr-FR") +
+      " sont reprises : vous pouvez les modifier, l'enregistrement suit. « Recommencer » ouvre une nouvelle passation." + lienFiche();
+  }
 }).catch(function(e) {
   document.getElementById("zone-a").innerHTML = '<p class="fiche-attente">Le questionnaire n\'a pas pu être chargé : ' + e.message + '</p>';
 });
