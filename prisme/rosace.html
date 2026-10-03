@@ -24,7 +24,8 @@ a{color:inherit}
 #rosace path.choisi{stroke:var(--sel);stroke-width:7}
 #rosace path.vous{stroke:#1B2430;stroke-width:9}
 .outils{display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:13.5px;color:var(--muted);margin:10px 4px 0}
-.outils label{display:flex;gap:6px;align-items:center}
+.bascule{border:1px solid var(--ink);background:var(--ink);color:var(--panel);border-radius:999px;padding:6px 14px;font:500 13.5px var(--sans);cursor:pointer}
+.bascule[aria-pressed="false"]{background:transparent;color:var(--ink);border-color:var(--line)}
 aside{position:sticky;top:14px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 22px;max-height:calc(100vh - 28px);overflow:auto}
 aside .niveau{font-size:13px;color:var(--muted);margin:0}
 aside h1{font:600 30px/1.15 var(--serif);margin:2px 0 4px}
@@ -350,14 +351,14 @@ aside .vous-badge{display:inline-block;font:600 12px var(--sans);color:#fff;back
 <text x="1570.7" y="1530" font-family="Arial" font-size="22" text-anchor="end" dominant-baseline="middle" fill="#5A3A00">player</text>
 </svg></div>
     <div class="outils"><span>Cliquez sur un secteur pour le découvrir.</span>
-      <label id="opt-chemin" hidden><input type="checkbox" id="chemin" checked> Mettre en évidence mon profil</label></div>
+      <button type="button" id="bascule" class="bascule" aria-pressed="true" hidden>Surbrillance de mon profil : activée</button></div>
   </div>
   <aside id="panneau"><p class="niveau">Chargement…</p></aside>
 </div>
 <p class="version" id="version"></p>
 
 <script>
-const VERSION = { numero:"1.0", date:"2026-10-03 22:20" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"1.1", date:"2026-10-03 23:03" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -394,7 +395,7 @@ async function demarrer(user){
   }
   preparerDessin();
   if (vous){
-    $("#opt-chemin").hidden = false;
+    $("#bascule").hidden = false;
     surligner(); montrer(vous.sous_profil);
   } else montrerAccueil(!!user);
 }
@@ -430,16 +431,24 @@ function chaine(code){   // le sous-profil, son profil, son archétype
   const sp = B.sous.find(s => s.code === code), p = B.profils.find(x => x.code === sp?.profil);
   return [code, p?.code, p?.archetype].filter(Boolean);
 }
+let surbrillance = true;
 function surligner(){
   const svg = $("#rosace");
   svg.querySelectorAll(".surligne,.vous").forEach(e => e.classList.remove("surligne", "vous"));
-  if (!vous) return;
+  svg.classList.remove("chemin");
+  if (!vous || !surbrillance) return;
   const c = chaine(vous.sous_profil);
   c.forEach(code => svg.querySelectorAll(`[data-code="${CSS.escape(code)}"]`).forEach(e => e.classList.add("surligne")));
   secteur(vous.sous_profil)?.classList.add("vous");
-  svg.classList.toggle("chemin", $("#chemin").checked);
+  svg.classList.add("chemin");
 }
-$("#chemin").addEventListener("change", surligner);
+// une seule bascule : tout (estompage et contour) s'allume ou s'éteint ensemble
+$("#bascule").addEventListener("click", () => {
+  surbrillance = !surbrillance;
+  $("#bascule").setAttribute("aria-pressed", surbrillance);
+  $("#bascule").textContent = "Surbrillance de mon profil : " + (surbrillance ? "activée" : "désactivée");
+  surligner();
+});
 
 function montrer(code){
   document.querySelectorAll("#rosace path.choisi").forEach(e => e.classList.remove("choisi"));
