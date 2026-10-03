@@ -53,7 +53,7 @@ section p{margin:0 0 10px;font:16.5px/1.65 var(--serif)}
 <main><p class="version" id="version"></p></main>
 
 <script>
-const VERSION = { numero:"1.0", date:"2026-10-03 21:48" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"1.1", date:"2026-10-03 22:21" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -106,7 +106,7 @@ async function afficher(user){
       <p class="surtitre">${autre ? "Profil de joueur" : "Mon profil de joueur"}</p>
       <h1>${esc(sp.nom)}</h1>
       <p class="filiation">${esc(sp.profil_nom)}, archétype ${esc(arch.nom)}</p>
-      <p class="date">Questionnaire du ${new Date(r.passe_le).toLocaleDateString("fr-FR")}.${autre ? "" : ' <a href="questionnaire.html">Le modifier ou le refaire</a>'}</p>
+      <p class="date">Questionnaire du ${new Date(r.passe_le).toLocaleDateString("fr-FR")}.${autre ? "" : ' <a href="questionnaire.html">Le modifier ou le refaire</a>. <a href="rosace.html">Voir ma place sur la rosace</a>.'}</p>
     </div>
 
     <section><h2>Vos moteurs</h2><p class="question">Ce qui vous met en mouvement à la table, du plus fort au plus faible.</p>
