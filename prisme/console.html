@@ -234,7 +234,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 16px}
 
 <script>
 /* ================= configuration ================= */
-const VERSION = { numero:"1.5", date:"2026-10-03 22:21" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"1.6", date:"2026-10-03 22:35" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 
@@ -399,6 +399,7 @@ function bloc(table, row, contenu, opts = {}){
 function lireBloc(el){
   const v = {};
   el.querySelectorAll("[data-k]").forEach(f => {
+    if (f.dataset.k === "bgg_id"){ const n = numeroBGG(f.value); v.bgg_id = n === undefined ? "illisible" : n; return; }
     if (f.type === "checkbox") v[f.dataset.k] = f.checked;
     else if (f.type === "number") v[f.dataset.k] = f.value === "" ? null : Number(f.value);
     else { const s = f.value.trim(); v[f.dataset.k] = s === "" ? null : s; }
@@ -440,6 +441,7 @@ document.addEventListener("click", async e => {
   }
   const maj = changements(id, el);
   if (!Object.keys(maj).length) return;
+  if (maj.bgg_id === "illisible"){ m.className = "msg err"; m.textContent = "Lien BoardGameGeek illisible : colle l'adresse de la page du jeu, ou son numéro."; return; }
   btn.disabled = true; m.className = "msg"; m.textContent = "Enregistrement…";
   const { data, error } = await sb.from(b.table).update(maj).eq("code", b.row.code).eq("modifie_le", b.row.modifie_le).select();
   if (error){ m.className = "msg err"; m.textContent = "Enregistrement refusé : " + error.message; btn.disabled = false; return; }
@@ -607,23 +609,48 @@ function afficherTextes(){
 
 /* ================= jeux ================= */
 const slug = s => norm(s).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+/* ---- jeux : repérer un doublon, lire un lien BoardGameGeek ---- */
+// « Flip 7 », « flip7 » et « Flip-7 » donnent la même clé
+const cleJeu = s => norm(s).replace(/[^a-z0-9]/g, "");
+// accepte l'adresse d'une page BGG (…/boardgame/174430/gloomhaven) ou le numéro seul ; undefined = illisible
+function numeroBGG(t){
+  const s = String(t ?? "").trim(); if (!s) return null;
+  const m = s.match(/boardgame(?:expansion)?\/(\d+)/i) || s.match(/^(\d+)$/);
+  return m ? Number(m[1]) : undefined;
+}
+function doublons(nom, bgg, jeux){
+  const k = cleJeu(nom);
+  const exact = jeux.find(j => cleJeu(j.nom) === k || (bgg && j.bgg_id === bgg));
+  const proches = exact ? [] : jeux.filter(j => { const kj = cleJeu(j.nom); return k.length >= 4 && kj.length >= 4 && (kj.includes(k) || k.includes(kj)); });
+  return { exact, proches };
+}
+
 function afficherJeux(){
   let h = `<div class="editor"><h2>Jeux</h2>
-    <p class="aide">Les jeux cités en exemple dans le modèle, et bientôt ceux qu'on évalue. L'identifiant BGG servira quand l'API BoardGameGeek sera ouverte.</p>
+    <p class="aide">Les jeux cités en exemple dans le modèle et ceux qu'on évalue. Pour BoardGameGeek, colle simplement l'adresse de la page du jeu : seul son numéro est gardé.</p>
     ${peutAjouterJeu() ? `<div class="ajout"><label class="field"><span>Nom du jeu</span><input id="new-jeu" type="text"></label>
+      <label class="field"><span>Lien BoardGameGeek (facultatif)</span><input id="new-bgg" type="text" placeholder="https://boardgamegeek.com/boardgame/…"></label>
       <button class="btn" id="add-jeu" type="button">Ajouter le jeu</button><span class="msg" id="add-jeu-msg"></span></div>` : ""}`;
   state.jeux.forEach(j => {
     const n = state.exemples.filter(x => x.jeu === j.code).length;
     h += `<h3>${esc(j.nom)} <span class="badge" style="color:var(--muted)">${n} exemple${n > 1 ? "s" : ""}</span></h3>` +
-      bloc("prisme_jeux", j, r => `<div class="grid2">${champ("nom", r.nom)}${champ("bgg_id", r.bgg_id, { type:"number" })}</div>${champ("notes", r.notes, { type:"area", rows:2 })}`, { supprimable: n === 0 });
+      bloc("prisme_jeux", j, r => `<div class="grid2">${champ("nom", r.nom)}${champ("bgg_id", r.bgg_id, { label:"Lien ou numéro BoardGameGeek" })}</div>
+        ${r.bgg_id ? `<p class="aide"><a href="https://boardgamegeek.com/boardgame/${esc(r.bgg_id)}" target="_blank" rel="noopener">Voir sur BoardGameGeek</a></p>` : ""}
+        ${champ("notes", r.notes, { type:"area", rows:2 })}`, { supprimable: n === 0 });
   });
   $("#jeux-pane").innerHTML = h + "</div>";
   $("#add-jeu")?.addEventListener("click", async () => {
-    const nom = $("#new-jeu").value.trim(), m = $("#add-jeu-msg");
+    const nom = $("#new-jeu").value.trim(), m = $("#add-jeu-msg"), bgg = numeroBGG($("#new-bgg").value);
     if (!nom){ m.className = "msg err"; m.textContent = "Indique le nom du jeu."; return; }
-    const code = slug(nom);
-    if (state.jeux.some(j => j.code === code)){ m.className = "msg warn"; m.textContent = "Ce jeu existe déjà."; return; }
-    const { data, error } = await sb.from("prisme_jeux").insert({ code, nom }).select();
+    if (bgg === undefined){ m.className = "msg err"; m.textContent = "Lien BoardGameGeek illisible : colle l'adresse de la page du jeu, ou son numéro."; return; }
+    const { exact, proches } = doublons(nom, bgg, state.jeux);
+    if (exact){ m.className = "msg warn"; m.textContent = `« ${exact.nom} » existe déjà.`; return; }
+    if (proches.length && afficherJeux.confirme !== cleJeu(nom)){
+      afficherJeux.confirme = cleJeu(nom); m.className = "msg warn";
+      m.textContent = `Jeux proches déjà présents : ${proches.map(j => j.nom).join(", ")}. Si c'est bien un autre jeu, clique à nouveau.`; return;
+    }
+    let code = slug(nom), k = 2; while (state.jeux.some(j => j.code === code)) code = slug(nom) + "-" + k++;
+    const { data, error } = await sb.from("prisme_jeux").insert({ code, nom, bgg_id: bgg }).select();
     if (error){ m.className = "msg err"; m.textContent = "Refusé : " + error.message; return; }
     state.jeux.push(data[0]); state.jeux.sort((a,b) => a.nom.localeCompare(b.nom, "fr")); afficherJeux();
   });

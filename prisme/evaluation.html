@@ -72,12 +72,19 @@ table.fiches td{border-bottom:1px solid var(--line);padding:9px 12px} table.fich
 
 <section id="accueil" class="wrap">
   <h1>Évaluer un jeu</h1>
-  <p class="aide">Choisis un jeu : s'il a déjà une fiche à ton nom, elle s'ouvre là où tu l'avais laissée. Chaque réponse est enregistrée automatiquement.</p>
+  <p class="aide">Choisis un jeu : s'il a déjà une fiche à ton nom, elle s'ouvre là où tu l'avais laissée. S'il n'est pas dans la liste, ajoute-le. Chaque réponse est enregistrée automatiquement.</p>
   <div class="choix">
     <div><label for="sel-jeu">Jeu</label><select id="sel-jeu"></select></div>
-    <div id="bloc-nouveau" class="hidden"><label for="nouveau-jeu">Nom du nouveau jeu</label><input id="nouveau-jeu" type="text"></div>
     <button class="btn" id="ouvrir" type="button">Ouvrir la fiche</button>
+    <button class="btn ghost" id="btn-ajout" type="button">Ajouter un jeu</button>
     <span class="msg" id="msg-accueil"></span>
+  </div>
+  <div class="choix hidden" id="form-ajout">
+    <div><label for="nouveau-jeu">Nom du jeu</label><input id="nouveau-jeu" type="text"></div>
+    <div><label for="nouveau-bgg">Lien BoardGameGeek (facultatif)</label><input id="nouveau-bgg" type="text" placeholder="https://boardgamegeek.com/boardgame/…"></div>
+    <button class="btn" id="creer" type="button">Créer et ouvrir la fiche</button>
+    <button class="btn ghost" id="annuler-ajout" type="button">Annuler</button>
+    <p class="msg" id="msg-ajout" style="flex-basis:100%;margin:0"></p>
   </div>
   <div id="mes-fiches"></div>
 </section>
@@ -97,7 +104,7 @@ table.fiches td{border-bottom:1px solid var(--line);padding:9px 12px} table.fich
 <div class="wrap"><p class="version" id="version"></p></div>
 
 <script>
-const VERSION = { numero:"1.0", date:"2026-10-03 22:12" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"1.1", date:"2026-10-03 22:35" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -140,30 +147,61 @@ async function demarrer(){
 }
 
 /* ---------------- choix du jeu, mes fiches ---------------- */
+/* ---- jeux : repérer un doublon, lire un lien BoardGameGeek ---- */
+// « Flip 7 », « flip7 » et « Flip-7 » donnent la même clé
+const cleJeu = s => norm(s).replace(/[^a-z0-9]/g, "");
+// accepte l'adresse d'une page BGG (…/boardgame/174430/gloomhaven) ou le numéro seul ; undefined = illisible
+function numeroBGG(t){
+  const s = String(t ?? "").trim(); if (!s) return null;
+  const m = s.match(/boardgame(?:expansion)?\/(\d+)/i) || s.match(/^(\d+)$/);
+  return m ? Number(m[1]) : undefined;
+}
+function doublons(nom, bgg, jeux){
+  const k = cleJeu(nom);
+  const exact = jeux.find(j => cleJeu(j.nom) === k || (bgg && j.bgg_id === bgg));
+  const proches = exact ? [] : jeux.filter(j => { const kj = cleJeu(j.nom); return k.length >= 4 && kj.length >= 4 && (kj.includes(k) || k.includes(kj)); });
+  return { exact, proches };
+}
+
 function remplirJeux(choix){
-  $("#sel-jeu").innerHTML = `<option value="">Choisir un jeu…</option>` + M.jeux.map(j => `<option value="${esc(j.code)}">${esc(j.nom)}</option>`).join("") +
-    `<option value="__nouveau">+ Ajouter un jeu…</option>`;
+  $("#sel-jeu").innerHTML = `<option value="">Choisir un jeu…</option>` + M.jeux.map(j => `<option value="${esc(j.code)}">${esc(j.nom)}</option>`).join("");
   if (choix) $("#sel-jeu").value = choix;
 }
-$("#sel-jeu").addEventListener("change", () => $("#bloc-nouveau").classList.toggle("hidden", $("#sel-jeu").value !== "__nouveau"));
-$("#ouvrir").addEventListener("click", async () => {
-  const m = $("#msg-accueil"); m.className = "msg"; m.textContent = "";
-  let code = $("#sel-jeu").value;
-  if (code === "__nouveau"){
-    const nom = $("#nouveau-jeu").value.trim();
-    if (!nom){ m.className = "msg err"; m.textContent = "Indique le nom du jeu."; return; }
-    code = slug(nom);
-    if (!M.jeux.some(j => j.code === code)){
-      const { data, error } = await sb.from("prisme_jeux").insert({ code, nom }).select();
-      if (error){ m.className = "msg err"; m.textContent = "Ajout du jeu refusé : " + error.message; return; }
-      M.jeux.push(data[0]); M.jeux.sort((a, b) => a.nom.localeCompare(b.nom, "fr"));
-    }
-    remplirJeux(code); $("#bloc-nouveau").classList.add("hidden"); $("#nouveau-jeu").value = "";
+let confirmeProche = null;   // nom pour lequel on a déjà averti d'un jeu proche
+$("#btn-ajout").addEventListener("click", () => { $("#form-ajout").classList.remove("hidden"); $("#msg-ajout").textContent = ""; $("#nouveau-jeu").focus(); });
+$("#annuler-ajout").addEventListener("click", () => { $("#form-ajout").classList.add("hidden"); $("#nouveau-jeu").value = ""; $("#nouveau-bgg").value = ""; confirmeProche = null; });
+$("#nouveau-jeu").addEventListener("input", () => { confirmeProche = null; $("#msg-ajout").textContent = ""; });
+$("#creer").addEventListener("click", async () => {
+  const m = $("#msg-ajout"); m.className = "msg";
+  const nom = $("#nouveau-jeu").value.trim(), bgg = numeroBGG($("#nouveau-bgg").value);
+  if (!nom){ m.className = "msg err"; m.textContent = "Indique le nom du jeu."; return; }
+  if (bgg === undefined){ m.className = "msg err"; m.textContent = "Lien BoardGameGeek illisible : colle l'adresse de la page du jeu, ou son numéro."; return; }
+  const { exact, proches } = doublons(nom, bgg, M.jeux);
+  if (exact){
+    remplirJeux(exact.code); $("#form-ajout").classList.add("hidden"); $("#nouveau-jeu").value = ""; $("#nouveau-bgg").value = "";
+    $("#msg-accueil").className = "msg ok"; $("#msg-accueil").textContent = `« ${exact.nom} » est déjà dans la liste : je l'ai sélectionné.`; return;
   }
-  if (!code){ m.className = "msg err"; m.textContent = "Choisis un jeu."; return; }
+  if (proches.length && confirmeProche !== cleJeu(nom)){
+    confirmeProche = cleJeu(nom); m.className = "msg err";
+    m.textContent = `Jeux proches déjà présents : ${proches.map(j => j.nom).join(", ")}. Si c'est bien un autre jeu, clique à nouveau sur « Créer ».`; return;
+  }
+  let code = slug(nom), n = 2; while (M.jeux.some(j => j.code === code)) code = slug(nom) + "-" + n++;
+  const { data, error } = await sb.from("prisme_jeux").insert({ code, nom, bgg_id: bgg }).select();
+  if (error){ m.className = "msg err"; m.textContent = "Ajout du jeu refusé : " + error.message; return; }
+  M.jeux.push(data[0]); M.jeux.sort((a, b) => a.nom.localeCompare(b.nom, "fr"));
+  remplirJeux(code); $("#form-ajout").classList.add("hidden"); $("#nouveau-jeu").value = ""; $("#nouveau-bgg").value = ""; confirmeProche = null;
+  ouvrirJeu(code);
+});
+$("#ouvrir").addEventListener("click", () => {
+  const code = $("#sel-jeu").value, m = $("#msg-accueil");
+  if (!code){ m.className = "msg err"; m.textContent = "Choisis un jeu, ou ajoute-le."; return; }
+  ouvrirJeu(code);
+});
+async function ouvrirJeu(code){
+  $("#msg-accueil").textContent = "";
   const { data } = await sb.from("prisme_evaluations").select("*").eq("evaluateur", user.id).eq("jeu", code).order("modifie_le", { ascending:false }).limit(1);
   ouvrirFiche(data?.[0] || { id:null, jeu:code, statut:"brouillon" });
-});
+}
 async function afficherMesFiches(){
   const { data: evals } = await sb.from("prisme_evaluations").select("*").eq("evaluateur", user.id).order("modifie_le", { ascending:false });
   if (!evals?.length){ $("#mes-fiches").innerHTML = '<p class="aide">Tu n\'as encore évalué aucun jeu.</p>'; return; }
