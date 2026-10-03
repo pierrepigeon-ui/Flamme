@@ -128,6 +128,17 @@ table.j td input,table.j td select{padding:6px 8px;border:1px solid var(--line);
 .sans-role{color:var(--warn)}
 
 .version{font-size:12px;color:var(--muted);margin:24px 0 0}
+/* résultats PRISMEplayer */
+.res-outils{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:10px 0 14px}
+.res-outils select{padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+.res-outils label{font-size:14px;display:flex;gap:6px;align-items:center}
+.repartition{display:grid;gap:5px;max-width:620px;margin:6px 0 22px}
+.rep-ligne{display:grid;grid-template-columns:120px 1fr 34px;gap:10px;align-items:center;font-size:14px}
+.rep-ligne .barre{height:12px;border-radius:6px}
+.rep-ligne .n{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+.mini{display:flex;gap:3px;align-items:flex-end;height:28px}
+.mini span{width:9px;border-radius:2px 2px 0 0}
+table.j td .sous{font-size:12.5px;color:var(--muted)}
 footer{border-top:1px solid var(--line);background:var(--panel);padding:4px 20px;text-align:right}
 footer .version{margin:0}
 
@@ -183,6 +194,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 16px}
       <button role="tab" aria-selected="false" data-tab="textes">Textes généraux</button>
       <button role="tab" aria-selected="false" data-tab="jeux">Jeux</button>
       <button role="tab" aria-selected="false" data-tab="journal" id="tab-journal" class="hidden">Journal</button>
+      <button role="tab" aria-selected="false" data-tab="resultats" id="tab-resultats" class="hidden">Résultats</button>
       <button role="tab" aria-selected="false" data-tab="personnes" id="tab-personnes" class="hidden">Personnes</button>
       <a class="navlink" href="questionnaire.html">Questionnaire</a>
       <a class="navlink hidden" href="../index.html" id="lien-flamme">Flamme Bleue</a>
@@ -205,12 +217,13 @@ dialog h2{font:600 22px var(--serif);margin:0 0 16px}
   <main id="view-jeux" class="hidden"><section class="full" id="jeux-pane"></section></main>
   <main id="view-journal" class="hidden"><section class="full" id="journal-pane"></section></main>
   <main id="view-personnes" class="hidden"><section class="full" id="personnes-pane"></section></main>
+  <main id="view-resultats" class="hidden"><section class="full" id="resultats-pane"></section></main>
   <footer><span class="version" data-version></span></footer>
 </section>
 
 <script>
 /* ================= configuration ================= */
-const VERSION = { numero:"1.2", date:"2026-10-03 20:37" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"1.3", date:"2026-10-03 22:00" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 
@@ -277,6 +290,7 @@ async function demarrer(){
   const proprio = role === "proprietaire";
   $("#who").textContent = `${state.noms[state.user.id] || state.user.email} — ${ROLES[role] || "aucun rôle"}`;
   ["#tab-journal","#tab-personnes","#backup","#lien-flamme"].forEach(s => $(s).classList.toggle("hidden", !proprio));
+  $("#tab-resultats").classList.toggle("hidden", !peutEcrire());   // propriétaire et éditeurs voient tous les résultats
   if (proprio) infoSauvegarde();
   if (!role){
     $("#editor-host").innerHTML = `<p class="empty">Ton compte est connecté, mais il n'a pas de rôle dans PRISME. Le propriétaire doit t'en attribuer un dans l'onglet Personnes.</p>`;
@@ -291,8 +305,8 @@ async function demarrer(){
 document.querySelectorAll("nav [role=tab]").forEach(b => b.addEventListener("click", () => {
   if (blocsModifies() && !confirm("Des modifications n'ont pas été enregistrées. Les abandonner ?")) return;
   document.querySelectorAll("nav [role=tab]").forEach(x => x.setAttribute("aria-selected", x === b));
-  ["modele","textes","jeux","journal","personnes"].forEach(t => $("#view-" + t).classList.toggle("hidden", t !== b.dataset.tab));
-  ({ textes:afficherTextes, jeux:afficherJeux, journal:afficherJournal, personnes:afficherPersonnes })[b.dataset.tab]?.();
+  ["modele","textes","jeux","journal","personnes","resultats"].forEach(t => $("#view-" + t).classList.toggle("hidden", t !== b.dataset.tab));
+  ({ textes:afficherTextes, jeux:afficherJeux, journal:afficherJournal, personnes:afficherPersonnes, resultats:afficherResultats })[b.dataset.tab]?.();
 }));
 
 /* ================= liste des paires ================= */
@@ -604,6 +618,90 @@ async function attribuer(email, role, nom){
   if (!email.trim()){ $("#pers-msg").className = "msg err"; $("#pers-msg").textContent = "Indique l'e-mail du compte."; return; }
   const { error } = await sb.rpc("prisme_attribuer_role", { p_email: email, p_role: role, p_nom: nom });
   afficherPersonnes(error ? { cls:"err", txt:"Refusé : " + error.message } : { cls:"ok", txt:`${email.trim()} : ${ROLES[role]} de PRISME.` });
+}
+
+/* ================= résultats PRISMEplayer (propriétaire, éditeurs) ================= */
+let resCache = null;
+async function afficherResultats(){
+  const host = $("#resultats-pane");
+  host.innerHTML = '<p class="aide">Chargement…</p>';
+  try {
+    const [res, vue, mot, arch] = await Promise.all([
+      lireTout("prisme_player_resultats", q => q.order("passe_le", { ascending:false })),
+      lireTout("prisme_player_vue_sous_profils"), lireTout("prisme_player_moteurs", q => q.order("ordre")),
+      lireTout("prisme_player_archetypes", q => q.order("ordre"))
+    ]);
+    const personnes = {};
+    if (state.role === "proprietaire"){
+      const { data } = await sb.rpc("prisme_personnes");
+      (data || []).forEach(p => personnes[p.user_id] = { nom: p.nom, email: p.email });
+    }
+    resCache = { res, vue: Object.fromEntries(vue.map(v => [v.code, v])), mot, arch, personnes };
+  } catch (e){ host.innerHTML = `<p class="msg err">Lecture des résultats impossible : ${esc(e.message)}</p>`; return; }
+  const { res, personnes } = resCache;
+  const nomDe = id => personnes[id]?.nom || personnes[id]?.email || state.noms[id] || "compte " + id.slice(0, 8);
+  const ids = [...new Set(res.map(r => r.user_id))].sort((a, b) => nomDe(a).localeCompare(nomDe(b), "fr"));
+  host.innerHTML = `<h2>Résultats du questionnaire du joueur</h2>
+    <p class="aide">Toutes les passations enregistrées. Un clic sur « Fiche » ouvre le profil complet de la personne.</p>
+    <div class="res-outils">
+      <select id="res-personne" aria-label="Personne"><option value="">Toutes les personnes</option>
+        ${ids.map(id => `<option value="${esc(id)}">${esc(nomDe(id))}</option>`).join("")}</select>
+      <label><input type="checkbox" id="res-dernier" checked> Seulement le dernier résultat de chacun</label>
+      <button class="btn ghost small" id="res-csv" type="button">Exporter en CSV</button>
+    </div>
+    <div id="res-corps"></div>`;
+  const rendre = () => rendreResultats(nomDe);
+  $("#res-personne").addEventListener("change", rendre);
+  $("#res-dernier").addEventListener("change", rendre);
+  $("#res-csv").addEventListener("click", () => exporterResultats(nomDe));
+  rendre();
+}
+function resultatsFiltres(){
+  const qui = $("#res-personne").value, dernier = $("#res-dernier").checked, vus = new Set();
+  return resCache.res.filter(r => (!qui || r.user_id === qui) && (!dernier || (!vus.has(r.user_id) && vus.add(r.user_id))));
+}
+function rendreResultats(nomDe){
+  const { vue, mot, arch } = resCache, lignes = resultatsFiltres();
+  const nbPers = new Set(lignes.map(r => r.user_id)).size;
+  const parArch = {}; lignes.forEach(r => { const a = vue[r.sous_profil]?.archetype; parArch[a] = (parArch[a] || 0) + 1; });
+  const max = Math.max(1, ...Object.values(parArch));
+  const repartition = arch.map(a => `<div class="rep-ligne"><span>${esc(a.nom)}</span>
+    <span class="barre" style="width:${(parArch[a.code] || 0) / max * 100}%;min-width:${parArch[a.code] ? 4 : 0}px;background:${a.couleur}"></span>
+    <span class="n">${parArch[a.code] || 0}</span></div>`).join("");
+  const mini = r => `<div class="mini" title="${mot.map(m => m.nom + " " + Number(r.scores?.[m.code] ?? 0).toFixed(1) + " %").join(", ")}">${mot.map(m =>
+      `<span style="height:${Math.max(2, Number(r.scores?.[m.code] ?? 0) * .28)}px;background:${m.couleur}"></span>`).join("")}</div>`;
+  $("#res-corps").innerHTML = lignes.length ? `
+    <p class="aide">${lignes.length} passation${lignes.length > 1 ? "s" : ""}, ${nbPers} personne${nbPers > 1 ? "s" : ""}. Répartition par archétype :</p>
+    <div class="repartition">${repartition}</div>
+    <table class="j"><thead><tr><th>Date</th><th>Personne</th><th>Profil de joueur</th><th>Moteurs</th><th></th></tr></thead><tbody>
+    ${lignes.map(r => { const v = vue[r.sous_profil] || {}; return `<tr>
+      <td>${new Date(r.passe_le).toLocaleString("fr-FR")}</td>
+      <td>${esc(nomDe(r.user_id))}</td>
+      <td><b>${esc(v.nom || r.sous_profil)}</b><br><span class="sous">${esc(v.profil_nom || "")}, ${esc(v.archetype_nom || "")}</span></td>
+      <td>${mini(r)}</td>
+      <td><div class="row-btn"><a class="btn ghost small" href="fiche.html?resultat=${esc(r.id)}" target="_blank">Fiche</a>
+        ${state.role === "proprietaire" ? `<button class="btn ghost small res-suppr" type="button" data-id="${esc(r.id)}">Effacer</button>` : ""}</div></td></tr>`; }).join("")}
+    </tbody></table>` : '<p class="empty">Aucun résultat enregistré pour l\'instant.</p>';
+  document.querySelectorAll(".res-suppr").forEach(b => b.addEventListener("click", async () => {
+    const r = resCache.res.find(x => x.id === b.dataset.id);
+    if (!confirm(`Effacer définitivement le résultat de ${nomDe(r.user_id)} du ${new Date(r.passe_le).toLocaleDateString("fr-FR")} ?`)) return;
+    const { error } = await sb.from("prisme_player_resultats").delete().eq("id", r.id);
+    if (error){ alert("Effacement refusé : " + error.message); return; }
+    resCache.res = resCache.res.filter(x => x.id !== r.id); rendreResultats(nomDe);
+  }));
+}
+function exporterResultats(nomDe){
+  const { vue, mot } = resCache;
+  const lignes = resultatsFiltres().map(r => { const v = vue[r.sous_profil] || {}; return Object.assign({
+    date: new Date(r.passe_le).toLocaleString("fr-FR"), personne: nomDe(r.user_id),
+    sous_profil: v.nom, profil: v.profil_nom, archetype: v.archetype_nom },
+    Object.fromEntries(mot.map(m => [m.nom, String(r.scores?.[m.code] ?? "").replace(".", ",")])),
+    { version_questionnaire: r.version_questionnaire }); });
+  if (!lignes.length) return;
+  const cols = Object.keys(lignes[0]);
+  const cell = v => { const t = v == null ? "" : String(v); return /[";\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+  const csv = "\ufeff" + [cols.join(";"), ...lignes.map(l => cols.map(c => cell(l[c])).join(";"))].join("\r\n");
+  telecharger(`prisme_resultats_${new Date().toLocaleDateString("sv-SE")}.csv`, csv, "text/csv");
 }
 
 /* ================= sauvegarde (propriétaire) ================= */
