@@ -16,6 +16,8 @@
 a{color:inherit}
 .barre{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px 20px;font-size:13px;color:var(--muted)}
 .barre a{text-decoration:none}
+#qui a{margin-left:10px}
+
 main{max-width:860px;margin:0 auto;padding:10px 24px 40px}
 .entete{border-top:10px solid var(--arch);background:var(--panel);border-radius:12px;padding:22px 26px 20px;border-left:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
 .entete .surtitre{font-size:13px;color:var(--muted);margin:0}
@@ -53,7 +55,7 @@ section p{margin:0 0 10px;font:16.5px/1.65 var(--serif)}
 <main><p class="version" id="version"></p></main>
 
 <script>
-const VERSION = { numero:"1.1", date:"2026-10-03 22:21" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"1.2", date:"2026-10-04 16:44" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -61,16 +63,27 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 $("#version").textContent = `Fiche du joueur ${VERSION.numero}, version du ${VERSION.date.replace(/(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d)/,"$3/$2/$1 à $4h$5")}`;
 
+
+/* ---- connexion : tout passe par la Forge (portail commun, à la racine du site) ---- */
+const versForge = () => "../?retour=" + encodeURIComponent(location.href);
+function afficherCompte(u){
+  const el = document.getElementById("qui");
+  el.innerHTML = u ? `<span>${String(u.email).replace(/[&<>"']/g, "")}</span> <a href="#" id="deconnexion">Se déconnecter</a>`
+                   : `<a href="${versForge()}">Se connecter</a>`;
+  const d = document.getElementById("deconnexion");
+  if (d) d.addEventListener("click", e => { e.preventDefault(); sb.auth.signOut().then(() => location.href = "../"); });
+}
 let demarre = false;
 sb.auth.onAuthStateChange((_e, session) => {
-  $("#qui").textContent = session?.user ? session.user.email : "Non connecté";
+  if (!session?.user){ location.replace(versForge()); return; }   // page réservée : on passe par la Forge
+  afficherCompte(session.user);
   if (!demarre){ demarre = true; setTimeout(() => afficher(session?.user || null), 0); }
 });
 
 const vide = html => $("#contenu").innerHTML = `<p class="vide">${html}</p>`;
 
 async function afficher(user){
-  if (!user) return vide('Connectez-vous depuis l\'<a href="index.html">accueil PRISME</a> pour voir votre profil de joueur.');
+  if (!user) return;
   const id = new URLSearchParams(location.search).get("resultat");
   let q = sb.from("prisme_player_resultats").select("*");
   q = id ? q.eq("id", id) : q.eq("user_id", user.id).order("passe_le", { ascending:false }).limit(1);

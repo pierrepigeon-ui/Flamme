@@ -17,6 +17,8 @@
 button,input,select{font:inherit;color:inherit} :focus-visible{outline:2px solid #3B6FE0;outline-offset:2px} .hidden{display:none!important}
 a{color:inherit}
 .barre{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px 20px;font-size:13px;color:var(--muted)} .barre a{text-decoration:none}
+#qui a{margin-left:10px}
+
 .btn{border:1px solid var(--ink);background:var(--ink);color:var(--panel);padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:500}
 .btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)} .btn:disabled{opacity:.4;cursor:default}
 .wrap{max-width:860px;margin:0 auto;padding:0 20px}
@@ -104,7 +106,7 @@ table.fiches td{border-bottom:1px solid var(--line);padding:9px 12px} table.fich
 <div class="wrap"><p class="version" id="version"></p></div>
 
 <script>
-const VERSION = { numero:"1.1", date:"2026-10-03 22:35" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"1.2", date:"2026-10-04 16:44" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -125,14 +127,25 @@ let enAttente = new Set(), minuteur = null;
 function courbeS(x0){ const t = (x0 + 2) / 9; return t <= .5 ? 10 * t * t : 5 * (1 - 2 * (1 - t) * (1 - t)); }
 
 /* ---------------- démarrage ---------------- */
+
+/* ---- connexion : tout passe par la Forge (portail commun, à la racine du site) ---- */
+const versForge = () => "../?retour=" + encodeURIComponent(location.href);
+function afficherCompte(u){
+  const el = document.getElementById("qui");
+  el.innerHTML = u ? `<span>${String(u.email).replace(/[&<>"']/g, "")}</span> <a href="#" id="deconnexion">Se déconnecter</a>`
+                   : `<a href="${versForge()}">Se connecter</a>`;
+  const d = document.getElementById("deconnexion");
+  if (d) d.addEventListener("click", e => { e.preventDefault(); sb.auth.signOut().then(() => location.href = "../"); });
+}
 let demarre = false;
 sb.auth.onAuthStateChange((_e, session) => {
   user = session?.user || null;
-  $("#qui").textContent = user ? user.email : "Non connecté";
+  if (!user){ location.replace(versForge()); return; }   // page réservée : on passe par la Forge
+  afficherCompte(user);
   if (!demarre){ demarre = true; setTimeout(demarrer, 0); }
 });
 async function demarrer(){
-  if (!user){ $("#accueil").innerHTML = '<h1>Évaluer un jeu</h1><p class="aide">Connecte-toi depuis l\'<a href="index.html">accueil PRISME</a> pour évaluer un jeu.</p>'; return; }
+  if (!user) return;
   const { data: r } = await sb.rpc("prisme_mon_role"); role = r;
   if (!["proprietaire","editeur","evaluateur"].includes(role)){
     $("#accueil").innerHTML = '<h1>Évaluer un jeu</h1><p class="aide">Ton compte n\'a pas le rôle d\'évaluateur dans PRISME. Le propriétaire peut te l\'attribuer.</p>'; return;

@@ -15,6 +15,8 @@
 *{box-sizing:border-box} html,body{margin:0} body{background:var(--paper);color:var(--ink);font:15px/1.55 var(--sans)}
 a{color:inherit}
 .barre{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px 20px;font-size:13px;color:var(--muted)} .barre a{text-decoration:none}
+#qui a{margin-left:10px}
+
 .page{max-width:1320px;margin:0 auto;padding:0 20px 30px;display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:22px;align-items:start}
 .carte{background:#FFFFFF;border:1px solid var(--line);border-radius:14px;padding:8px}
 #rosace{display:block;width:100%;height:auto}
@@ -358,7 +360,7 @@ aside .vous-badge{display:inline-block;font:600 12px var(--sans);color:#fff;back
 <p class="version" id="version"></p>
 
 <script>
-const VERSION = { numero:"1.1", date:"2026-10-03 23:03" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"1.2", date:"2026-10-04 16:44" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -376,9 +378,19 @@ const B = {};      // le modèle, lu dans la base
 let vous = null;   // dernier résultat de la personne connectée
 let choisi = null;
 
+
+/* ---- connexion : tout passe par la Forge (portail commun, à la racine du site) ---- */
+const versForge = () => "../?retour=" + encodeURIComponent(location.href);
+function afficherCompte(u){
+  const el = document.getElementById("qui");
+  el.innerHTML = u ? `<span>${String(u.email).replace(/[&<>"']/g, "")}</span> <a href="#" id="deconnexion">Se déconnecter</a>`
+                   : `<a href="${versForge()}">Se connecter</a>`;
+  const d = document.getElementById("deconnexion");
+  if (d) d.addEventListener("click", e => { e.preventDefault(); sb.auth.signOut().then(() => location.href = "../"); });
+}
 let demarre = false;
 sb.auth.onAuthStateChange((_e, session) => {
-  $("#qui").textContent = session?.user ? session.user.email : "";
+  afficherCompte(session?.user || null);
   if (!demarre){ demarre = true; setTimeout(() => demarrer(session?.user || null), 0); }
 });
 
@@ -491,7 +503,7 @@ function montrerAccueil(connecte){
     <p>Au centre, l'archétype : pourquoi l'on joue. Au milieu, le profil : ce qui fait décrocher. Au bord, le sous-profil : ce qui nourrit le plus.</p>
     <p>Cliquez sur un secteur pour le découvrir.</p>
     <p>${connecte ? '<a href="questionnaire.html">Passez le questionnaire</a> pour voir votre place sur la rosace.'
-                  : 'Passez le <a href="questionnaire.html">questionnaire du joueur</a>, connecté, pour voir votre place sur la rosace.'}</p>`;
+                  : `<a href="${versForge()}">Connectez-vous</a> et passez le <a href="questionnaire.html">questionnaire du joueur</a> pour voir votre place sur la rosace.`}</p>`;
 }
 </script>
 </body>
