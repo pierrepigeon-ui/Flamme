@@ -29,8 +29,6 @@ button,input,select,textarea{font:inherit;color:inherit}
 .hidden{display:none!important}
 
 /* connexion */
-#login{min-height:100%;display:grid;place-items:center;padding:24px}
-.login-box{width:min(380px,100%)}
 .wordmark{font:600 44px/1 var(--serif);letter-spacing:.06em;margin:0}
 .signature{font:italic 17px/1.4 var(--serif);color:var(--muted);margin:6px 0 28px}
 .prisme-bar{display:flex;height:6px;width:120px;margin:10px 0 0}
@@ -53,6 +51,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 #app{height:100%;display:flex;flex-direction:column}
 header{display:flex;align-items:baseline;gap:18px;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
 header .wordmark{font-size:24px}
+header .wordmark a{color:inherit;text-decoration:none}
 header .signature{margin:0;font-size:14px}
 nav{display:flex;gap:4px;margin-left:12px;flex-wrap:wrap}
 nav button{background:none;border:0;padding:4px 10px;border-radius:5px;cursor:pointer;color:var(--muted)}
@@ -160,19 +159,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 16px}
 </head>
 <body>
 
-<!-- connexion -->
-<section id="login" class="hidden">
-  <form class="login-box" id="login-form">
-    <h1 class="wordmark">PRISME</h1>
-    <div class="prisme-bar"><span style="--c:var(--SYS)"></span><span style="--c:var(--EXP)"></span><span style="--c:var(--EDI)"></span></div>
-    <p class="signature">Le modèle d'évaluation des jeux</p>
-    <label class="field"><span>Adresse e-mail</span><input type="email" id="email" autocomplete="username" required></label>
-    <label class="field"><span>Mot de passe</span><input type="password" id="password" autocomplete="current-password" required></label>
-    <button class="btn" type="submit">Se connecter</button>
-    <p class="msg" id="login-msg" role="status"></p>
-    <p class="version" data-version></p>
-  </form>
-</section>
+<!-- la connexion se fait par la Forge (racine du site) -->
 
 <dialog id="dlg-mdp">
   <form method="dialog" id="form-mdp">
@@ -187,9 +174,9 @@ dialog h2{font:600 22px var(--serif);margin:0 0 16px}
 
 <section id="app" class="hidden">
   <header>
-    <h1 class="wordmark">PRISME</h1>
+    <h1 class="wordmark"><a href="index.html" title="Accueil de PRISME">PRISME</a></h1>
     <p class="signature">Le modèle d'évaluation des jeux</p>
-    <nav role="tablist"><a class="navlink" href="index.html">Accueil</a>
+    <nav role="tablist">
       <button role="tab" aria-selected="false" data-tab="player">PRISMEplayer</button>
       <button role="tab" aria-selected="true" data-tab="modele">PRISMEgame</button>
       <button role="tab" aria-selected="false" data-tab="textes">Textes généraux</button>
@@ -200,7 +187,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 16px}
       <a class="navlink" href="questionnaire.html">Questionnaire</a>
       <a class="navlink" href="rosace.html">Rosace</a>
       <a class="navlink" href="evaluation.html" id="lien-evaluer">Évaluer un jeu</a>
-      <a class="navlink hidden" href="../blueflame/index.html" id="lien-flamme">Flamme Bleue</a>
+      <a class="navlink hidden" href="../" id="lien-forge">La Forge</a>
     </nav>
     <div class="who"><span id="backup-info"></span><button class="btn ghost hidden" id="backup" type="button">Sauvegarder PRISME</button><span id="who"></span><button class="btn ghost" id="mdp" type="button">Mon mot de passe</button><button class="btn ghost" id="logout" type="button">Se déconnecter</button></div>
   </header>
@@ -234,7 +221,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 16px}
 
 <script>
 /* ================= configuration ================= */
-const VERSION = { numero:"1.7", date:"2026-10-04 11:56" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"1.9", date:"2026-10-04 17:19" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 
@@ -272,17 +259,12 @@ let state = { user:null, role:null, noms:{}, chapitres:[], paires:[], axes:[], p
 const peutEcrire = () => state.role === "proprietaire" || state.role === "editeur";
 const peutAjouterJeu = () => peutEcrire() || state.role === "evaluateur";
 
-/* ================= connexion ================= */
-$("#login-form").addEventListener("submit", async e => {
-  e.preventDefault();
-  const m = $("#login-msg"); m.className = "msg"; m.textContent = "Connexion…";
-  const { error } = await sb.auth.signInWithPassword({ email: $("#email").value.trim(), password: $("#password").value });
-  if (error){ m.className = "msg err"; m.textContent = /invalid/i.test(error.message) ? "Adresse ou mot de passe incorrect." : "Connexion impossible : " + error.message; }
-});
-$("#logout").addEventListener("click", () => sb.auth.signOut());
+/* ================= connexion : par la Forge ================= */
+const versForge = () => "../?retour=" + encodeURIComponent(location.href);
+$("#logout").addEventListener("click", () => sb.auth.signOut().then(() => location.href = "../"));
 sb.auth.onAuthStateChange((_evt, session) => {
   if (session?.user){ if (state.user?.id !== session.user.id){ state.user = session.user; setTimeout(demarrer, 0); } }
-  else { state.user = null; $("#app").classList.add("hidden"); $("#login").classList.remove("hidden"); }
+  else { state.user = null; location.replace(versForge()); }   // pas de session : on passe par la Forge, qui ramène ici
 });
 
 async function chargerPlayer(){
@@ -306,13 +288,14 @@ async function chargerModele(){
 const chap = code => state.chapitres.find(c => c.code === code) || { ordre:99, nom:code };
 
 async function demarrer(){
-  $("#login").classList.add("hidden"); $("#app").classList.remove("hidden");
-  const [{ data: role }, { data: roles }] = await Promise.all([ sb.rpc("prisme_mon_role"), sb.from("prisme_roles").select("user_id,nom,role") ]);
+  $("#app").classList.remove("hidden");
+  const [{ data: role }, { data: roles }, { data: roleFlamme }] = await Promise.all([ sb.rpc("prisme_mon_role"), sb.from("prisme_roles").select("user_id,nom,role"), sb.rpc("mon_role") ]);
+  $("#lien-forge").classList.toggle("hidden", !roleFlamme);   // la Forge n'a d'intérêt que s'il y a autre chose que PRISME
   state.role = role;
   (roles || []).forEach(r => state.noms[r.user_id] = r.nom || ROLES[r.role]);
   const proprio = role === "proprietaire";
   $("#who").textContent = `${state.noms[state.user.id] || state.user.email} — ${ROLES[role] || "aucun rôle"}`;
-  ["#tab-journal","#tab-personnes","#backup","#lien-flamme"].forEach(s => $(s).classList.toggle("hidden", !proprio));
+  ["#tab-journal","#tab-personnes","#backup"].forEach(s => $(s).classList.toggle("hidden", !proprio));
   $("#tab-resultats").classList.toggle("hidden", !peutEcrire());   // propriétaire et éditeurs voient tous les résultats
   if (proprio) infoSauvegarde();
   if (!role){

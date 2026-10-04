@@ -14,6 +14,8 @@
 @media (prefers-color-scheme: dark){:root{--ink:#E6E9EE;--muted:#9AA4B2;--line:#2C3542;--paper:#11161D;--panel:#171D25;--accent:#C9B4D2;--err:#F2837A;--ok:#5CC98A}}
 *{box-sizing:border-box} html,body{margin:0} body{background:var(--paper);color:var(--ink);font:16px/1.6 var(--sans)}
 button,input{font:inherit;color:inherit} :focus-visible{outline:2px solid #3B6FE0;outline-offset:2px} .hidden{display:none!important}
+.barre .forge{margin-right:auto;color:var(--muted);text-decoration:none}
+.barre #who{margin-left:auto}
 .barre{display:flex;justify-content:flex-end;gap:10px;align-items:center;padding:12px 20px;font-size:13px;color:var(--muted)}
 .btn{display:inline-block;border:1px solid var(--ink);background:var(--ink);color:var(--panel);padding:11px 20px;border-radius:7px;cursor:pointer;font-weight:500;text-decoration:none}
 .btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
@@ -47,6 +49,7 @@ button,input{font:inherit;color:inherit} :focus-visible{outline:2px solid #3B6FE
 .tuile{display:block;border:1px solid var(--line);border-radius:10px;padding:14px 16px;text-decoration:none;color:var(--ink);background:var(--paper)}
 .tuile:hover{border-color:var(--accent)}
 .tuile b{display:block;font:600 17px var(--serif)} .tuile span{font-size:13.5px;color:var(--muted)}
+footer .contact{margin-left:14px;color:inherit}
 footer{max-width:1000px;margin:40px auto 0;padding:14px 24px 30px;font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line)}
 dialog{border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);padding:24px;width:min(380px,92vw)} dialog::backdrop{background:rgba(10,15,25,.45)}
 dialog h2{font:600 22px var(--serif);margin:0 0 14px} .field{display:block;margin-bottom:12px} .field span{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
@@ -56,8 +59,8 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px} .field{display:block;margi
 </style>
 </head>
 <body>
-<div class="barre"><span id="who"></span>
-  <button class="btn ghost petit" id="btn-login" type="button">Se connecter</button>
+<div class="barre"><a class="forge hidden" id="lien-forge" href="../">La Forge</a><span id="who"></span>
+  <a class="btn ghost petit" id="btn-login" href="../">Se connecter</a>
   <button class="btn ghost petit hidden" id="btn-logout" type="button">Se déconnecter</button></div>
 
 <section class="hero">
@@ -68,7 +71,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px} .field{display:block;margi
   <div class="actions">
     <a class="btn" href="questionnaire.html">Passer le questionnaire du joueur</a>
     <a class="btn ghost" href="rosace.html">Explorer la rosace</a>
-    <button class="btn ghost" id="btn-login-2" type="button">Se connecter</button>
+    <a class="btn ghost" id="btn-login-2" href="../">Se connecter</a>
   </div>
 </section>
 
@@ -90,16 +93,10 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px} .field{display:block;margi
     <p>Une première partie ne ressemble pas à la vingtième : de la découverte à la maîtrise, chaque joueur a son moment d'apogée.</p></article>
 </section>
 
-<footer><span>PRISME — l'Arpenteur</span><span id="version"></span></footer>
-
-<dialog id="dlg-login"><form id="form-login"><h2>Se connecter</h2>
-  <label class="field"><span>Adresse e-mail</span><input type="email" id="email" autocomplete="username" required></label>
-  <label class="field"><span>Mot de passe</span><input type="password" id="password" autocomplete="current-password" required></label>
-  <div style="display:flex;gap:10px"><button class="btn" type="submit">Se connecter</button><button class="btn ghost" type="button" id="login-fermer">Fermer</button></div>
-  <p class="msg" id="login-msg" role="status"></p></form></dialog>
+<footer><span>PRISME — l'Arpenteur <a class="contact" href="../?contact&amp;depuis=prisme">Écrire à l'Arpenteur</a></span><span id="version"></span></footer>
 
 <script>
-const VERSION = { numero:"1.4", date:"2026-10-04 11:56" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"1.6", date:"2026-10-04 17:19" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -107,13 +104,10 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 $("#version").textContent = `Accueil PRISME ${VERSION.numero}, version du ${VERSION.date.replace(/(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d)/,"$3/$2/$1 à $4h$5")}`;
 
-const ouvrir = () => { $("#login-msg").textContent = ""; $("#dlg-login").showModal(); $("#email").focus(); };
-$("#btn-login").addEventListener("click", ouvrir); $("#btn-login-2").addEventListener("click", ouvrir);
-$("#login-fermer").addEventListener("click", () => $("#dlg-login").close());
-$("#btn-logout").addEventListener("click", () => sb.auth.signOut());
-$("#form-login").addEventListener("submit", async e => { e.preventDefault(); const m = $("#login-msg"); m.className = "msg"; m.textContent = "Connexion…";
-  const { error } = await sb.auth.signInWithPassword({ email: $("#email").value.trim(), password: $("#password").value });
-  if (error){ m.className = "msg err"; m.textContent = /invalid/i.test(error.message) ? "Adresse ou mot de passe incorrect." : error.message; } else $("#dlg-login").close(); });
+/* connexion et déconnexion : par la Forge, qui ramène ici après connexion */
+const versForge = () => "../?retour=" + encodeURIComponent(location.href);
+$("#btn-login").href = versForge(); $("#btn-login-2").href = versForge();
+$("#btn-logout").addEventListener("click", () => sb.auth.signOut().then(() => location.href = "../"));
 
 const tuile = (href, titre, texte) => `<a class="tuile" href="${href}"><b>${esc(titre)}</b><span>${esc(texte)}</span></a>`;
 let user = null;
@@ -126,13 +120,16 @@ async function afficherEspace(){
   $("#btn-login").classList.toggle("hidden", !!user); $("#btn-logout").classList.toggle("hidden", !user);
   $("#btn-login-2").classList.toggle("hidden", !!user);
   $("#who").textContent = user ? user.email : "";
+  $("#lien-forge").classList.add("hidden");
   if (!user){ $("#espace").classList.add("hidden"); return; }
-  const [{ data: role }, { data: moiP }, { data: moiF }, { data: res }] = await Promise.all([
+  const [{ data: role }, { data: moiP }, { data: moiF }, { data: res }, { data: roleFlamme }] = await Promise.all([
     sb.rpc("prisme_mon_role"),
     sb.from("prisme_roles").select("nom").eq("user_id", user.id).maybeSingle(),
     sb.from("roles_utilisateurs").select("nom").eq("user_id", user.id).maybeSingle(),
-    sb.from("prisme_player_resultats").select("id,passe_le,sous_profil").eq("user_id", user.id).order("passe_le", { ascending:false }).limit(1)
+    sb.from("prisme_player_resultats").select("id,passe_le,sous_profil").eq("user_id", user.id).order("passe_le", { ascending:false }).limit(1),
+    sb.rpc("mon_role")   // accès à Flamme Bleue : seulement lu, pour savoir si la Forge a autre chose à proposer
   ]);
+  $("#lien-forge").classList.toggle("hidden", !roleFlamme);
   const nom = moiP?.nom || moiF?.nom;
   const dernier = res?.[0];
   let profil = null;
@@ -151,7 +148,6 @@ async function afficherEspace(){
   if (["proprietaire","editeur","evaluateur"].includes(role)) t += tuile("evaluation.html", "Évaluer un jeu", "Remplir ou reprendre une fiche PRISMEgame");
   if (role) t += tuile("console.html", ["proprietaire","editeur"].includes(role) ? "Console" : "Le modèle",
                        ["proprietaire","editeur"].includes(role) ? "Parcourir et éditer le modèle PRISME" : "Parcourir le modèle PRISME");
-  if (role === "proprietaire") t += tuile("../blueflame/index.html", "Flamme Bleue", "L'autre univers de l'Arpenteur");
   $("#tuiles").innerHTML = t;
 }
 </script>
