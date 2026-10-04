@@ -89,6 +89,11 @@ table.fiches td{border-bottom:1px solid var(--line);padding:9px 12px} table.fich
 .suggestion button{margin-left:6px;font-size:12.5px;padding:2px 8px;border:1px solid var(--line);background:var(--panel);border-radius:5px;cursor:pointer}
 .justif{margin-top:12px} .justif label{font-size:12.5px;color:var(--muted)}
 .justif textarea,.carnet textarea{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--paper);font:15px/1.5 var(--serif);resize:vertical}
+.btn-modeles{font-size:12.5px;padding:2px 9px;border:1px solid var(--line);background:var(--panel);border-radius:5px;cursor:pointer;margin-left:8px;color:var(--muted)}
+.modeles{margin-top:8px;border:1px solid var(--line);border-radius:8px;background:var(--paper);padding:8px 12px;display:grid;gap:10px}
+.modele{font:14.5px/1.5 var(--serif)} .modele .src{font:600 12.5px var(--sans);color:var(--muted)}
+.modele p{margin:2px 0} .modele .amorce{font-style:italic}
+.modele button{font:12px var(--sans);padding:1px 8px;border:1px solid var(--line);background:var(--panel);border-radius:5px;cursor:pointer;margin-left:6px}
 .carnet{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:26px 0 10px}
 .carnet h2{font:600 20px var(--serif);margin:0 0 4px}
 .carnet textarea{min-height:220px}
@@ -149,7 +154,7 @@ table.recap .aller{cursor:pointer;text-decoration:underline;text-decoration-colo
 <div class="wrap"><p class="version" id="version"></p></div>
 
 <script>
-const VERSION = { numero:"2.0", date:"2026-10-04 17:50" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"2.1", date:"2026-10-04 18:54" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -340,8 +345,9 @@ function construireGrille(){
         <div class="tete" data-replier="${esc(p.code)}"><h3>${esc(p.nom)}</h3><span class="meca">${MECA[p.mecanisme] || ""}</span><span class="note" id="note-${esc(p.code)}"></span><span class="fleche">▾</span></div>
         <div class="corps"><label class="na"><input type="checkbox" data-na="${esc(p.code)}" ${so ? "checked" : ""} ${lectureSeule ? "disabled" : ""}> Sans objet pour ce jeu (exclu de la moyenne)</label>
         <div class="axes">${corps}</div><div class="res" id="res-${esc(p.code)}"></div>
-        <div class="justif"><label for="j-${esc(p.code)}">Justification (facultative)</label>
-          <textarea id="j-${esc(p.code)}" rows="1" data-justif="${esc(a1.code)}" ${lectureSeule ? "disabled" : ""} placeholder="Pourquoi ces notes ?">${esc(saisie[a1.code]?.commentaire || "")}</textarea></div></div></div>`;
+        <div class="justif"><label for="j-${esc(p.code)}">Justification (facultative)</label>${boutonModeles(p, ax)}
+          <textarea id="j-${esc(p.code)}" rows="1" data-justif="${esc(a1.code)}" ${lectureSeule ? "disabled" : ""} placeholder="Pourquoi ces notes ?">${esc(saisie[a1.code]?.commentaire || "")}</textarea>
+          <div class="modeles hidden" id="m-${esc(p.code)}"></div></div></div></div>`;
       $("#aller").insertAdjacentHTML("beforeend", `<option value="p-${esc(p.code)}">${esc(c.nom)} — ${esc(p.nom)}</option>`);
     });
     h += "</div>";
@@ -353,6 +359,29 @@ function construireGrille(){
   document.querySelectorAll(".axe").forEach(majPaliers);
   M.paires.forEach(p => { if (estComplete(p, saisie)) document.getElementById("p-" + p.code).classList.add("repliee"); });   // ce qui est fait se replie
 }
+/* ---- textes modèles : les exemples rédigés dans le modop (justifications, amorces littéraires) ---- */
+const modelesDe = ax => M.exemples.filter(x => ax.some(a => a.code === x.axe) && (x.justification || x.amorce));
+function boutonModeles(p, ax){
+  const n = modelesDe(ax).length;
+  return (!lectureSeule && n) ? `<button type="button" class="btn-modeles" data-modeles="${esc(p.code)}">Modèles (${n})</button>` : "";
+}
+function afficherModeles(code){
+  const box = document.getElementById("m-" + code);
+  if (!box.classList.contains("hidden")){ box.classList.add("hidden"); return; }
+  const ax = axesDe(code);
+  box.innerHTML = modelesDe(ax).map((x, i) => `<div class="modele">
+      <div class="src">${esc(nomJeu(x.jeu))}, ${esc(x.axe)} ${esc(x.valeur_texte || "")}</div>
+      ${x.justification ? `<p>${esc(x.justification)}<button type="button" data-inserer="justif" data-paire="${esc(code)}" data-ex="${esc(x.code)}">Insérer</button></p>` : ""}
+      ${x.amorce ? `<p class="amorce">${esc(x.amorce)}<button type="button" data-inserer="carnet" data-ex="${esc(x.code)}">Au carnet</button></p>` : ""}</div>`).join("")
+    + '<p class="aide" style="margin:0">« Insérer » reprend le texte dans la justification, « Au carnet » ajoute l\'amorce au carnet d\'article : à toi ensuite de l\'adapter à ce jeu.</p>';
+  box.classList.remove("hidden");
+}
+function ajouterTexte(champ, texte){
+  champ.value = champ.value.trim() ? champ.value.trimEnd() + "\n" + texte : texte;
+  champ.dispatchEvent(new Event("input", { bubbles:true }));
+  champ.focus();
+}
+
 function majPaliers(div){
   const code = div.dataset.axe, v = saisie[code]?.valeur, lis = div.querySelectorAll(".paliers li");
   if (!lis.length) return;
@@ -428,6 +457,15 @@ function rafraichirSuggestions(){
   });
 }
 $("#grille").addEventListener("click", e => {
+  const bm = e.target.closest("[data-modeles]");
+  if (bm){ afficherModeles(bm.dataset.modeles); return; }
+  const ins = e.target.closest("[data-inserer]");
+  if (ins){
+    const x = M.exemples.find(y => y.code === ins.dataset.ex);
+    if (ins.dataset.inserer === "justif") ajouterTexte(document.getElementById("j-" + ins.dataset.paire), x.justification);
+    else { ajouterTexte($("#carnet"), `${x.amorce}  (modèle : ${nomJeu(x.jeu)})`); ins.textContent = "Ajouté ✓"; }
+    return;
+  }
   const li = e.target.closest(".paliers li");
   if (li && !lectureSeule){ poser(li.closest(".axe").dataset.axe, Number(li.dataset.v)); return; }
   const ap = e.target.closest("[data-appliquer]");
