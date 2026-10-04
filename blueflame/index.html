@@ -3,49 +3,40 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PRISME — Le jeu, le joueur, et ce qui se passe entre les deux</title>
+<title>Flamme Bleue — Cartographiez votre énergie</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
 <style>
-:root{--ink:#1B2430;--muted:#5B6573;--line:#DDE1E7;--paper:#F6F5F1;--panel:#FFFFFF;--accent:#3D2645;--err:#B42318;--ok:#1E7A46;
+:root{--ink:#1B2430;--muted:#5B6573;--line:#DDE1E7;--paper:#F4F6F8;--panel:#FFFFFF;--hover:#EEF1F5;--bleu:#1F4FD1;--err:#B42318;
   --serif:"Source Serif 4",Georgia,"Times New Roman",serif;--sans:"IBM Plex Sans","Segoe UI",Arial,sans-serif}
-@media (prefers-color-scheme: dark){:root{--ink:#E6E9EE;--muted:#9AA4B2;--line:#2C3542;--paper:#11161D;--panel:#171D25;--accent:#C9B4D2;--err:#F2837A;--ok:#5CC98A}}
+@media (prefers-color-scheme: dark){:root{--ink:#E6E9EE;--muted:#9AA4B2;--line:#2C3542;--paper:#11161D;--panel:#171D25;--hover:#1E2630;--bleu:#7FA6FF;--err:#F2837A}}
 *{box-sizing:border-box} html,body{margin:0} body{background:var(--paper);color:var(--ink);font:16px/1.6 var(--sans)}
 button,input{font:inherit;color:inherit} :focus-visible{outline:2px solid #3B6FE0;outline-offset:2px} .hidden{display:none!important}
 .barre{display:flex;justify-content:flex-end;gap:10px;align-items:center;padding:12px 20px;font-size:13px;color:var(--muted)}
 .btn{display:inline-block;border:1px solid var(--ink);background:var(--ink);color:var(--panel);padding:11px 20px;border-radius:7px;cursor:pointer;font-weight:500;text-decoration:none}
 .btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
 .btn.petit{padding:6px 12px;font-size:13px}
-
-/* la roue des dix archétypes, centre jaune : la rosace en miniature */
-.hero{max-width:860px;margin:6px auto 0;padding:20px 24px 10px;text-align:center}
-.roue{width:118px;height:118px;border-radius:50%;margin:0 auto 14px;position:relative;
-  background:conic-gradient(#C33030 0 36deg,#C38930 36deg 72deg,#A6C330 72deg 108deg,#4EC330 108deg 144deg,#30C36B 144deg 180deg,
-    #30C3C3 180deg 216deg,#306BC3 216deg 252deg,#4E30C3 252deg 288deg,#A630C3 288deg 324deg,#C33089 324deg 360deg)}
-.roue::after{content:"";position:absolute;inset:30%;border-radius:50%;background:#FFD54A;box-shadow:0 0 0 3px var(--paper)}
-@media (prefers-reduced-motion:no-preference){ .roue{animation:tour 1.6s cubic-bezier(.2,.7,.2,1) 1} @keyframes tour{from{transform:rotate(-72deg)}to{transform:none}} }
-.hero h1{font:600 clamp(42px,7vw,66px)/1 var(--serif);margin:0;letter-spacing:.08em}
-.hero .acrostiche{font:italic clamp(17px,2.3vw,21px)/1.45 var(--serif);color:var(--muted);margin:10px auto 2px;max-width:34ch}
-.hero .acrostiche b{font-style:normal;color:var(--ink);font-weight:600}
-.hero .auteur{font-size:14px;color:var(--muted);margin:6px 0 26px}
+.hero{max-width:860px;margin:10px auto 0;padding:20px 24px 10px;text-align:center}
+.hero svg{width:110px;height:110px;display:block;margin:0 auto 8px}
+.hero h1{font:600 clamp(40px,7vw,64px)/1.05 var(--serif);margin:0;letter-spacing:.01em}
+.hero .signature{font:italic clamp(19px,2.6vw,24px)/1.4 var(--serif);color:var(--muted);margin:6px 0 2px}
+.hero .auteur{font-size:14px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:0 0 26px}
 .hero .actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-
-.blocs{max-width:1000px;margin:40px auto 0;padding:0 24px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.couleurs{display:flex;gap:10px;justify-content:center;margin:30px 0 0}
+.couleurs span{width:18px;height:18px;border-radius:50%;border:1px solid #8892A0}
+.blocs{max-width:1000px;margin:36px auto 0;padding:0 24px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
 .bloc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px 22px}
-.bloc h2{font:600 20px/1.25 var(--serif);margin:0 0 4px}
-.bloc .question{font:italic 15px var(--serif);color:var(--muted);margin:0 0 8px}
-.bloc p{margin:0;font:15.5px/1.6 var(--serif)}
-
+.bloc h2{font:600 20px/1.25 var(--serif);margin:0 0 6px}
+.bloc p{margin:0;color:var(--muted);font:15.5px/1.6 var(--serif)}
 #espace{max-width:1000px;margin:34px auto 0;padding:0 24px}
 #espace .cadre{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px 22px}
 #espace h2{font:600 22px var(--serif);margin:0 0 4px}
-#espace .sous{color:var(--muted);font-size:14.5px;margin:0 0 14px}
-#espace .sous b{color:var(--ink)}
-.tuiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+#espace .sous{color:var(--muted);font-size:14px;margin:0 0 14px}
+.tuiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
 .tuile{display:block;border:1px solid var(--line);border-radius:10px;padding:14px 16px;text-decoration:none;color:var(--ink);background:var(--paper)}
-.tuile:hover{border-color:var(--accent)}
+.tuile:hover{border-color:var(--bleu)}
 .tuile b{display:block;font:600 17px var(--serif)} .tuile span{font-size:13.5px;color:var(--muted)}
 footer{max-width:1000px;margin:40px auto 0;padding:14px 24px 30px;font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line)}
 dialog{border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);padding:24px;width:min(380px,92vw)} dialog::backdrop{background:rgba(10,15,25,.45)}
@@ -61,14 +52,20 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px} .field{display:block;margi
   <button class="btn ghost petit hidden" id="btn-logout" type="button">Se déconnecter</button></div>
 
 <section class="hero">
-  <div class="roue" aria-hidden="true"></div>
-  <h1>PRISME</h1>
-  <p class="acrostiche"><b>P</b>ourquoi <b>R</b>estons-nous <b>I</b>mpliqués, <b>S</b>timulés, <b>M</b>otivés, <b>E</b>ngagés ?</p>
+  <svg viewBox="0 0 100 100" aria-hidden="true">
+    <defs><linearGradient id="fb" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#0B2E8A"/><stop offset=".55" stop-color="#2F6BFF"/><stop offset="1" stop-color="#BFE0FF"/></linearGradient></defs>
+    <g fill="url(#fb)"><path d="M50 4c4 16 22 24 22 48 0 12-6 22-14 26 4-8 2-18-6-24 2 10-4 16-8 18-2-10-10-12-10-22-8 8-10 20-4 30C18 76 14 64 16 52c3-16 18-22 22-36 4 8 4 16 2 22 8-6 12-18 10-34z"/></g>
+  </svg>
+  <h1>Flamme Bleue</h1>
+  <p class="signature">Cartographiez votre énergie</p>
   <p class="auteur">par l'Arpenteur</p>
   <div class="actions">
-    <a class="btn" href="questionnaire.html">Passer le questionnaire du joueur</a>
-    <a class="btn ghost" href="rosace.html">Explorer la rosace</a>
+    <a class="btn" href="autotest.html">Passer l'autotest</a>
     <button class="btn ghost" id="btn-login-2" type="button">Se connecter</button>
+  </div>
+  <div class="couleurs" aria-hidden="true">
+    <span style="background:#FFFFFF"></span><span style="background:#0055FF"></span><span style="background:#111111"></span><span style="background:#F00000"></span><span style="background:#00D900"></span>
   </div>
 </section>
 
@@ -82,15 +79,17 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px} .field{display:block;margi
 
 <!-- Textes de présentation : à ajuster librement -->
 <section class="blocs">
-  <article class="bloc"><h2>Le joueur</h2><p class="question">Qu'est-ce que je recherche en jouant ?</p>
-    <p>Dix archétypes pour savoir pourquoi l'on joue, vingt profils pour ce qui fait décrocher, soixante sous-profils pour ce qui nourrit le plus.</p></article>
-  <article class="bloc"><h2>Le jeu</h2><p class="question">Qu'est-ce que ce jeu est, objectivement ?</p>
-    <p>Quinze paires d'axes, du système à l'édition, pour décrire un jeu tel qu'il est, avant de se demander à qui il plaira.</p></article>
-  <article class="bloc"><h2>Le temps</h2><p class="question">Comment l'expérience évolue-t-elle ?</p>
-    <p>Une première partie ne ressemble pas à la vingtième : de la découverte à la maîtrise, chaque joueur a son moment d'apogée.</p></article>
+  <article class="bloc"><h2>Cinq couleurs, cinq énergies</h2>
+    <p>Ce qui nous met en mouvement se lit en cinq couleurs. Leur dosage dessine une carte unique : la vôtre.</p></article>
+  <article class="bloc"><h2>L'autotest</h2>
+    <p>Classez vingt tempéraments, du plus proche au plus lointain. Votre profil se révèle parmi quatre-vingt-dix, avec sa devise et ses armoiries.</p></article>
+  <article class="bloc"><h2>La Forge de l'Arpenteur</h2>
+    <p>Comprendre son énergie est un premier pas ; la travailler en est un autre. La Forge accompagne la motivation, au feu de la flamme bleue.</p></article>
 </section>
 
-<footer><span>PRISME — l'Arpenteur</span><span id="version"></span></footer>
+
+
+<footer><span>Flamme Bleue — l'Arpenteur</span><span id="version"></span></footer>
 
 <dialog id="dlg-login"><form id="form-login"><h2>Se connecter</h2>
   <label class="field"><span>Adresse e-mail</span><input type="email" id="email" autocomplete="username" required></label>
@@ -99,13 +98,13 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px} .field{display:block;margi
   <p class="msg" id="login-msg" role="status"></p></form></dialog>
 
 <script>
-const VERSION = { numero:"1.4", date:"2026-10-04 11:56" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"1.4", date:"2026-10-04 12:00" };
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
-const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
+const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-$("#version").textContent = `Accueil PRISME ${VERSION.numero}, version du ${VERSION.date.replace(/(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d)/,"$3/$2/$1 à $4h$5")}`;
+$("#version").textContent = `Accueil ${VERSION.numero}, version du ${VERSION.date.replace(/(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d)/,"$3/$2/$1 à $4h$5")}`;
 
 const ouvrir = () => { $("#login-msg").textContent = ""; $("#dlg-login").showModal(); $("#email").focus(); };
 $("#btn-login").addEventListener("click", ouvrir); $("#btn-login-2").addEventListener("click", ouvrir);
@@ -117,43 +116,41 @@ $("#form-login").addEventListener("submit", async e => { e.preventDefault(); con
 
 const tuile = (href, titre, texte) => `<a class="tuile" href="${href}"><b>${esc(titre)}</b><span>${esc(texte)}</span></a>`;
 let user = null;
-sb.auth.onAuthStateChange((_e, session) => {
+sb.auth.onAuthStateChange(async (_e, session) => {
   const u = session?.user || null; if (u?.id === user?.id) return; user = u;
-  setTimeout(afficherEspace, 0);
-});
-
-async function afficherEspace(){
   $("#btn-login").classList.toggle("hidden", !!user); $("#btn-logout").classList.toggle("hidden", !user);
   $("#btn-login-2").classList.toggle("hidden", !!user);
   $("#who").textContent = user ? user.email : "";
   if (!user){ $("#espace").classList.add("hidden"); return; }
-  const [{ data: role }, { data: moiP }, { data: moiF }, { data: res }] = await Promise.all([
-    sb.rpc("prisme_mon_role"),
-    sb.from("prisme_roles").select("nom").eq("user_id", user.id).maybeSingle(),
+  const [{ data: role }, { data: moi }, { data: res }, { data: rolePrisme }] = await Promise.all([
+    sb.rpc("mon_role"),
     sb.from("roles_utilisateurs").select("nom").eq("user_id", user.id).maybeSingle(),
-    sb.from("prisme_player_resultats").select("id,passe_le,sous_profil").eq("user_id", user.id).order("passe_le", { ascending:false }).limit(1)
+    sb.from("resultats").select("id,passe_le,codes").eq("user_id", user.id).order("passe_le", { ascending:false }).limit(1),
+    sb.rpc("prisme_mon_role")   // rôle PRISME, indépendant de Flamme Bleue
   ]);
-  const nom = moiP?.nom || moiF?.nom;
-  const dernier = res?.[0];
-  let profil = null;
-  if (dernier){
-    const { data } = await sb.from("prisme_player_vue_sous_profils").select("nom,profil_nom,archetype_nom").eq("code", dernier.sous_profil).maybeSingle();
-    profil = data;
-  }
+  // la tuile PRISME n'apparaît qu'aux personnes qui ont un rôle PRISME
+  const tuilePrisme = rolePrisme ? tuile("../prisme/", "PRISME",
+    ["proprietaire","editeur"].includes(rolePrisme) ? "Le modèle d'évaluation des jeux : parcourir et éditer" : "Le modèle d'évaluation des jeux : parcourir") : "";
   $("#espace").classList.remove("hidden");
-  $("#bonjour").textContent = `Bonjour${nom ? ", " + nom : ""}`;
-  $("#espace-sous").innerHTML = dernier && profil
-    ? `Votre profil de joueur : <b>${esc(profil.nom)}</b> (${esc(profil.profil_nom)}, ${esc(profil.archetype_nom)}), le ${new Date(dernier.passe_le).toLocaleDateString("fr-FR")}.`
-    : "Vous n'avez pas encore enregistré de profil de joueur : commencez par le questionnaire.";
-  let t = dernier ? tuile("fiche.html", "Mon profil de joueur", "Vos moteurs, votre archétype, votre moment") : "";
-  t += tuile("rosace.html", "La rosace", dernier ? "Votre place parmi les soixante sous-profils" : "Les dix archétypes, vingt profils, soixante sous-profils");
-  t += tuile("questionnaire.html", "Questionnaire du joueur", dernier ? "Revoir ou modifier vos réponses" : "Vingt-cinq situations de jeu, dix minutes");
-  if (["proprietaire","editeur","evaluateur"].includes(role)) t += tuile("evaluation.html", "Évaluer un jeu", "Remplir ou reprendre une fiche PRISMEgame");
-  if (role) t += tuile("console.html", ["proprietaire","editeur"].includes(role) ? "Console" : "Le modèle",
-                       ["proprietaire","editeur"].includes(role) ? "Parcourir et éditer le modèle PRISME" : "Parcourir le modèle PRISME");
-  if (role === "proprietaire") t += tuile("../blueflame/index.html", "Flamme Bleue", "L'autre univers de l'Arpenteur");
+  $("#bonjour").textContent = `Bonjour${moi?.nom ? ", " + moi.nom : ""}`;
+  if (!role){
+    $("#espace-sous").textContent = rolePrisme ? "Votre compte donne accès à PRISME." : "Votre compte n'a pas encore accès à Flamme Bleue. L'Arpenteur doit vous l'ouvrir.";
+    $("#tuiles").innerHTML = tuilePrisme; return;
+  }
+  const dernier = res?.[0];
+  $("#espace-sous").textContent = dernier
+    ? `Votre dernier résultat : ${dernier.codes[0]}, le ${new Date(dernier.passe_le).toLocaleDateString("fr-FR")}.`
+    : "Vous n'avez pas encore enregistré de résultat : commencez par l'autotest.";
+  let t = tuile("autotest.html", "Autotest", dernier ? "Reprendre ou refaire votre classement" : "Classer les vingt tempéraments");
+  if (dernier){
+    t += tuile(`fiche.html?resultat=${dernier.id}`, "Ma fiche", "Votre portrait, vos valeurs, vos motivations");
+    t += tuile(`ecusson.html?resultat=${dernier.id}`, "Mes armes", "Votre écusson et sa devise");
+  }
+  t += tuile("console.html", role === "proprietaire" ? "Console" : "Le modèle", role === "invite" ? "Parcourir les profils ; changer votre mot de passe" : "Parcourir et éditer le contenu ; votre mot de passe");
+  if (role === "proprietaire") t += tuile("rosace.html", "Rosace", "La carte complète du modèle");
+  t += tuilePrisme;
   $("#tuiles").innerHTML = t;
-}
+});
 </script>
 </body>
 </html>

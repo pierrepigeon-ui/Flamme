@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flamme Bleue — écusson</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+<script src="flamme_moteur.js?v=1.3"></script>
+<script src="flamme_blason.js?v=1.8"></script>
+<style>
+:root{--ink:#1B2430;--muted:#5B6573;--line:#DDE1E7;--paper:#F4F6F8;--panel:#FFFFFF;--hover:#EEF1F5;--ok:#1E7A46;--warn:#9A5B00;--err:#B42318;
+  --serif:"Source Serif 4",Georgia,"Times New Roman",serif;--sans:"IBM Plex Sans","Segoe UI",Arial,sans-serif}
+*{box-sizing:border-box} html,body{margin:0} body{background:var(--paper);color:var(--ink);font:15px/1.5 var(--sans)}
+button,input{font:inherit;color:inherit} :focus-visible{outline:2px solid #3B6FE0;outline-offset:2px} .hidden{display:none!important}
+header{display:flex;align-items:baseline;gap:18px;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
+.wordmark{font:600 24px/1 var(--serif);letter-spacing:.02em;margin:0} .signature{font:italic 14px/1.4 var(--serif);color:var(--muted);margin:0}
+header nav a{color:var(--muted);text-decoration:none;padding:4px 10px;border-radius:5px} header nav a:hover{background:var(--hover);color:var(--ink)}
+.who{margin-left:auto;font-size:13px;color:var(--muted);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn{border:1px solid var(--ink);background:var(--ink);color:var(--panel);padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:500}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.msg{font-size:14px;min-height:1.4em;margin:6px 0 0} .msg.err{color:var(--err)}
+.bloque{max-width:560px;margin:60px auto;padding:0 20px;font:italic 17px/1.5 var(--serif);color:var(--muted)}
+.outils{max-width:1000px;margin:16px auto 0;padding:0 20px;display:flex;gap:10px;flex-wrap:wrap}
+
+/* écusson */
+@font-face{font-family:"Cinzel";src:url("polices/cinzel-600.woff2") format("woff2");font-weight:600;font-display:swap}
+main{max-width:1150px;margin:16px auto 40px;padding:0 20px}
+.armes.accoles{grid-template-columns:1fr}
+.armes.accoles .ecus figure{max-width:360px}
+.armes{display:grid;grid-template-columns:minmax(280px,420px) minmax(0,1fr);gap:32px;background:#fff;color:#1B2430;border:1px solid var(--line);border-radius:10px;padding:28px 32px;margin-bottom:16px}
+.ecus{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.ecus figure{margin:0;text-align:center;flex:1;min-width:220px;max-width:420px}
+.ecus svg{width:100%;height:auto}
+.ecus figcaption{font:600 18px var(--serif);margin-top:2px}
+.ecus figcaption small{display:block;font:italic 14px var(--serif);color:#5B6573}
+h1.titre{font:600 30px/1.15 var(--serif);margin:0 0 2px}
+.sous{color:#5B6573;font-size:14px;margin-bottom:16px}
+.blasonnement{font:italic 19px/1.55 var(--serif);border-left:3px solid #C9A227;padding:4px 0 4px 14px;margin:0 0 18px}
+h2{font:600 17px var(--serif);margin:18px 0 8px}
+.lecture{font:15.5px/1.6 var(--serif);padding-left:18px;margin:0}
+.lecture li{margin-bottom:6px}
+.note{font-size:13px;color:var(--warn);margin-top:10px}
+details.grammaire{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 20px}
+details.grammaire summary{font:600 18px var(--serif);cursor:pointer}
+details.grammaire dl{display:grid;grid-template-columns:180px 1fr;gap:6px 18px;margin:14px 0 4px;font:15px/1.55 var(--serif)}
+details.grammaire dt{font-weight:600}
+details.grammaire dd{margin:0}
+.planche{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;margin-top:12px}
+.planche div{text-align:center;font-size:12px;color:#5B6573}
+.planche svg{width:64px;height:64px;display:block;margin:0 auto 2px}
+footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid var(--line);background:var(--panel);padding:4px 20px;text-align:right;font-size:12px;color:var(--muted)}
+dialog{border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);padding:24px;width:min(380px,92vw)} dialog::backdrop{background:rgba(10,15,25,.45)}
+.field{display:block;margin-bottom:12px} .field span{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+.field input{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:6px;background:var(--paper)}
+@media (max-width:860px){ .armes{grid-template-columns:1fr} details.grammaire dl{grid-template-columns:1fr} }
+@page{size:A4 portrait;margin:12mm}
+@media print{ body{background:#fff} header,.outils,footer,dialog{display:none!important} main{margin:0;padding:0;max-width:none}
+  .armes{border:0;padding:0} details.grammaire{border:0;padding:0} details.grammaire:not([open]){display:none} }
+</style>
+</head>
+<body>
+<header>
+  <h1 class="wordmark">Flamme Bleue</h1><p class="signature">Cartographiez votre énergie</p>
+  <nav><a href="index.html">Accueil</a><a href="autotest.html">Autotest</a><a href="console.html">Console</a></nav>
+  <div class="who"><span id="who"></span>
+    <button class="btn ghost" id="btn-login" type="button">Se connecter</button>
+    <button class="btn ghost hidden" id="btn-logout" type="button">Se déconnecter</button></div>
+</header>
+<p class="bloque" id="bloque">Chargement…</p>
+<div class="outils hidden" id="outils">
+  <button class="btn" type="button" onclick="window.print()">Imprimer ou enregistrer en PDF</button>
+  <button class="btn ghost" type="button" id="dl-svg">Télécharger en SVG</button>
+  <button class="btn ghost" type="button" id="dl-png">Télécharger en PNG</button>
+  <a class="btn ghost" id="lien-fiche" href="#">Voir la fiche</a>
+</div>
+<main class="hidden" id="page"></main>
+<footer><span id="credits">Meubles et animaux : icônes de Lorc, Delapouite et contributeurs, <a href="https://game-icons.net" target="_blank" rel="noopener">game-icons.net</a>, licence <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a>.</span> <span id="version"></span></footer>
+<dialog id="dlg-login"><form id="form-login"><h2 style="font:600 22px var(--serif);margin:0 0 14px">Se connecter</h2>
+  <label class="field"><span>Adresse e-mail</span><input type="email" id="email" autocomplete="username" required></label>
+  <label class="field"><span>Mot de passe</span><input type="password" id="password" autocomplete="current-password" required></label>
+  <div style="display:flex;gap:10px"><button class="btn" type="submit">Se connecter</button><button class="btn ghost" type="button" id="login-fermer">Fermer</button></div>
+  <p class="msg" id="login-msg" role="status"></p></form></dialog>
+<script>
+const VERSION = { numero:"1.7", date:"2026-10-02 12:41" };
+const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
+const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";
+const M = window.FLAMME_MOTEUR, B = window.FLAMME_BLASON;
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const dateFr = d => new Date(d).toLocaleDateString("fr-FR", { day:"numeric", month:"long", year:"numeric" });
+let user = null, role = null, E = {}, C = {}, svgs = [];
+$("#version").textContent = `Écusson ${VERSION.numero}, version du ${VERSION.date.replace(/(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d)/,"$3/$2/$1 à $4h$5")} — blason ${B.VERSION.numero}, moteur ${M.VERSION.numero}`;
+
+async function lireSource(){
+  const q = new URLSearchParams(location.search);
+  if (q.get("type")){
+    const code = q.get("type");
+    if (!M.analyser(code).famille) throw new Error(`« ${code} » n'est pas un code de profil.`);
+    return { scores: M.scoresTypes(code), date: null, qui: "", type: code, classement: null };
+  }
+  if (q.get("resultat")){
+    const { data, error } = await sb.from("resultats").select("*").eq("id", q.get("resultat")).maybeSingle();
+    if (error || !data) throw new Error("Ce résultat est introuvable, ou tu n'as pas le droit de le consulter.");
+    let qui = "";
+    if (role === "proprietaire" && data.user_id !== user.id){
+      const { data: pers } = await sb.rpc("personnes"); const p = (pers || []).find(x => x.user_id === data.user_id); qui = p ? (p.nom || p.email) : "";
+    }
+    return { scores: data.scores, date: data.passe_le, qui, classement: data.classement };
+  }
+  const s = {}; for (const c of M.ORDRE){ const v = parseFloat(String(q.get(c) ?? "").replace(",", ".")); if (!isFinite(v)) throw new Error("Il manque des scores : ouvre l'écusson depuis la fiche, l'autotest ou la console."); s[c] = v; }
+  return { scores: s, date: new Date().toISOString(), qui: "", classement: null };
+}
+
+/* bibliothèque d'images (meubles, animaux) : chargée une fois, secours sur les dessins internes */
+let BIB = null;
+const interieur = t => t.replace(/^[\s\S]*?<svg[^>]*>/, "").replace(/<\/svg>\s*$/, "");
+async function chargerBibliotheque(){
+  if (BIB) return BIB;
+  BIB = { meubles: {}, animaux: {}, catalogue: null };
+  try {
+    const cat = await (await fetch("bibliotheque/catalogue.json?v=3")).json(); BIB.catalogue = cat;
+    await Promise.all(Object.entries(cat.meubles).map(async ([k, v]) => { if (v.fichier) BIB.meubles[k] = interieur(await (await fetch("bibliotheque/" + v.fichier + "?v=3")).text()); }));
+  } catch (e){ console.warn("Bibliothèque d'images indisponible : dessins internes utilisés.", e); }
+  return BIB;
+}
+async function imageAnimal(code){
+  const v = BIB?.catalogue?.animaux?.[code];
+  if (!v?.fichier) return null;
+  if (!(code in BIB.animaux)){ try { BIB.animaux[code] = interieur(await (await fetch("bibliotheque/" + v.fichier + "?v=3")).text()); } catch { BIB.animaux[code] = null; } }
+  return BIB.animaux[code];
+}
+
+async function rendre(src){
+  const s01 = Object.fromEntries(M.ORDRE.map(c => [c, src.scores[c] / 100]));
+  const codes = M.profil(s01, { classement: src.classement }).codes;
+  // tempéraments : classement choisi par la personne dans l'autotest, sinon calcul (prDétail)
+  let temps, origine, note = "";
+  if (src.classement?.length === 20){ temps = src.classement; origine = "du classement des 20 tempéraments fait par la personne dans l'autotest"; }
+  else {
+    const codesProfils = Object.values(E).filter(e => e.couche === "profil").sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0)).map(e => e.code);
+    const t = M.statistiques(s01, codesProfils).sections.temperaments;
+    temps = t.map(x => x.code); origine = "du calcul des tempéraments à partir des scores";
+    const eg = (i, j) => Math.abs(t[i].score - t[j].score) < 1e-9;
+    if (eg(0, 1) || eg(1, 2) || eg(17, 18) || eg(18, 19)) note = "Certains tempéraments retenus sont à égalité avec leurs voisins : l'ordre de la base les a départagés pour le choix des meubles.";
+  }
+  await chargerBibliotheque();
+  const animaux = Object.fromEntries(await Promise.all(codes.map(async c => [c, await imageAnimal(c)])));
+  svgs = codes.map((c, i) => B.ecusson({ images: { meubles: BIB.meubles, animal: animaux[c] }, code: c, scores: src.scores, temperaments: temps, couleurs: C,
+    devise: E[c]?.devise_heraldique || E[c]?.devise || "", animal: E[c]?.animal_totem || "", id: "e" + i,
+    noms: Object.fromEntries(Object.values(E).filter(e => e.couche === "temperament").map(e => [e.code, e.nom])) }));
+  const frontiere = codes.length > 1;
+  $("#page").innerHTML = `
+    <section class="armes${frontiere ? " accoles" : ""}">
+      <div class="ecus">${svgs.map((r, i) => `<figure>${r.svg}<figcaption>${esc(E[codes[i]]?.nom || codes[i])}<small>${esc(codes[i])}</small></figcaption></figure>`).join("")}</div>
+      <div>
+        <h1 class="titre">${frontiere ? "Écus accolés" : "Les armes de " + esc(E[codes[0]]?.nom || codes[0])}</h1>
+        <div class="sous">${src.type ? "Profil type (scores types de la famille)" : (src.qui ? esc(src.qui) + " — " : "") + dateFr(src.date)} — ${M.ORDRE.map(c => `${c} ${String(Math.round(src.scores[c] * 10) / 10).replace(".", ",")}`).join(" · ")}</div>
+        ${svgs.map((r, i) => `${frontiere ? `<h2>${esc(codes[i])} — ${esc(E[codes[i]]?.nom || "")}</h2>` : ""}<p class="blasonnement">${esc(r.blason)}</p>
+          ${frontiere ? `<ol class="lecture">${r.lecture.slice(0, r.lecture.findIndex(l => l.startsWith("En cœur"))).map(l => `<li>${esc(l)}</li>`).join("")}</ol>` : ""}`).join("")}
+        <h2>Comment se lisent ces armes</h2>
+        <ol class="lecture">${(frontiere ? svgs[0].lecture.slice(-(svgs[0].lecture.length - svgs[0].lecture.findIndex(l => l.startsWith("En cœur")))) : svgs[0].lecture).map(l => `<li>${esc(l)}</li>`).join("")}
+          <li>${esc(`Les meubles viennent ${origine}.`)}</li>
+          ${frontiere ? `<li>${esc("Profil frontière : les scores placent à égalité entre plusieurs profils. Leurs écus sont accolés, comme on réunit deux lignées.")}</li>` : ""}
+          <li>${esc(E[codes[0]]?.devise_heraldique ? "La devise est la devise héraldique du profil." : "La devise est celle du profil, en attendant sa devise héraldique.")}</li></ol>
+        ${note ? `<p class="note">${esc(note)}</p>` : ""}
+      </div>
+    </section>
+    <details class="grammaire"><summary>La grammaire des écussons Flamme Bleue</summary>
+      <dl>${B.GRAMMAIRE.map(([t, d]) => `<dt>${esc(t)}</dt><dd>${esc(d)}</dd>`).join("")}</dl>
+      <h2>Les vingt meubles</h2>
+      <div class="planche">${Object.entries(B.MEUBLES).map(([k, m]) => `<div>${BIB.meubles[k] ? `<svg viewBox="0 0 512 512"><g color="#E6B422" fill="#E6B422" stroke="#1B2430" stroke-width="12" paint-order="stroke">${BIB.meubles[k]}</g></svg>` : `<svg viewBox="0 0 100 100"><g fill="#E6B422" stroke="#1B2430" stroke-width="2.6" stroke-linejoin="round">${m.svg}</g></svg>`}${esc(m.nom)}<br><b>${esc(k)}</b> ${esc(E[k]?.nom || "")}</div>`).join("")}</div>
+    </details>`;
+  $("#lien-fiche").href = "fiche.html" + location.search;
+  document.title = `Flamme Bleue — écusson ${codes.join(" / ")}`;
+}
+
+/* exports */
+function telecharger(nom, blob){ const u = URL.createObjectURL(blob); const a = Object.assign(document.createElement("a"), { href:u, download:nom }); document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 2000); }
+// la police du listel est intégrée aux exports, pour qu'ils restent fidèles hors du site
+let policeB64 = null;
+async function policeIntegree(){
+  if (policeB64 === null){
+    try { const r = await fetch("polices/cinzel-600.woff2"); const b = new Uint8Array(await r.arrayBuffer());
+      let bin = ""; b.forEach(x => bin += String.fromCharCode(x)); policeB64 = btoa(bin); } catch { policeB64 = ""; }
+  }
+  return policeB64 ? `<style>@font-face{font-family:"Cinzel";font-weight:600;src:url(data:font/woff2;base64,${policeB64}) format("woff2")}</style>` : "";
+}
+function svgComplet(){
+  // un seul écu, ou plusieurs accolés dans un même SVG
+  const n = svgs.length, w = 400 * n + 20 * (n - 1);
+  const H = B.HAUTEUR;
+  const corps = svgs.map((r, i) => r.svg.replace(/<svg[^>]*>/, `<svg x="${i * 420}" y="0" width="400" height="${H}" viewBox="${B.VUE}">`)).join("");
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${H}" viewBox="0 0 ${w} ${H}">${policeExport}<rect width="${w}" height="${H}" fill="#fff"/>${corps}</svg>`;
+}
+const nomFichier = ext => `flamme_ecusson_${document.title.split("écusson ")[1].replace(/[/.\s]/g, "-")}.${ext}`;
+let policeExport = "";
+$("#dl-svg").addEventListener("click", async () => { policeExport = await policeIntegree(); telecharger(nomFichier("svg"), new Blob([svgComplet()], { type:"image/svg+xml" })); });
+$("#dl-png").addEventListener("click", async () => {
+  policeExport = await policeIntegree();
+  const txt = svgComplet(), w = +txt.match(/width="(\d+)"/)[1], img = new Image();
+  img.onload = () => { const c = document.createElement("canvas"); c.width = w * 2; c.height = B.HAUTEUR * 2; const x = c.getContext("2d"); x.scale(2, 2); x.drawImage(img, 0, 0); c.toBlob(b => telecharger(nomFichier("png"), b), "image/png"); };
+  img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(txt);
+});
+
+/* accès */
+$("#btn-login").addEventListener("click", () => { $("#login-msg").textContent = ""; $("#dlg-login").showModal(); });
+$("#login-fermer").addEventListener("click", () => $("#dlg-login").close());
+$("#btn-logout").addEventListener("click", () => sb.auth.signOut());
+$("#form-login").addEventListener("submit", async e => { e.preventDefault(); const m = $("#login-msg"); m.className = "msg"; m.textContent = "Connexion…";
+  const { error } = await sb.auth.signInWithPassword({ email: $("#email").value.trim(), password: $("#password").value });
+  if (error){ m.className = "msg err"; m.textContent = /invalid/i.test(error.message) ? "Adresse ou mot de passe incorrect." : error.message; } else $("#dlg-login").close(); });
+
+sb.auth.onAuthStateChange(async (_e, session) => {
+  const u = session?.user || null; if (u?.id === user?.id && role !== null) return;
+  user = u; role = null;
+  $("#btn-login").classList.toggle("hidden", !!user); $("#btn-logout").classList.toggle("hidden", !user);
+  $("#who").textContent = user ? user.email : "";
+  ["#page", "#outils"].forEach(s => $(s).classList.add("hidden")); $("#bloque").classList.remove("hidden");
+  if (!user){ $("#bloque").textContent = "L'écusson est réservé aux personnes qui ont un compte. Connecte-toi pour l'afficher."; return; }
+  const { data: r } = await sb.rpc("mon_role"); role = r || "";
+  if (!role){ $("#bloque").textContent = "Ton compte n'a pas encore accès à Flamme Bleue."; return; }
+  try {
+    const [{ data: els, error }, { data: cols }] = await Promise.all([sb.from("elements").select("*"), sb.from("couleurs").select("*")]);
+    if (error) throw new Error(error.message);
+    E = Object.fromEntries(els.map(e => [e.code, e])); C = Object.fromEntries((cols || []).map(c => [c.code, c]));
+    await rendre(await lireSource());
+    $("#bloque").classList.add("hidden"); ["#page", "#outils"].forEach(s => $(s).classList.remove("hidden"));
+  } catch (err){ $("#bloque").textContent = err.message; }
+});
+</script>
+</body>
+</html>
