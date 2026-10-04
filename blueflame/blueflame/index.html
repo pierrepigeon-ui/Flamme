@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flamme Bleue — Cartographiez votre énergie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+<style>
+:root{--ink:#1B2430;--muted:#5B6573;--line:#DDE1E7;--paper:#F4F6F8;--panel:#FFFFFF;--hover:#EEF1F5;--bleu:#1F4FD1;--err:#B42318;
+  --serif:"Source Serif 4",Georgia,"Times New Roman",serif;--sans:"IBM Plex Sans","Segoe UI",Arial,sans-serif}
+@media (prefers-color-scheme: dark){:root{--ink:#E6E9EE;--muted:#9AA4B2;--line:#2C3542;--paper:#11161D;--panel:#171D25;--hover:#1E2630;--bleu:#7FA6FF;--err:#F2837A}}
+*{box-sizing:border-box} html,body{margin:0} body{background:var(--paper);color:var(--ink);font:16px/1.6 var(--sans)}
+button,input{font:inherit;color:inherit} :focus-visible{outline:2px solid #3B6FE0;outline-offset:2px} .hidden{display:none!important}
+.barre{display:flex;justify-content:flex-end;gap:10px;align-items:center;padding:12px 20px;font-size:13px;color:var(--muted)}
+.btn{display:inline-block;border:1px solid var(--ink);background:var(--ink);color:var(--panel);padding:11px 20px;border-radius:7px;cursor:pointer;font-weight:500;text-decoration:none}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn.petit{padding:6px 12px;font-size:13px}
+.hero{max-width:860px;margin:10px auto 0;padding:20px 24px 10px;text-align:center}
+.hero svg{width:110px;height:110px;display:block;margin:0 auto 8px}
+.hero h1{font:600 clamp(40px,7vw,64px)/1.05 var(--serif);margin:0;letter-spacing:.01em}
+.hero .signature{font:italic clamp(19px,2.6vw,24px)/1.4 var(--serif);color:var(--muted);margin:6px 0 2px}
+.hero .auteur{font-size:14px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:0 0 26px}
+.hero .actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.couleurs{display:flex;gap:10px;justify-content:center;margin:30px 0 0}
+.couleurs span{width:18px;height:18px;border-radius:50%;border:1px solid #8892A0}
+.blocs{max-width:1000px;margin:36px auto 0;padding:0 24px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.bloc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px 22px}
+.bloc h2{font:600 20px/1.25 var(--serif);margin:0 0 6px}
+.bloc p{margin:0;color:var(--muted);font:15.5px/1.6 var(--serif)}
+#espace{max-width:1000px;margin:34px auto 0;padding:0 24px}
+#espace .cadre{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px 22px}
+#espace h2{font:600 22px var(--serif);margin:0 0 4px}
+#espace .sous{color:var(--muted);font-size:14px;margin:0 0 14px}
+.tuiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.tuile{display:block;border:1px solid var(--line);border-radius:10px;padding:14px 16px;text-decoration:none;color:var(--ink);background:var(--paper)}
+.tuile:hover{border-color:var(--bleu)}
+.tuile b{display:block;font:600 17px var(--serif)} .tuile span{font-size:13.5px;color:var(--muted)}
+footer{max-width:1000px;margin:40px auto 0;padding:14px 24px 30px;font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line)}
+dialog{border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);padding:24px;width:min(380px,92vw)} dialog::backdrop{background:rgba(10,15,25,.45)}
+dialog h2{font:600 22px var(--serif);margin:0 0 14px} .field{display:block;margin-bottom:12px} .field span{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+.field input{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:6px;background:var(--paper)}
+.msg{font-size:14px;min-height:1.4em;margin:8px 0 0} .msg.err{color:var(--err)}
+@media (max-width:820px){ .blocs{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="barre"><span id="who"></span>
+  <button class="btn ghost petit" id="btn-login" type="button">Se connecter</button>
+  <button class="btn ghost petit hidden" id="btn-logout" type="button">Se déconnecter</button></div>
+
+<section class="hero">
+  <svg viewBox="0 0 100 100" aria-hidden="true">
+    <defs><linearGradient id="fb" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#0B2E8A"/><stop offset=".55" stop-color="#2F6BFF"/><stop offset="1" stop-color="#BFE0FF"/></linearGradient></defs>
+    <g fill="url(#fb)"><path d="M50 4c4 16 22 24 22 48 0 12-6 22-14 26 4-8 2-18-6-24 2 10-4 16-8 18-2-10-10-12-10-22-8 8-10 20-4 30C18 76 14 64 16 52c3-16 18-22 22-36 4 8 4 16 2 22 8-6 12-18 10-34z"/></g>
+  </svg>
+  <h1>Flamme Bleue</h1>
+  <p class="signature">Cartographiez votre énergie</p>
+  <p class="auteur">par l'Arpenteur</p>
+  <div class="actions">
+    <a class="btn" href="autotest.html">Passer l'autotest</a>
+    <button class="btn ghost" id="btn-login-2" type="button">Se connecter</button>
+  </div>
+  <div class="couleurs" aria-hidden="true">
+    <span style="background:#FFFFFF"></span><span style="background:#0055FF"></span><span style="background:#111111"></span><span style="background:#F00000"></span><span style="background:#00D900"></span>
+  </div>
+</section>
+
+<section id="espace" class="hidden">
+  <div class="cadre">
+    <h2 id="bonjour"></h2>
+    <p class="sous" id="espace-sous"></p>
+    <div class="tuiles" id="tuiles"></div>
+  </div>
+</section>
+
+<!-- Textes de présentation : à ajuster librement -->
+<section class="blocs">
+  <article class="bloc"><h2>Cinq couleurs, cinq énergies</h2>
+    <p>Ce qui nous met en mouvement se lit en cinq couleurs. Leur dosage dessine une carte unique : la vôtre.</p></article>
+  <article class="bloc"><h2>L'autotest</h2>
+    <p>Classez vingt tempéraments, du plus proche au plus lointain. Votre profil se révèle parmi quatre-vingt-dix, avec sa devise et ses armoiries.</p></article>
+  <article class="bloc"><h2>La Forge de l'Arpenteur</h2>
+    <p>Comprendre son énergie est un premier pas ; la travailler en est un autre. La Forge accompagne la motivation, au feu de la flamme bleue.</p></article>
+</section>
+
+
+
+<footer><span>Flamme Bleue — l'Arpenteur · <a href="../?contact&amp;depuis=blueflame">Écrire à l'Arpenteur</a></span><span id="version"></span></footer>
+
+<dialog id="dlg-login"><form id="form-login"><h2>Se connecter</h2>
+  <label class="field"><span>Adresse e-mail</span><input type="email" id="email" autocomplete="username" required></label>
+  <label class="field"><span>Mot de passe</span><input type="password" id="password" autocomplete="current-password" required></label>
+  <div style="display:flex;gap:10px"><button class="btn" type="submit">Se connecter</button><button class="btn ghost" type="button" id="login-fermer">Fermer</button></div>
+  <p class="msg" id="login-msg" role="status"></p></form></dialog>
+
+<script>
+const VERSION = { numero:"1.5", date:"2026-10-04 12:35" };
+const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
+const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+$("#version").textContent = `Accueil ${VERSION.numero}, version du ${VERSION.date.replace(/(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d)/,"$3/$2/$1 à $4h$5")}`;
+
+const ouvrir = () => { location.href = "../?retour=" + encodeURIComponent(location.href); };   // connexion centralisée sur la Forge
+$("#btn-login").addEventListener("click", ouvrir); $("#btn-login-2").addEventListener("click", ouvrir);
+$("#login-fermer").addEventListener("click", () => $("#dlg-login").close());
+$("#btn-logout").addEventListener("click", () => sb.auth.signOut().then(() => location.href = "../"));
+$("#form-login").addEventListener("submit", async e => { e.preventDefault(); const m = $("#login-msg"); m.className = "msg"; m.textContent = "Connexion…";
+  const { error } = await sb.auth.signInWithPassword({ email: $("#email").value.trim(), password: $("#password").value });
+  if (error){ m.className = "msg err"; m.textContent = /invalid/i.test(error.message) ? "Adresse ou mot de passe incorrect." : error.message; } else $("#dlg-login").close(); });
+
+const tuile = (href, titre, texte) => `<a class="tuile" href="${href}"><b>${esc(titre)}</b><span>${esc(texte)}</span></a>`;
+let user = null;
+sb.auth.onAuthStateChange(async (_e, session) => {
+  const u = session?.user || null; if (u?.id === user?.id) return; user = u;
+  $("#btn-login").classList.toggle("hidden", !!user); $("#btn-logout").classList.toggle("hidden", !user);
+  $("#btn-login-2").classList.toggle("hidden", !!user);
+  $("#who").textContent = user ? user.email : "";
+  if (!user){ $("#espace").classList.add("hidden"); return; }
+  const [{ data: role }, { data: moi }, { data: res }, { data: rolePrisme }] = await Promise.all([
+    sb.rpc("mon_role"),
+    sb.from("roles_utilisateurs").select("nom").eq("user_id", user.id).maybeSingle(),
+    sb.from("resultats").select("id,passe_le,codes").eq("user_id", user.id).order("passe_le", { ascending:false }).limit(1),
+    sb.rpc("prisme_mon_role")   // rôle PRISME, indépendant de Flamme Bleue
+  ]);
+  // la tuile PRISME n'apparaît qu'aux personnes qui ont un rôle PRISME
+  const tuilePrisme = rolePrisme ? tuile("../", "La Forge", "Revenir au portail de l'Arpenteur et à ses autres outils") : "";
+  $("#espace").classList.remove("hidden");
+  $("#bonjour").textContent = `Bonjour${moi?.nom ? ", " + moi.nom : ""}`;
+  if (!role){
+    $("#espace-sous").textContent = rolePrisme ? "Votre compte donne accès à PRISME." : "Votre compte n'a pas encore accès à Flamme Bleue. L'Arpenteur doit vous l'ouvrir.";
+    $("#tuiles").innerHTML = tuilePrisme; return;
+  }
+  const dernier = res?.[0];
+  $("#espace-sous").textContent = dernier
+    ? `Votre dernier résultat : ${dernier.codes[0]}, le ${new Date(dernier.passe_le).toLocaleDateString("fr-FR")}.`
+    : "Vous n'avez pas encore enregistré de résultat : commencez par l'autotest.";
+  let t = tuile("autotest.html", "Autotest", dernier ? "Reprendre ou refaire votre classement" : "Classer les vingt tempéraments");
+  if (dernier){
+    t += tuile(`fiche.html?resultat=${dernier.id}`, "Ma fiche", "Votre portrait, vos valeurs, vos motivations");
+    t += tuile(`ecusson.html?resultat=${dernier.id}`, "Mes armes", "Votre écusson et sa devise");
+  }
+  t += tuile("console.html", role === "proprietaire" ? "Console" : "Le modèle", role === "invite" ? "Parcourir les profils ; changer votre mot de passe" : "Parcourir et éditer le contenu ; votre mot de passe");
+  if (role === "proprietaire") t += tuile("rosace.html", "Rosace", "La carte complète du modèle");
+  t += tuilePrisme;
+  $("#tuiles").innerHTML = t;
+});
+</script>
+</body>
+</html>
