@@ -126,7 +126,23 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px}
   </div>
 </section>
 
-<footer><span>La Forge de l'Arpenteur</span><span id="version"></span></footer>
+<!-- Réglages : propriétaire seulement -->
+<section class="cadre hidden" id="reglages">
+  <div>
+    <h2>Réglages de la Forge</h2>
+    <p class="sous">Modifiables ici sans toucher au code. Ils s'appliquent aussitôt, pour tout le monde.</p>
+    <form id="form-reglages">
+      <label class="field"><span>Adresse de contact de l'Arpenteur (proposée si le formulaire de contact échoue ; laisser vide pour ne rien afficher)</span>
+        <input id="r-contact" type="email" maxlength="300" placeholder="adresse@exemple.fr"></label>
+      <label class="field" style="display:flex;gap:10px;align-items:center"><input id="r-prisme" type="checkbox" style="width:auto">
+        <span style="margin:0;font-size:15px;color:var(--ink)">Ouvrir PRISME aux visiteurs sans compte (la porte PRISME apparaît sur la Forge)</span></label>
+      <button class="btn" type="submit">Enregistrer</button>
+      <p class="msg" id="reglages-msg" role="status"></p>
+    </form>
+  </div>
+</section>
+
+<footer><span>La Forge de l'Arpenteur</span><span><a href="#" id="ouvrir-reglages" class="hidden">Réglages</a></span><span id="version"></span></footer>
 
 <dialog id="dlg-login"><form id="form-login"><h2>Se connecter</h2>
   <label class="field"><span>Adresse e-mail</span><input type="email" id="email" autocomplete="username" required></label>
@@ -135,15 +151,21 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px}
   <p class="msg" id="login-msg" role="status"></p></form></dialog>
 
 <script>
-const VERSION = { numero:"1.1", date:"2026-10-04 12:35" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"1.2", date:"2026-10-04 17:13" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 
 /* ============ Paramètres de la Forge ============ */
-// Adresse de contact de l'Arpenteur : proposée en secours si le formulaire échoue (à remplir).
-const CONTACT_EMAIL = "";
-// Sans compte, Flamme Bleue est ouverte à tous (autotest) ; PRISME seulement si PRISME_PUBLIC vaut true.
-const PRISME_PUBLIC = false;
+// Les réglages vivent dans la base (table forge_parametres) et se modifient depuis la Forge
+// par le propriétaire, dans « Réglages de la Forge ». Valeurs par défaut si la table est absente :
+const PARAM = { contact_email: "", prisme_public: "non" };
+async function chargerParametres(){
+  try {
+    const { data, error } = await sb.from("forge_parametres").select("cle,valeur");
+    if (!error && data) data.forEach(p => { PARAM[p.cle] = p.valeur; });
+  } catch {}
+}
+const prismePublic = () => PARAM.prisme_public === "oui";
 const SITES = { flamme: "blueflame/", prisme: "prisme/" };
 
 /* Aiguillage :
@@ -165,13 +187,14 @@ function retourSur(){
 }
 async function role(fn){ try { const { data, error } = await sb.rpc(fn); return error ? null : data; } catch { return null; } }
 
-let user = null, roleFlamme = null, demarre = false;
+let user = null, roleFlamme = null, demarre = false, parametresCharges = null;
 async function aiguiller(session, viaConnexion){
   user = session?.user || null;
+  await (parametresCharges ||= chargerParametres());
   const retour = retourSur();
   if (user && retour && viaConnexion !== false){ location.replace(retour); return; }
   let sites;
-  if (!user) sites = PRISME_PUBLIC ? ["flamme","prisme"] : ["flamme"];
+  if (!user) sites = prismePublic() ? ["flamme","prisme"] : ["flamme"];
   else {
     const [rf, rp] = await Promise.all([role("mon_role"), role("prisme_mon_role")]);
     roleFlamme = rf; sites = [];
@@ -193,6 +216,8 @@ function afficher(sites){
   $("#btn-logout").classList.toggle("hidden", !user);
   $("#actions-anonyme").classList.toggle("hidden", !!user);
   if (P.has("contact")) ouvrirContact();
+  $("#ouvrir-reglages").classList.toggle("hidden", roleFlamme !== "proprietaire");
+  if (roleFlamme !== "proprietaire") $("#reglages").classList.add("hidden");
   if (roleFlamme === "proprietaire") chargerMessages(P.has("messages"));
   else $("#messages").classList.add("hidden");
   $("#attente").classList.add("hidden");
@@ -236,11 +261,32 @@ $("#form-contact").addEventListener("submit", async e => {
   const { error } = await sb.from("forge_messages").insert(ligne);
   if (error){
     m.className = "msg err";
-    m.textContent = "L'envoi a échoué." + (CONTACT_EMAIL ? ` Vous pouvez écrire directement à ${CONTACT_EMAIL}.` : " Réessayez un peu plus tard.");
+    m.textContent = "L'envoi a échoué." + (PARAM.contact_email ? ` Vous pouvez écrire directement à ${PARAM.contact_email}.` : " Réessayez un peu plus tard.");
     return;
   }
   $("#form-contact").reset(); if (user) $("#c-email").value = user.email;
   m.className = "msg ok"; m.textContent = "Merci, votre message est bien parti. L'Arpenteur vous répondra à l'adresse indiquée.";
+});
+
+/* ============ réglages (propriétaire) ============ */
+$("#ouvrir-reglages").addEventListener("click", e => {
+  e.preventDefault();
+  $("#r-contact").value = PARAM.contact_email || "";
+  $("#r-prisme").checked = prismePublic();
+  $("#reglages-msg").textContent = "";
+  $("#reglages").classList.remove("hidden");
+  $("#reglages").scrollIntoView({ behavior:"smooth", block:"start" });
+});
+$("#form-reglages").addEventListener("submit", async e => {
+  e.preventDefault(); const m = $("#reglages-msg"); m.className = "msg"; m.textContent = "Enregistrement…";
+  const maintenant = new Date().toISOString();
+  const valeurs = { contact_email: $("#r-contact").value.trim(), prisme_public: $("#r-prisme").checked ? "oui" : "non" };
+  for (const [cle, valeur] of Object.entries(valeurs)){
+    const { data, error } = await sb.from("forge_parametres").update({ valeur, modifie_le: maintenant }).eq("cle", cle).select("cle");
+    if (error || !data?.length){ m.className = "msg err"; m.textContent = "Enregistrement impossible" + (error ? " : " + error.message : " (la migration forge_02 a-t-elle été passée ?)"); return; }
+    PARAM[cle] = valeur;
+  }
+  m.className = "msg ok"; m.textContent = "Réglages enregistrés.";
 });
 
 /* ============ messages reçus (propriétaire) ============ */
