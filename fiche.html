@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PRISME — Mon profil de joueur</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+<style>
+:root{--ink:#1B2430;--muted:#5B6573;--line:#DDE1E7;--paper:#F6F5F1;--panel:#FFFFFF;--accent:#3D2645;--arch:#888;
+  --serif:"Source Serif 4",Georgia,"Times New Roman",serif;--sans:"IBM Plex Sans","Segoe UI",Arial,sans-serif}
+@media (prefers-color-scheme: dark){:root{--ink:#E6E9EE;--muted:#9AA4B2;--line:#2C3542;--paper:#11161D;--panel:#171D25;--accent:#C9B4D2}}
+*{box-sizing:border-box} html,body{margin:0} body{background:var(--paper);color:var(--ink);font:16px/1.6 var(--sans)}
+a{color:inherit}
+.marque{font:600 19px/1 "Source Serif 4",Georgia,serif;letter-spacing:.08em;color:inherit!important;text-decoration:none}
+.barre{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px 20px;font-size:13px;color:var(--muted)}
+.barre a{text-decoration:none}
+#qui a{margin-left:10px}
+
+main{max-width:860px;margin:0 auto;padding:10px 24px 40px}
+.entete{border-top:10px solid var(--arch);background:var(--panel);border-radius:12px;padding:22px 26px 20px;border-left:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.entete .surtitre{font-size:13px;color:var(--muted);margin:0}
+.entete h1{font:600 clamp(36px,6vw,54px)/1.05 var(--serif);margin:4px 0 6px}
+.entete .filiation{font:italic 19px/1.4 var(--serif);color:var(--muted);margin:0}
+.entete .date{font-size:13px;color:var(--muted);margin:10px 0 0}
+section{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px 26px;margin-top:16px}
+section h2{font:600 22px/1.25 var(--serif);margin:0 0 2px}
+section .question{font:italic 15px var(--serif);color:var(--muted);margin:0 0 12px}
+section p{margin:0 0 10px;font:16.5px/1.65 var(--serif)}
+.devise{font-style:italic;color:var(--muted)}
+.libelle{font:600 13px var(--sans);color:var(--muted);display:block;margin-bottom:1px}
+/* les cinq moteurs, du plus fort au plus faible */
+.moteurs{display:grid;gap:8px}
+.moteur{display:grid;grid-template-columns:118px 1fr 58px;gap:12px;align-items:center}
+.moteur .nom{font-weight:500}
+.moteur .piste{height:14px;border-radius:7px;background:var(--line);overflow:hidden}
+.moteur .plein{display:block;height:100%;border-radius:7px}
+.moteur .pct{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted);font-size:14px}
+.moteur .role{grid-column:2 / 4;font-size:12.5px;color:var(--muted);margin:-6px 0 2px}
+.trois{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.trois div p{font-size:15.5px}
+/* timeline */
+.timeline svg{width:100%;height:auto;display:block}
+.timeline .note{font-size:13px;color:var(--muted);margin:8px 0 0}
+.version{font-size:12px;color:var(--muted);text-align:right;margin-top:24px}
+.vide{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:30px 26px;font:italic 18px/1.5 var(--serif);color:var(--muted)}
+.vide a{color:var(--ink)}
+@media (max-width:700px){ .trois{grid-template-columns:1fr} .moteur{grid-template-columns:96px 1fr 50px} main{padding:8px 14px 30px} section,.entete{padding:18px} }
+</style>
+</head>
+<body>
+<div class="barre"><a href="index.html" class="marque" title="Accueil de PRISME">PRISME</a><span id="qui"></span></div>
+<main id="contenu"><p class="vide">Chargement…</p></main>
+<main><p class="version" id="version"></p></main>
+
+<script>
+const VERSION = { numero:"1.2", date:"2026-10-04 16:44" };   // à incrémenter à chaque livraison
+const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
+const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+$("#version").textContent = `Fiche du joueur ${VERSION.numero}, version du ${VERSION.date.replace(/(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d)/,"$3/$2/$1 à $4h$5")}`;
+
+
+/* ---- connexion : tout passe par la Forge (portail commun, à la racine du site) ---- */
+const versForge = () => "../?retour=" + encodeURIComponent(location.href);
+function afficherCompte(u){
+  const el = document.getElementById("qui");
+  el.innerHTML = u ? `<span>${String(u.email).replace(/[&<>"']/g, "")}</span> <a href="#" id="deconnexion">Se déconnecter</a>`
+                   : `<a href="${versForge()}">Se connecter</a>`;
+  const d = document.getElementById("deconnexion");
+  if (d) d.addEventListener("click", e => { e.preventDefault(); sb.auth.signOut().then(() => location.href = "../"); });
+}
+let demarre = false;
+sb.auth.onAuthStateChange((_e, session) => {
+  if (!session?.user){ location.replace(versForge()); return; }   // page réservée : on passe par la Forge
+  afficherCompte(session.user);
+  if (!demarre){ demarre = true; setTimeout(() => afficher(session?.user || null), 0); }
+});
+
+const vide = html => $("#contenu").innerHTML = `<p class="vide">${html}</p>`;
+
+async function afficher(user){
+  if (!user) return;
+  const id = new URLSearchParams(location.search).get("resultat");
+  let q = sb.from("prisme_player_resultats").select("*");
+  q = id ? q.eq("id", id) : q.eq("user_id", user.id).order("passe_le", { ascending:false }).limit(1);
+  const { data: res, error } = await q;
+  if (error) return vide("Lecture impossible : " + esc(error.message));
+  const r = res?.[0];
+  if (!r) return vide(id ? "Ce résultat n'existe pas, ou vous n'avez pas le droit de le voir."
+                         : 'Vous n\'avez pas encore de profil de joueur. <a href="questionnaire.html">Passer le questionnaire</a>.');
+  const [{ data: sp }, { data: mot }] = await Promise.all([
+    sb.from("prisme_player_vue_sous_profils").select("*").eq("code", r.sous_profil).single(),
+    sb.from("prisme_player_moteurs").select("*").order("ordre")
+  ]);
+  const { data: arch } = await sb.from("prisme_player_archetypes").select("*").eq("code", sp.archetype).single();
+  const M = Object.fromEntries(mot.map(m => [m.code, m]));
+  // pas de lettre à l'écran : « (W · Intégrer) » devient « (rassembler) »
+  const sansLettres = t => String(t || "").replace(/\(([WUBRG]) · [^)]*\)/g, (_, l) => "(" + (M[l]?.nom || l).toLowerCase() + ")");
+  const autre = r.user_id !== user.id;
+  document.documentElement.style.setProperty("--arch", arch.couleur || "#888");
+  document.title = `PRISME — ${sp.nom}`;
+
+  const ordre = r.classement.split("");
+  const moteurs = ordre.map((c, i) => {
+    const m = M[c], pct = Number(r.scores?.[c] ?? 0);
+    const role = i === 0 ? "votre moteur dominant" : (i === 4 ? "votre moteur le plus faible : celui qui fait décrocher" : (i < 3 ? "dans votre trio de tête" : ""));
+    return `<div class="moteur"><span class="nom">${esc(m.nom)}</span>
+      <span class="piste"><span class="plein" style="width:${Math.min(100, pct)}%;background:${m.couleur}"></span></span>
+      <span class="pct">${pct.toFixed(1).replace(".", ",")} %</span>
+      ${role ? `<span class="role">${role}</span>` : ""}</div>`;
+  }).join("");
+
+  $("#contenu").innerHTML = `
+    <div class="entete">
+      <p class="surtitre">${autre ? "Profil de joueur" : "Mon profil de joueur"}</p>
+      <h1>${esc(sp.nom)}</h1>
+      <p class="filiation">${esc(sp.profil_nom)}, archétype ${esc(arch.nom)}</p>
+      <p class="date">Questionnaire du ${new Date(r.passe_le).toLocaleDateString("fr-FR")}.${autre ? "" : ' <a href="questionnaire.html">Le modifier ou le refaire</a>. <a href="rosace.html">Voir ma place sur la rosace</a>.'}</p>
+    </div>
+
+    <section><h2>Vos moteurs</h2><p class="question">Ce qui vous met en mouvement à la table, du plus fort au plus faible.</p>
+      <div class="moteurs">${moteurs}</div></section>
+
+    <section><h2>${esc(arch.nom)}</h2><p class="question">Pourquoi je joue ? Votre archétype.</p>
+      <p class="devise">${esc(arch.devise)}</p>
+      <p>${esc(sansLettres(arch.texte))}</p>
+      ${arch.percu ? `<p><span class="libelle">Peut être perçu comme</span>${esc(arch.percu)}</p>` : ""}</section>
+
+    <section><h2>${esc(sp.profil_nom)}</h2><p class="question">Qu'est-ce qui me fait décrocher ? Votre profil.</p>
+      <p>${esc(sp.decrochage)}</p></section>
+
+    <section><h2>${esc(sp.nom)}</h2><p class="question">Qu'est-ce qui me nourrit particulièrement ? Votre sous-profil.</p>
+      <div class="trois">
+        <div><span class="libelle">Adore</span><p>${esc(sp.adore)}</p></div>
+        <div><span class="libelle">Déteste</span><p>${esc(sp.deteste)}</p></div>
+        <div><span class="libelle">On lui reproche</span><p>${esc(sp.reproche)}</p></div>
+      </div></section>
+
+    <section class="timeline"><h2>Votre moment</h2><p class="question">Où culmine votre intérêt au fil des parties ?</p>
+      ${frise(sp, M[sp.dominante])}
+      <p class="note">Hypothèse de travail du modèle, pas encore validée sur des cas réels.</p></section>`;
+}
+
+// frise des jalons 0 à 7+, avec la zone d'apogée du moteur dominant
+function frise(sp, m){
+  const W = 760, x = j => 30 + j * 90, y = 70;
+  const phases = [["Accès",1,2],["Rôdage",4,5],["Aguerrissement",5,6],["Exploitation",6,7]];
+  const demi = { "courte":0.5, "moyenne":0.9, "longue (étendue)":1.6 }[sp.duree_apogee] ?? 0.9;
+  let zone;
+  if (sp.climax_jalon == null){   // transversal : prolonge l'apogée des autres
+    zone = `<rect x="${x(1)}" y="${y-26}" width="${x(7.6)-x(1)}" height="26" rx="6" fill="${m.couleur}" opacity=".22"/>
+      <text x="${(x(1)+x(7.6))/2}" y="${y-36}" text-anchor="middle" font-size="15" font-weight="600" fill="currentColor">Transversal : vous prolongez l'apogée, quelle que soit la phase</text>`;
+  } else {
+    const c = Number(sp.climax_jalon);
+    zone = `<rect x="${x(c-demi)}" y="${y-26}" width="${x(c+demi)-x(c-demi)}" height="26" rx="6" fill="${m.couleur}" opacity=".3"/>
+      <circle cx="${x(c)}" cy="${y-13}" r="7" fill="${m.couleur}"/>
+      <text x="${x(c)}" y="${y-36}" text-anchor="middle" font-size="15" font-weight="600" fill="currentColor">${esc(sp.climax_phase)}, apogée ${esc(sp.duree_apogee)}</text>`;
+  }
+  const graduations = [0,1,2,3,4,5,6,7].map(j => `<line x1="${x(j)}" y1="${y}" x2="${x(j)}" y2="${y+7}" stroke="currentColor" opacity=".5"/>
+    <text x="${x(j)}" y="${y+24}" text-anchor="middle" font-size="12.5" fill="currentColor" opacity=".7">${j === 7 ? "7+" : j}</text>`).join("");
+  const noms = phases.map(([n,a,b]) => `<text x="${(x(a)+x(b))/2}" y="${y+44}" text-anchor="middle" font-size="12" fill="currentColor" opacity=".6">${n}</text>`).join("");
+  return `<svg viewBox="0 0 ${W} 122" role="img" aria-label="Frise des parties, de la découverte à l'exploitation">
+    ${zone}<line x1="${x(0)}" y1="${y}" x2="${x(7.6)}" y2="${y}" stroke="currentColor" stroke-width="1.5" opacity=".6"/>${graduations}${noms}</svg>`;
+}
+</script>
+</body>
+</html>
