@@ -110,7 +110,7 @@ table.tl-table tr.alpha td{background:color-mix(in srgb, var(--accent) 9%, trans
 .sp-arc{border-top:1px solid var(--line);padding:6px 0} .sp-arc summary{cursor:pointer;display:flex;gap:10px;align-items:baseline} .sp-arc summary .n{margin-left:auto;font-variant-numeric:tabular-nums}
 .sp-arc summary .aide{font-size:13px;margin:0}
 button.lien,a.lien{border:0;background:none;padding:0;font:inherit;color:inherit;text-decoration:underline;text-decoration-color:var(--line);cursor:pointer}
-table.tl-table tr.choisi td{background:color-mix(in srgb, var(--accent) 9%, transparent)} table.tl-table small{color:var(--muted)}
+table.sp-extremes{margin:0 0 10px} table.tl-table tr.choisi td{background:color-mix(in srgb, var(--accent) 9%, transparent)} table.tl-table small{color:var(--muted)}
 .sp-courbe{border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:10px 0;background:var(--paper)} .sp-courbe h3{font:600 17px var(--serif);margin:0 0 4px}
 #pied .tl-pied{cursor:pointer} #pied .tl-pied b{font-size:16px;font-weight:600} #pied .tl-pied b small{display:inline;font-size:12px;color:var(--muted);font-weight:400}
 .carnet{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:26px 0 10px}
@@ -202,9 +202,9 @@ table.recap .aller{cursor:pointer;text-decoration:underline;text-decoration-colo
 <dialog id="dlg-recap"><div id="recap"></div><p style="text-align:right;margin:12px 0 0"><button class="btn" id="fermer-recap" type="button">Fermer</button></p></dialog>
 <div class="wrap"><p class="version" id="version"></p></div>
 
-<script src="timeline.js?v=1.2"></script>
+<script src="timeline.js?v=1.3"></script>
 <script>
-const VERSION = { numero:"3.9", date:"2026-10-08 18:41" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"3.10", date:"2026-10-08 18:47" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -627,8 +627,9 @@ function majSpectro(n){
   box.innerHTML = `<div class="sp-haut"><figure>${rosaceSVG(r.spectre, PL.moteurs.map(m => ({ code:m.code, nom:m.nom, couleur:coul(m) })))}
       <figcaption>Pointillés : ce que le jeu <b>offre</b> à chaque moteur (le trait, axes 1). Surface : ce qu'il <b>réussit</b> pour lui (les paires qu'il aime).</figcaption></figure>
     <div><p class="aide" style="margin-top:0">Note pour tous : <b>${fmt(r.noteBase, 2)}</b>. Du sous-profil le mieux servi au moins bien servi : <b>${fmt(r.lignes[0].note, 2)}</b> (${esc(r.lignes[0].sp.nom)}) à <b>${fmt(r.lignes.at(-1).note, 2)}</b> (${esc(r.lignes.at(-1).sp.nom)}).</p>
-    <table class="tl-table"><thead><tr><th>Archétype</th><th>Note</th><th>α moyen</th></tr></thead><tbody>
-    ${r.archetypes.map(a => `<tr><td><a href="#ar-${esc(a.a.code)}" class="lien">${esc(a.a.nom)}</a></td><td class="n"><b>${fmt(a.note, 2)}</b></td><td class="n">${fmt(a.alpha, 2)}</td></tr>`).join("")}</tbody></table></div></div>
+    ${[["Les mieux servis", r.lignes.slice(0, 5)], ["Les moins bien servis", r.lignes.slice(-5).reverse()]].map(([t, L]) => `<table class="tl-table sp-extremes"><thead><tr><th>${t}</th><th>Note</th><th>α</th></tr></thead><tbody>
+      ${L.map(l => `<tr class="${spChoisi === l.sp.code ? "choisi" : ""}"><td><button type="button" class="lien" data-sp="${esc(l.sp.code)}">${esc(l.sp.nom)}</button> <small>${esc(l.archetype.nom)}</small></td><td class="n"><b>${fmt(l.note, 2)}</b></td><td class="n">${fmt(l.c.y[l.c.alpha], 2)}</td></tr>`).join("")}</tbody></table>`).join("")}
+    <p class="aide">Ci-dessous, les dix archétypes du mieux au moins bien servi ; dépliez-en un pour ses six sous-profils.</p></div></div>
     ${det ? `<div class="sp-courbe"><h3>${esc(det.sp.nom)} <small>(${esc(det.archetype.nom)}, ${esc(det.profil.nom)})</small> <button type="button" class="lien" data-sp="">fermer</button></h3>
       <p class="aide">Adore ${esc(det.sp.adore)} ; déteste ${esc(det.sp.deteste)}.</p>
       <div class="tl-bandeau">${esc(syntheseTimeline(det.c))}</div>

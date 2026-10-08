@@ -1,6 +1,6 @@
 /* PRISME — timeline du jeu : jalons, durées, flow, α β γ, demi-vie.
    Module partagé par l'encyclopédie et l'outil d'évaluation. Méthode arrêtée le 08/10/2026 (jeu d'essai : Heat). */
-const TIMELINE_VERSION = { numero:"1.2", date:"2026-10-08 18:41" };   // à incrémenter à chaque livraison
+const TIMELINE_VERSION = { numero:"1.3", date:"2026-10-08 18:47" };   // à incrémenter à chaque livraison
 
 const JALONS = [
   { n:0, nom:"identifié", quoi:"Le jeu est connu de loin : critique, vitrine, recommandation." },
@@ -305,3 +305,40 @@ function jeuxPourJoueurs(fiches, paires, axes, pl, codes){
     return { jeu, fiches:F.length, finale:F[0].finale, note:m("note"), base:m("base"), alpha:m("alpha"), demivie:m("demivie") };
   }).sort((a, b) => b.note - a.note);
 }
+
+/* ---------------- lecture des jeux évalués et tableau « ses jeux » (partagé : rosace, fiche du joueur) ---------------- */
+async function lireJeuxEvalues(sb){
+  const lire = async (t, o) => { const tout = []; for (let d = 0; ; d += 1000){ let q = sb.from(t).select("*"); if (o) q = q.order(o); const { data, error } = await q.range(d, d + 999);
+    if (error) throw error; tout.push(...data); if (data.length < 1000) return tout; } };
+  try {
+    const [paires, axes, jeux, evals, vals] = await Promise.all([lire("prisme_paires","ordre"), lire("prisme_axes","ordre"), lire("prisme_jeux","nom"), lire("prisme_evaluations"), lire("prisme_evaluation_valeurs")]);
+    if (!paires.length) return { refus:true };
+    const saisies = {}; vals.forEach(v => (saisies[v.evaluation] ??= {})[v.axe] = { valeur: v.valeur == null ? null : Number(v.valeur), sans_objet: v.sans_objet });
+    return { paires, axes, jeux, fiches: evals.map(e => ({ jeu:e.jeu, statut:e.statut, contenu_parties:e.contenu_parties, saisie: saisies[e.id] || {} })) };
+  } catch (e){ return { refus:true }; }
+}
+// L : résultat de jeuxPourJoueurs ; d : résultat de lireJeuxEvalues ; qui : « lui », « vous »…
+function tableJeuxHTML(L, d, qui, moyenne){
+  const e = s => String(s ?? "").replace(/[&<>"']/g, k => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[k]));
+  const nom = c => d.jeux.find(j => j.code === c)?.nom || c, f = (v, k = 2) => Number(v).toFixed(k).replace(".", ",");
+  if (!L.length) return `<p class="pj-discret">Aucun jeu n'a encore de fiche complète.</p>`;
+  const ecart = x => { const v = x.note - x.base; return `<span class="pj-ecart ${v >= .005 ? "plus" : v <= -.005 ? "moins" : ""}">${Math.abs(v) < .005 ? "±" : v > 0 ? "+" : "−"}${f(Math.abs(v))}</span>`; };
+  const ligne = (x, i) => `<tr><td class="rang">${i}</td><td><a href="evaluation.html?jeu=${encodeURIComponent(x.jeu)}">${e(nom(x.jeu))}</a>${x.finale ? "" : ' <small class="pj-discret">brouillon</small>'}</td>
+    <td class="n"><b>${f(x.note)}</b> ${ecart(x)}</td><td class="n">${f(x.alpha)}</td><td class="n">${x.demivie >= 1e7 ? "∞" : arrondiDemiVie(x.demivie)}</td></tr>`;
+  const haut = L.slice(0, 8), bas = L.length > 11 ? L.slice(-3) : [];
+  return `<p class="pj-discret">${L.length} jeu${L.length > 1 ? "x" : ""} évalué${L.length > 1 ? "s" : ""}, classé${L.length > 1 ? "s" : ""} ${qui === "vous" ? "selon la note qu'ils obtiennent pour vous" : "selon la note vue par " + e(qui) + (moyenne ? " (en moyenne)" : "")} ; l'écart se lit par rapport à la note pour tous.</p>
+    <table class="pj-jeux"><thead><tr><th></th><th>Jeu</th><th class="n">Note</th><th class="n">α</th><th class="n">Demi-vie</th></tr></thead>
+    <tbody>${haut.map((x, i) => ligne(x, i + 1)).join("")}</tbody>
+    ${bas.length ? `<tbody class="bas"><tr><td colspan="5" class="pj-discret">Ceux qui ${qui === "vous" ? "vous" : "lui"} vont le moins</td></tr>${bas.map((x, i) => ligne(x, L.length - bas.length + i + 1)).join("")}</tbody>` : ""}</table>`;
+}
+(function(){
+  const st = document.createElement("style");
+  st.textContent = `.pj-discret{color:var(--muted);font:13.5px/1.5 var(--sans, inherit)}
+table.pj-jeux{width:100%;border-collapse:collapse;font-size:14px;margin:4px 0 10px}
+table.pj-jeux th{font-weight:500;font-size:12px;color:var(--muted);text-align:left;border-bottom:1px solid var(--line);padding:4px 5px}
+table.pj-jeux td{border-bottom:1px solid var(--line);padding:5px;vertical-align:baseline} table.pj-jeux .n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+table.pj-jeux td.rang{color:var(--muted);width:1.6em} table.pj-jeux tbody.bas td{border-bottom-color:transparent}
+.pj-ecart{font-size:12px;color:var(--muted)} .pj-ecart.plus{color:#1E7A46} .pj-ecart.moins{color:#B42318}
+@media (prefers-color-scheme: dark){.pj-ecart.plus{color:#5CC98A} .pj-ecart.moins{color:#F2837A}}`;
+  document.head.appendChild(st);
+})();

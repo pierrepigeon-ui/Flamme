@@ -14,6 +14,7 @@
 @media (prefers-color-scheme: dark){:root{--ink:#E6E9EE;--muted:#9AA4B2;--line:#2C3542;--paper:#11161D;--panel:#171D25;--accent:#C9B4D2}}
 *{box-sizing:border-box} html,body{margin:0} body{background:var(--paper);color:var(--ink);font:16px/1.6 var(--sans)}
 a{color:inherit}
+.marque{font:600 19px/1 "Source Serif 4",Georgia,serif;letter-spacing:.08em;color:inherit!important;text-decoration:none}
 .barre{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px 20px;font-size:13px;color:var(--muted)}
 .barre a{text-decoration:none}
 #qui a{margin-left:10px}
@@ -23,6 +24,15 @@ main{max-width:860px;margin:0 auto;padding:10px 24px 40px}
 .entete .surtitre{font-size:13px;color:var(--muted);margin:0}
 .entete h1{font:600 clamp(36px,6vw,54px)/1.05 var(--serif);margin:4px 0 6px}
 .entete .filiation{font:italic 19px/1.4 var(--serif);color:var(--muted);margin:0}
+/* les trois niveaux, du plus partagé (archétype, 1 joueur sur 10) au plus singulier (sous-profil, 1 sur 60) */
+.entete h1.niveaux{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;font:600 clamp(26px,4.4vw,40px)/1.15 var(--serif);margin:8px 0 4px}
+.niveaux .niv{display:inline-flex;flex-direction:column}
+.niveaux small{font:500 12px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.niveaux .arch{font-size:clamp(38px,6.5vw,60px);line-height:1.05;color:var(--arch)}
+.niveaux .prof{color:color-mix(in srgb, var(--arch) 55%, var(--ink))}
+.niveaux .sous{font-size:.85em;color:color-mix(in srgb, var(--sous) 80%, var(--ink))}
+.niveaux .sep{color:var(--line);font-weight:400}
+@media (max-width:520px){ .niveaux .sep{display:none} }
 .entete .date{font-size:13px;color:var(--muted);margin:10px 0 0}
 section{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px 26px;margin-top:16px}
 section h2{font:600 22px/1.25 var(--serif);margin:0 0 2px}
@@ -43,6 +53,7 @@ section p{margin:0 0 10px;font:16.5px/1.65 var(--serif)}
 /* timeline */
 .timeline svg{width:100%;height:auto;display:block}
 .timeline .note{font-size:13px;color:var(--muted);margin:8px 0 0}
+#vos-jeux table.pj-jeux{font-size:15px}
 .version{font-size:12px;color:var(--muted);text-align:right;margin-top:24px}
 .vide{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:30px 26px;font:italic 18px/1.5 var(--serif);color:var(--muted)}
 .vide a{color:var(--ink)}
@@ -50,18 +61,19 @@ section p{margin:0 0 10px;font:16.5px/1.65 var(--serif)}
 </style>
 </head>
 <body>
-<div class="barre"><a href="index.html">← Accueil PRISME</a><span id="qui"></span></div>
+<div class="barre"><a href="index.html" class="marque" title="Accueil de PRISME">PRISME</a><span id="qui"></span></div>
 <main id="contenu"><p class="vide">Chargement…</p></main>
 <main><p class="version" id="version"></p></main>
 
+<script src="timeline.js?v=1.3"></script>
 <script>
-const VERSION = { numero:"1.2", date:"2026-10-04 16:44" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"1.4", date:"2026-10-08 18:51" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-$("#version").textContent = `Fiche du joueur ${VERSION.numero}, version du ${VERSION.date.replace(/(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d)/,"$3/$2/$1 à $4h$5")}`;
+$("#version").textContent = `Fiche du joueur ${VERSION.numero}, version du ${VERSION.date.replace(/(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d)/,"$3/$2/$1 à $4h$5")} · timeline ${TIMELINE_VERSION.numero}`;
 
 
 /* ---- connexion : tout passe par la Forge (portail commun, à la racine du site) ---- */
@@ -117,8 +129,10 @@ async function afficher(user){
   $("#contenu").innerHTML = `
     <div class="entete">
       <p class="surtitre">${autre ? "Profil de joueur" : "Mon profil de joueur"}</p>
-      <h1>${esc(sp.nom)}</h1>
-      <p class="filiation">${esc(sp.profil_nom)}, archétype ${esc(arch.nom)}</p>
+      <h1 class="niveaux">
+        <span class="niv arch"><small>archétype</small>${esc(arch.nom)}</span><span class="sep" aria-hidden="true">›</span>
+        <span class="niv prof"><small>profil</small>${esc(sp.profil_nom)}</span><span class="sep" aria-hidden="true">›</span>
+        <span class="niv sous" style="--sous:${esc(M[sp.dominante]?.couleur || "var(--ink)")}"><small>sous-profil</small>${esc(sp.nom)}</span></h1>
       <p class="date">Questionnaire du ${new Date(r.passe_le).toLocaleDateString("fr-FR")}.${autre ? "" : ' <a href="questionnaire.html">Le modifier ou le refaire</a>. <a href="rosace.html">Voir ma place sur la rosace</a>.'}</p>
     </div>
 
@@ -142,7 +156,19 @@ async function afficher(user){
 
     <section class="timeline"><h2>Votre moment</h2><p class="question">Où culmine votre intérêt au fil des parties ?</p>
       ${frise(sp, M[sp.dominante])}
-      <p class="note">Hypothèse de travail du modèle, pas encore validée sur des cas réels.</p></section>`;
+      <p class="note">Hypothèse de travail du modèle, pas encore validée sur des cas réels.</p></section>
+
+    <section id="vos-jeux"><h2>${autre ? "Ses jeux" : "Vos jeux"}</h2><p class="question">Les jeux évalués dans PRISME, vus par ${autre ? "ce" : "votre"} profil de joueur.</p>
+      <div id="vos-jeux-corps"><p class="pj-discret">Calcul en cours…</p></div></section>`;
+  afficherVosJeux(r.sous_profil, autre);
+}
+async function afficherVosJeux(code, autre){
+  const box = $("#vos-jeux-corps"), d = await lireJeuxEvalues(sb);
+  if (d.refus){ box.innerHTML = `<p class="pj-discret">Les jeux évalués sont réservés aux membres de PRISME pour l'instant.</p>`; return; }
+  const lire = t => sb.from(t).select("*").order("ordre");
+  const [mo, ar, pr, sp] = await Promise.all(["prisme_player_moteurs","prisme_player_archetypes","prisme_player_profils","prisme_player_sous_profils"].map(lire));
+  const L = jeuxPourJoueurs(d.fiches, d.paires, d.axes, { moteurs:mo.data, archetypes:ar.data, profils:pr.data, sousprofils:sp.data }, [code]);
+  box.innerHTML = tableJeuxHTML(L, d, autre ? "ce joueur" : "vous", false);
 }
 
 // frise des jalons 0 à 7+, avec la zone d'apogée du moteur dominant

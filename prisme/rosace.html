@@ -38,13 +38,6 @@ aside .lib{display:block;font:600 12.5px var(--sans);color:var(--muted);margin-t
 aside ul{margin:4px 0 10px;padding-left:18px;font:15.5px/1.5 var(--serif)}
 aside .lien{cursor:pointer;text-decoration:underline;text-decoration-color:var(--line)}
 aside .vous-badge{display:inline-block;font:600 12px var(--sans);color:#fff;background:#1B2430;border-radius:4px;padding:1px 7px;margin-left:6px;vertical-align:4px}
-aside .discret,.discret{color:var(--muted);font:13.5px/1.5 var(--sans)}
-aside table.jeux{width:100%;border-collapse:collapse;font-size:14px;margin:4px 0 10px}
-aside table.jeux th{font:500 12px var(--sans);color:var(--muted);text-align:left;border-bottom:1px solid var(--line);padding:4px 5px}
-aside table.jeux td{border-bottom:1px solid var(--line);padding:5px;vertical-align:baseline} aside table.jeux .n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
-aside table.jeux td.rang{color:var(--muted);width:1.6em} aside table.jeux tbody.bas td{border-bottom-color:transparent}
-aside .ecart{font-size:12px;color:var(--muted)} aside .ecart.plus{color:#1E7A46} aside .ecart.moins{color:#B42318}
-@media (prefers-color-scheme: dark){aside .ecart.plus{color:#5CC98A} aside .ecart.moins{color:#F2837A}}
 .version{font-size:12px;color:var(--muted);text-align:right;max-width:1320px;margin:0 auto;padding:0 20px 20px}
 @media (max-width:980px){ .page{grid-template-columns:1fr} aside{position:static;max-height:none} }
 </style>
@@ -367,9 +360,9 @@ aside .ecart{font-size:12px;color:var(--muted)} aside .ecart.plus{color:#1E7A46}
 </div>
 <p class="version" id="version"></p>
 
-<script src="timeline.js?v=1.2"></script>
+<script src="timeline.js?v=1.3"></script>
 <script>
-const VERSION = { numero:"1.3", date:"2026-10-08 18:41" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"1.4", date:"2026-10-08 18:47" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -504,43 +497,20 @@ function montrer(code){
       <span class="lib">Ce qui le fait décrocher</span><p>${esc(M[p.rejetee].fragilite)}</p>
       ${estVous && code === vous.sous_profil ? '<p><a href="fiche.html">Voir ma fiche de joueur complète</a></p>' : ""}`;
   }
-  $("#panneau").innerHTML = h + `<div id="jeux-joueur"><span class="lib">Ses jeux</span><p class="discret">Calcul en cours…</p></div>`;
+  $("#panneau").innerHTML = h + `<div id="jeux-joueur"><span class="lib">Ses jeux</span><p class="pj-discret">Calcul en cours…</p></div>`;
   afficherJeux(code, N);
   $("#panneau").querySelectorAll("[data-aller]").forEach(x => x.addEventListener("click", () => montrer(x.dataset.aller)));
 }
 /* ---- l'inverse du spectromètre : les jeux évalués, classés pour ce joueur ---- */
-let J = null;   // jeux évalués, lus une fois
-async function chargerJeux(){
-  if (J) return J;
-  const lire = async (t, o) => { const tout = []; for (let d = 0; ; d += 1000){ let q = sb.from(t).select("*"); if (o) q = q.order(o); const { data, error } = await q.range(d, d + 999);
-    if (error) throw error; tout.push(...data); if (data.length < 1000) return tout; } };
-  try {
-    const [paires, axes, jeux, evals, vals] = await Promise.all([lire("prisme_paires","ordre"), lire("prisme_axes","ordre"), lire("prisme_jeux","nom"), lire("prisme_evaluations"), lire("prisme_evaluation_valeurs")]);
-    if (!paires.length) return J = { refus:true };
-    const saisies = {}; vals.forEach(v => (saisies[v.evaluation] ??= {})[v.axe] = { valeur: v.valeur == null ? null : Number(v.valeur), sans_objet: v.sans_objet });
-    J = { paires, axes, jeux, fiches: evals.map(e => ({ jeu:e.jeu, statut:e.statut, contenu_parties:e.contenu_parties, saisie: saisies[e.id] || {} })) };
-  } catch (e){ J = { refus:true }; }
-  return J;
-}
+let J = null;   // jeux évalués, lus une fois (lecture et tableau partagés : timeline.js)
 async function afficherJeux(code, N){
-  const box = document.getElementById("jeux-joueur"); const d = await chargerJeux();
+  const box = document.getElementById("jeux-joueur"); J ??= await lireJeuxEvalues(sb);
   if (choisi !== code || !box?.isConnected) return;
-  if (d.refus){ box.innerHTML = `<span class="lib">Ses jeux</span><p class="discret">Les jeux évalués sont réservés aux membres de PRISME.</p>`; return; }
+  if (J.refus){ box.innerHTML = `<span class="lib">Ses jeux</span><p class="pj-discret">Les jeux évalués sont réservés aux membres de PRISME.</p>`; return; }
   const codes = N === "sous" ? [code] : N === "profil" ? B.sous.filter(x => x.profil === code).map(x => x.code)
     : B.sous.filter(x => B.profils.find(p => p.code === x.profil)?.archetype === code).map(x => x.code);
-  const L = jeuxPourJoueurs(d.fiches, d.paires, d.axes, { moteurs:B.moteurs, archetypes:B.archetypes, profils:B.profils, sousprofils:B.sous }, codes);
-  const nom = c => d.jeux.find(j => j.code === c)?.nom || c, f = (v, k = 2) => Number(v).toFixed(k).replace(".", ",");
-  const ecart = x => { const e = x.note - x.base; return `<span class="ecart ${e >= .005 ? "plus" : e <= -.005 ? "moins" : ""}">${Math.abs(e) < .005 ? "±" : e > 0 ? "+" : "−"}${f(Math.abs(e))}</span>`; };
-  const ligne = (x, i) => `<tr><td class="rang">${i}</td><td><a href="evaluation.html?jeu=${encodeURIComponent(x.jeu)}">${esc(nom(x.jeu))}</a>${x.finale ? "" : ' <small class="discret">brouillon</small>'}</td>
-    <td class="n"><b>${f(x.note)}</b> ${ecart(x)}</td><td class="n">${f(x.alpha)}</td><td class="n">${x.demivie >= 1e7 ? "∞" : arrondiDemiVie(x.demivie)}</td></tr>`;
-  const qui = N === "sous" ? "lui" : N === "profil" ? "ses trois sous-profils" : "ses six sous-profils";
-  if (!L.length){ box.innerHTML = `<span class="lib">Ses jeux</span><p class="discret">Aucun jeu n'a encore de fiche complète.</p>`; return; }
-  const haut = L.slice(0, 8), bas = L.length > 11 ? L.slice(-3) : [];
-  box.innerHTML = `<span class="lib">Ses jeux</span>
-    <p class="discret">${L.length} jeu${L.length > 1 ? "x" : ""} évalué${L.length > 1 ? "s" : ""}, classé${L.length > 1 ? "s" : ""} selon la note vue par ${qui}${N === "sous" ? "" : " (en moyenne)"} ; l'écart se lit par rapport à la note pour tous.</p>
-    <table class="jeux"><thead><tr><th></th><th>Jeu</th><th class="n">Note</th><th class="n">α</th><th class="n">Demi-vie</th></tr></thead>
-    <tbody>${haut.map((x, i) => ligne(x, i + 1)).join("")}</tbody>
-    ${bas.length ? `<tbody class="bas"><tr><td colspan="5" class="discret">Ceux qui lui vont le moins</td></tr>${bas.map((x, i) => ligne(x, L.length - bas.length + i + 1)).join("")}</tbody>` : ""}</table>`;
+  const L = jeuxPourJoueurs(J.fiches, J.paires, J.axes, { moteurs:B.moteurs, archetypes:B.archetypes, profils:B.profils, sousprofils:B.sous }, codes);
+  box.innerHTML = `<span class="lib">Ses jeux</span>` + tableJeuxHTML(L, J, N === "sous" ? "lui" : N === "profil" ? "ses trois sous-profils" : "ses six sous-profils", N !== "sous");
 }
 function montrerAccueil(connecte){
   $("#panneau").innerHTML = `<p class="niveau">La rosace des joueurs</p><h1>Dix archétypes, vingt profils, soixante sous-profils</h1>
