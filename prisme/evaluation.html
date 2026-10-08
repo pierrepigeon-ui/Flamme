@@ -104,6 +104,14 @@ table.tl-table th{text-align:left;font-weight:500;color:var(--muted);border-bott
 table.tl-table td{border-bottom:1px solid var(--line);padding:5px 8px} table.tl-table td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 table.tl-table tr.tl-phase td{font:600 12px var(--sans,inherit);text-transform:uppercase;letter-spacing:.04em;color:var(--muted);background:var(--paper);padding-top:8px}
 table.tl-table tr.alpha td{background:color-mix(in srgb, var(--accent) 9%, transparent)} table.tl-table tr.chute td:first-child{color:var(--err)}
+.sp-haut{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:18px;align-items:start;margin:8px 0 12px}
+.sp-haut figure{margin:0} .sp-haut figcaption{font-size:12.5px;color:var(--muted);text-align:center}
+@media (max-width:700px){.sp-haut{grid-template-columns:1fr}}
+.sp-arc{border-top:1px solid var(--line);padding:6px 0} .sp-arc summary{cursor:pointer;display:flex;gap:10px;align-items:baseline} .sp-arc summary .n{margin-left:auto;font-variant-numeric:tabular-nums}
+.sp-arc summary .aide{font-size:13px;margin:0}
+button.lien,a.lien{border:0;background:none;padding:0;font:inherit;color:inherit;text-decoration:underline;text-decoration-color:var(--line);cursor:pointer}
+table.tl-table tr.choisi td{background:color-mix(in srgb, var(--accent) 9%, transparent)} table.tl-table small{color:var(--muted)}
+.sp-courbe{border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:10px 0;background:var(--paper)} .sp-courbe h3{font:600 17px var(--serif);margin:0 0 4px}
 #pied .tl-pied{cursor:pointer} #pied .tl-pied b{font-size:16px}
 .carnet{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:26px 0 10px}
 .carnet h2{font:600 20px var(--serif);margin:0 0 4px}
@@ -194,9 +202,9 @@ table.recap .aller{cursor:pointer;text-decoration:underline;text-decoration-colo
 <dialog id="dlg-recap"><div id="recap"></div><p style="text-align:right;margin:12px 0 0"><button class="btn" id="fermer-recap" type="button">Fermer</button></p></dialog>
 <div class="wrap"><p class="version" id="version"></p></div>
 
-<script src="timeline.js?v=1.0"></script>
+<script src="timeline.js?v=1.1"></script>
 <script>
-const VERSION = { numero:"3.6", date:"2026-10-08 17:56" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"3.7", date:"2026-10-08 18:30" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -253,6 +261,8 @@ async function demarrer(){
     [M.chapitres, M.paires, M.axes, M.paliers, M.exemples, M.jeux, M.notes] = await Promise.all([lire("prisme_chapitres","ordre"), lire("prisme_paires","ordre"),
       lire("prisme_axes","ordre"), lire("prisme_paliers","valeur"), lire("prisme_exemples","ordre"), lire("prisme_jeux","nom"), lire("prisme_notes","ordre")]);
     const { data: n } = await sb.rpc("prisme_noms"); (n || []).forEach(x => noms[x.user_id] = x.nom);
+    try { [PL.moteurs, PL.archetypes, PL.profils, PL.sousprofils] = await Promise.all([lire("prisme_player_moteurs","ordre"), lire("prisme_player_archetypes","ordre"),
+      lire("prisme_player_profils","ordre"), lire("prisme_player_sous_profils","ordre")]); } catch (e){ PL.erreur = e.message; }
   } catch (e){ $("#msg-accueil").className = "msg err"; $("#msg-accueil").textContent = "Lecture du modèle impossible : " + e.message; return; }
   M.paires.sort((a, b) => M.chapitres.find(c => c.code === a.chapitre).ordre - M.chapitres.find(c => c.code === b.chapitre).ordre || a.ordre - b.ordre);
   remplirJeux(); await chargerFiches(); afficherFiches();
@@ -260,6 +270,7 @@ async function demarrer(){
 async function chargerFiches(){
   [toutes, valeurs] = await Promise.all([lireTout("prisme_evaluations", q => q.order("modifie_le", { ascending:false })), lireTout("prisme_evaluation_valeurs")]);
 }
+const PL = { moteurs:[], archetypes:[], profils:[], sousprofils:[] };   // PRISMEplayer, pour le spectromètre
 const nomJeu = c => M.jeux.find(j => j.code === c)?.nom || c;
 const nomDe = id => id === user.id ? "moi" : (noms[id] || "un évaluateur");
 const saisieDe = id => { const s = {}; valeurs.filter(v => v.evaluation === id).forEach(v => s[v.axe] = { valeur: v.valeur == null ? null : Number(v.valeur), sans_objet: v.sans_objet, commentaire: v.commentaire }); return s; };
@@ -468,8 +479,13 @@ function construireGrille(){
   h += `<section class="timeline" id="timeline"><h2>Timeline</h2>
     <p class="aide">La vie du jeu, de la vitrine à l'étagère : à chaque jalon, le flow (stimulation moins friction, sur 10) calculé à partir des notes de la fiche, au meilleur effectif.
       Elle se met à jour à chaque saisie. <a href="encyclopedie.html#temps" target="_blank" rel="noopener">La méthode dans l'encyclopédie</a>.</p>
-    <div id="tl-corps"></div></section>`;
-  $("#aller").insertAdjacentHTML("beforeend", '<option value="timeline">Timeline</option>');
+    <div id="tl-corps"></div></section>
+    <section class="timeline" id="spectro"><h2>Spectromètre</h2>
+    <p class="aide">Le jeu vu par chacun des 60 sous-profils de PRISMEplayer. Chacun porte trois moteurs (3 pour le dominant, 1,5 pour les deux autres) et en rejette un :
+      les paires qu'aiment ses moteurs pèsent plus, dans la note comme dans la courbe ; ce qu'il rejette devient friction à partir de son moment.
+      <a href="encyclopedie.html#croisement" target="_blank" rel="noopener">La méthode dans l'encyclopédie</a>.</p>
+    <div id="sp-corps"></div></section>`;
+  $("#aller").insertAdjacentHTML("beforeend", '<option value="timeline">Timeline</option><option value="spectro">Spectromètre</option>');
   h += `<section class="carnet"><h2>Carnet d'article</h2>
     <p class="aide">Idées, anecdotes de partie, citations, plan : tout ce qui servira à écrire un article sur ce jeu. Visible par les autres évaluateurs, comme le reste de la fiche.</p>
     <textarea id="carnet" ${lectureSeule ? "disabled" : ""}>${esc(fiche.notes_article || "")}</textarea></section>`;
@@ -588,6 +604,7 @@ function entreesTimeline(){
   TIMELINE_AXES.forEach(code => {
     const a = M.axes.find(x => x.code === code); if (!a) return;
     const r = etat(a.paire), v = saisie[code]?.valeur;
+    if (r?.seuil && a.rang !== "1") return;                       // pas de vraie négociation : NEG2 ne compte pas
     if (r?.so || (r?.na1 && a.rang !== "1")) { absents.add(a.paire); return; }
     if (v == null) manque.add(a.paire); else n[code] = v;
   });
@@ -598,6 +615,7 @@ function majTimeline(){
   const { n, manque, absents } = entreesTimeline();
   const nomP = code => M.paires.find(p => p.code === code)?.nom || code;
   if (manque.length){
+    const sb2 = document.getElementById("sp-corps"); if (sb2) sb2.innerHTML = `<p class="tl-attente">Le spectromètre s'affichera avec la timeline.</p>`;
     box.innerHTML = `<p class="tl-attente">La courbe s'affichera quand ces paires seront remplies : ${manque.map(c => `<a href="#p-${esc(c)}" data-ouvrir="${esc(c)}">${esc(nomP(c))}</a>`).join(", ")}.</p>`;
     return {};
   }
@@ -614,9 +632,36 @@ function majTimeline(){
         <td>${esc(sp.nom)}</td><td class="n">${j.n < 7 ? fmt(c.d[j.n], 2) + " partie" + (c.d[j.n] >= 2 ? "s" : "") : "∞"}</td></tr>`; }).join("")}
     </tbody></table></div>
     <p class="aide">Plafond d'aléa ${fmt(c.plafond, 2)} (jalons 5 et 6) · usure ${fmt(c.usure, 2)} (jalon 7) · lassitude au jalon 7 : ×${fmt(c.det[7].L, 2)}.</p>`;
-  return { c };
+  return { c, sp: majSpectro(n) };
+}
+let spChoisi = null;   // sous-profil dont la courbe est affichée
+function majSpectro(n){
+  const box = document.getElementById("sp-corps"); if (!box) return null;
+  if (!PL.sousprofils.length){ box.innerHTML = `<p class="tl-attente">Modèle PRISMEplayer illisible${PL.erreur ? " : " + esc(PL.erreur) : ""}.</p>`; return null; }
+  const paires = Object.values(calculer(saisie).parChap).flat().map(x => ({ chap:x.p.chapitre, code:x.p.code, note:x.note }));
+  const r = spectrometre(n, paires, PL), Mo = Object.fromEntries(PL.moteurs.map(m => [m.code, m]));
+  const coul = m => (matchMedia("(prefers-color-scheme: dark)").matches ? m.couleur_sombre : m.couleur) || m.couleur || "var(--accent)";
+  const ligne = l => `<tr class="${spChoisi === l.sp.code ? "choisi" : ""}"><td><button type="button" class="lien" data-sp="${esc(l.sp.code)}">${esc(l.sp.nom)}</button><br><small>${esc(l.profil.nom)} · dominant ${esc(Mo[l.pr.dom]?.nom || "")} · rejette ${esc(Mo[l.pr.rejet]?.nom || "")}</small></td>
+    <td class="n"><b>${fmt(l.note, 2)}</b></td><td class="n">${fmt(l.c.y[l.c.alpha], 2)} <small>j${l.c.alpha}</small></td><td class="n">${l.c.demivie == null ? "∞" : arrondiDemiVie(l.c.demivie)}</td>
+    <td>${l.c.beta != null ? `chute au jalon ${l.c.beta}` : l.gene > 0 ? `gêné dès le jalon ${MOTEURS_JEU[l.pr.rejet].rejet} (${JALONS[MOTEURS_JEU[l.pr.rejet].rejet].nom})` : "—"}</td></tr>`;
+  const det = spChoisi && r.lignes.find(l => l.sp.code === spChoisi);
+  const ouverts = new Set([...box.querySelectorAll("details[open]")].map(d => d.id));
+  box.innerHTML = `<div class="sp-haut"><figure>${rosaceSVG(r.spectre, PL.moteurs.map(m => ({ code:m.code, nom:m.nom, couleur:coul(m) })))}
+      <figcaption>Pointillés : ce que le jeu <b>offre</b> à chaque moteur (le trait, axes 1). Surface : ce qu'il <b>réussit</b> pour lui (les paires qu'il aime).</figcaption></figure>
+    <div><p class="aide" style="margin-top:0">Note pour tous : <b>${fmt(r.noteBase, 2)}</b>. Du sous-profil le mieux servi au moins bien servi : <b>${fmt(r.lignes[0].note, 2)}</b> (${esc(r.lignes[0].sp.nom)}) à <b>${fmt(r.lignes.at(-1).note, 2)}</b> (${esc(r.lignes.at(-1).sp.nom)}).</p>
+    <table class="tl-table"><thead><tr><th>Archétype</th><th>Note</th><th>α moyen</th></tr></thead><tbody>
+    ${r.archetypes.map(a => `<tr><td><a href="#ar-${esc(a.a.code)}" class="lien">${esc(a.a.nom)}</a></td><td class="n"><b>${fmt(a.note, 2)}</b></td><td class="n">${fmt(a.alpha, 2)}</td></tr>`).join("")}</tbody></table></div></div>
+    ${det ? `<div class="sp-courbe"><h3>${esc(det.sp.nom)} <small>(${esc(det.archetype.nom)}, ${esc(det.profil.nom)})</small> <button type="button" class="lien" data-sp="">fermer</button></h3>
+      <p class="aide">Adore ${esc(det.sp.adore)} ; déteste ${esc(det.sp.deteste)}.</p>
+      <div class="tl-bandeau">${esc(syntheseTimeline(det.c))}</div>
+      <figure class="courbe-box">${courbeSVG(det.c, det.sp.nom, r.base)}<figcaption>Trait noir : la courbe vue par ce sous-profil. Pointillé gris : le flow pour tous (${r.base.y.map((v, j) => `${j} ${fmt(v, 1)}`).join(" · ")}).</figcaption></figure></div>` : ""}
+    ${r.archetypes.map(a => `<details class="sp-arc" id="ar-${esc(a.a.code)}"${(det && det.archetype.code === a.a.code) || ouverts.has("ar-" + a.a.code) ? " open" : ""}><summary><b>${esc(a.a.nom)}</b> <span class="aide">${esc(a.a.devise || "")}</span> <span class="n">${fmt(a.note, 2)}</span></summary>
+      <div class="defile"><table class="tl-table"><thead><tr><th>Sous-profil</th><th>Note</th><th>α</th><th>Demi-vie</th><th>Décrochage</th></tr></thead><tbody>${a.lignes.map(ligne).join("")}</tbody></table></div></details>`).join("")}`;
+  return r;
 }
 document.addEventListener("click", e => {
+  const b = e.target.closest("[data-sp]");
+  if (b){ e.preventDefault(); spChoisi = b.dataset.sp || null; majTimeline(); if (spChoisi) document.querySelector("#sp-corps .sp-courbe")?.scrollIntoView({ behavior:"smooth", block:"start" }); return; }
   const o = e.target.closest("[data-ouvrir]");
   if (o){ e.preventDefault(); const el = document.getElementById("p-" + o.dataset.ouvrir); el.classList.remove("repliee"); aligner(); el.scrollIntoView({ behavior:"smooth" }); return; }
   if (e.target.closest("[data-tl]")) document.getElementById("timeline")?.scrollIntoView({ behavior:"smooth" });
@@ -739,7 +784,8 @@ $("#btn-recap").addEventListener("click", () => {
   $("#recap").innerHTML = `<h2>${esc(nomJeu(fiche.jeu))} : récapitulatif</h2>
     <p class="aide">${manque.length ? `Il manque ${manque.length} paire${manque.length > 1 ? "s" : ""} : ${manque.map(l => esc(l.p.nom)).join(", ")}.` : `Les ${M.paires.length} paires sont remplies.`}
       Note finale : <b>${c.finale == null ? "—" : fmt(c.finale, 2)}</b> (${M.chapitres.map(ch => `${esc(ch.nom)} ${c.chap[ch.code] == null ? "—" : fmt(c.chap[ch.code], 2)}`).join(", ")}).</p>
-    ${(() => { const t = majTimeline(); return `<p class="aide">Timeline : ${t.c ? esc(syntheseTimeline(t.c)) : "incomplète"}.</p>`; })()}
+    ${(() => { const t = majTimeline(); return `<p class="aide">Timeline : ${t.c ? esc(syntheseTimeline(t.c)) : "incomplète"}.</p>` +
+      (t.sp ? `<p class="aide">Spectromètre : ${t.sp.archetypes.map(a => `${esc(a.a.nom)} ${fmt(a.note, 2)}`).join(" · ")}.</p>` : ""); })()}
     <table class="recap"><thead><tr><th>Paire</th><th>Saisie</th><th>Note retenue</th><th>Justification</th></tr></thead><tbody>
     ${L.map(l => `<tr class="${l.n.complete ? "" : "manque"}"><td><span class="aller" data-aller="${esc(l.p.code)}">${esc(l.p.nom)}</span></td><td>${l.notes}</td>
       <td>${l.n.so ? "sans objet" : l.n.note == null ? (l.n.na1 || l.n.seuil ? "axe 2 sans objet" : "—") : fmt(l.n.note, 2)}</td><td>${esc(l.justif)}</td></tr>`).join("")}</tbody></table>`;
@@ -758,6 +804,7 @@ $("#btn-export").addEventListener("click", () => {
   md += `**Note finale : ${c.finale == null ? "—" : fmt(c.finale, 2)}** (${M.chapitres.map(ch => `${ch.nom} ${c.chap[ch.code] == null ? "—" : fmt(c.chap[ch.code], 2)}`).join(", ")})\n`;
   const tl = majTimeline();
   if (tl.c) md += `\n**Timeline** : ${syntheseTimeline(tl.c)}.\n\nFlow par jalon : ${tl.c.y.map((v, j) => `${j} ${fmt(v, 2)}`).join(" · ")}\n`;
+  if (tl.sp) md += `\n**Spectromètre** (note vue par chaque archétype) : ${tl.sp.archetypes.map(a => `${a.a.nom} ${fmt(a.note, 2)}`).join(" · ")}. Le mieux servi : ${tl.sp.lignes[0].sp.nom} (${fmt(tl.sp.lignes[0].note, 2)}) ; le moins bien : ${tl.sp.lignes.at(-1).sp.nom} (${fmt(tl.sp.lignes.at(-1).note, 2)}).\n`;
   M.chapitres.forEach(ch => {
     md += `\n## ${ch.nom}\n`;
     L.filter(l => l.p.chapitre === ch.code).forEach(l => {

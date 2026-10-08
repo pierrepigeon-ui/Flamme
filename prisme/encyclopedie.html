@@ -120,7 +120,7 @@ mark{background:#FFE58A;color:#1B2430;border-radius:2px}
 <div class="page">
   <header class="titre">
     <div><h1>L'encyclopédie</h1>
-      <p>Le modèle PRISME tel qu'il est dans la base, à jour en direct : le jeu, ses chapitres, ses paires d'axes et leurs grilles ; le joueur, ses moteurs, archétypes, profils et sous-profils ; le temps, ses jalons et la courbe du flow.</p></div>
+      <p>Le modèle PRISME tel qu'il est dans la base, à jour en direct : le jeu, ses chapitres, ses paires d'axes et leurs grilles ; le joueur, ses moteurs, archétypes, profils et sous-profils ; le temps, ses jalons et la courbe du flow ; le croisement des jeux et des joueurs.</p></div>
     <div class="actions"><button class="btn" id="imprimer" type="button">Imprimer ou enregistrer en PDF</button></div>
   </header>
   <nav id="sommaire" aria-label="Sommaire"><input id="cherche" type="search" placeholder="Chercher dans l'encyclopédie…" aria-label="Chercher"><details id="tocbox" open><summary>Sommaire</summary><p class="plis"><button type="button" id="tout-deplier">Tout déplier</button> · <button type="button" id="tout-replier">Tout replier</button></p><ol id="toc"></ol></details></nav>
@@ -128,9 +128,9 @@ mark{background:#FFE58A;color:#1B2430;border-radius:2px}
 </div>
 <div style="max-width:1240px;margin:0 auto;padding:0 20px 30px"><p class="version" id="version"></p></div>
 
-<script src="timeline.js?v=1.0"></script>
+<script src="timeline.js?v=1.1"></script>
 <script>
-const VERSION = { numero:"1.2", date:"2026-10-08 17:56" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"1.3", date:"2026-10-08 18:30" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -199,6 +199,7 @@ async function charger(){
   h.push(M.paires.length ? sectionJeu(toc) : sectionJeuFermee(toc));
   h.push(sectionJoueur(toc));
   h.push(sectionTemps(toc));
+  h.push(sectionCroisement(toc));
   h.push(sectionGlossaire(toc));
   $("#contenu").innerHTML = h.join("");
   $("#toc").innerHTML = noeuds(toc, 1);
@@ -325,9 +326,55 @@ function sectionJoueur(toc){
 // Jalons, durées, flow et graphique : module partagé timeline.js.
 // Heat (boîte de base, toutes options) : notes de la fiche validée le 08/10/2026 ; POID, PROF… = notes retenues des paires.
 const HEAT = { nom:"Heat: Pedal to the Metal", POID1:2.5, POID:3.49, PROF:3.49, VAR1:3, VAR:3.89, ALEA1:2, ALEA2:4, EXIG1:3.5, EXIG:4.23,
-  RYT1:3, RYT2:3, MAN1:2, MAN2:4, THEM1:3, THEM:3.9, LIEN2:4.5, INT2:4, SCAL:3.89, MAT:3.02, ART2a:4.5, ART2b:3, TRAN2:3.5, VAL1:2,
+  RYT1:3, RYT2:3, MAN1:2, MAN2:4, THEM1:3, THEM:3.9, LIEN1:3, LIEN2:4.5, INT1:4, NEG1:1, PROF1:2.5, INT2:4, SCAL:3.89, MAT:3.02, ART2a:4.5, ART2b:3, TRAN2:3.5, VAL1:2,
   contenu_parties:12, effectif_reference:6 };
 
+// notes retenues des 16 paires de Heat (fiche validée le 08/10/2026), pour la note vue par chaque sous-profil
+const HEAT_PAIRES = [["SYS","POID",3.49],["SYS","PROF",3.49],["SYS","VAR",3.89],["SYS","ALEA",4],["SYS","EXIG",4.23],["EXP","RYT",3],["EXP","MAN",4],["EXP","THEM",3.9],
+  ["EXP","LIEN",4.5],["EXP","INT",4],["EXP","NEG",null],["EXP","SCAL",3.89],["EDI","MAT",3.02],["EDI","ART",3.75],["EDI","TRAN",3.5],["EDI","VAL",4]].map(([chap, code, note]) => ({ chap, code, note }));
+const EFFETS = {
+  U:"EXIGENCE et PROFONDEUR pèsent encore plus des jalons 3 à 6.",
+  B:"LIEN et PROFONDEUR pèsent encore plus des jalons 4 à 6. L'adversaire peut être le jeu : un coopératif exigeant ou un solo le nourrit aussi.",
+  R:"MATÉRIEL, ART et THÈME pèsent encore plus des jalons 1 à 3. Paralysie d'analyse subie : l'attente est multipliée par 1 + (EXIG1 − 2) / 5.",
+  W:"LIEN et SCALABILITÉ pèsent encore plus des jalons 5 à 7. Vraie négociation seulement : NEG2 entre dans la stimulation des jalons 6 et 7, et l'attente est multipliée par 1 − NEG2 / 10.",
+  G:"Phase clé transversale : la lassitude monte moins vite (pente 0,07 s'il est dominant, 0,085 s'il est secondaire, au lieu de 0,1). Il n'aime pas attendre non plus : paralysie subie à moitié."
+};
+function sectionCroisement(toc){
+  if (!M.paires.length || !M.sousprofils.length) return "";
+  const n1 = { id:"croisement", titre:"Le croisement (spectromètre)", enfants:[{ id:"x-principe", titre:"Le principe" }, { id:"x-moteurs", titre:"Les moteurs vus par le jeu" }, { id:"x-heat", titre:"Exemple : Heat" }] };
+  toc.push(n1);
+  const Mo = Object.fromEntries(M.moteurs.map(m => [m.code, m])), nomP = c => M.paires.find(p => p.code === c)?.nom || c;
+  const sombre = matchMedia("(prefers-color-scheme: dark)").matches, coul = m => (sombre ? m.couleur_sombre : m.couleur) || m.couleur || "var(--PLA)";
+  const r = spectrometre({ ...HEAT }, HEAT_PAIRES, { moteurs:M.moteurs, archetypes:M.archetypes, profils:M.profils, sousprofils:M.sousprofils });
+  const sp = l => `<tr><td>${esc(l.sp.nom)} <small class="vide">${esc(l.archetype.nom)}, ${esc(l.profil.nom)}</small></td><td class="n"><b>${fmt(l.note, 2)}</b></td><td class="n">${fmt(l.c.y[l.c.alpha], 2)}</td><td class="n">${l.c.demivie == null ? "∞" : arrondiDemiVie(l.c.demivie)}</td></tr>`;
+  return `<h2 id="croisement" style="--c:var(--PLA)">Le croisement (spectromètre)</h2>
+    <p class="chapo">Un même jeu n'est pas vécu pareil selon qui joue. Le spectromètre recalcule la note et la courbe du jeu pour chacun des 60 sous-profils de PRISMEplayer.</p>
+    <h3 class="section" id="x-principe">Le principe</h3>
+    <div class="texte"><ul>
+      <li><b>Ce qui nourrit un moteur</b> : les paires dont la réussite compte davantage pour lui (« ++ » ou « + »).</li>
+      <li><b>Son trait</b> : à quel point le jeu est tourné vers lui, lu dans les axes 1 (ce que le jeu est). Quand le moteur est rejeté, ce trait devient une gêne.</li>
+      <li><b>Sa phase clé</b> : le moment de la timeline où il culmine.</li>
+      <li><b>Un sous-profil</b> porte trois moteurs, pesés 3 pour le dominant et 1,5 pour chacun des deux autres, et en rejette un.</li>
+      <li><b>Sa note</b> : dans chaque chapitre, les paires sont pondérées par ses moteurs (poids 1 + 1 × lien du dominant + 0,5 × lien de chaque autre) ; puis la moyenne des chapitres ; puis la pénalité de rejet : jusqu'à −50 % quand le trait du moteur rejeté monte de 2 à 5.</li>
+      <li><b>Sa courbe</b> : mêmes jalons, mêmes durées ; les mêmes poids jouent sur la stimulation, et le trait du moteur rejeté entre dans la friction à partir de son moment.</li></ul>
+      <p>La note dit combien le jeu plaît à ce joueur ; la courbe dit quand, et combien de temps.</p></div>
+    <h3 class="section" id="x-moteurs">Les moteurs vus par le jeu</h3>
+    <div class="defile"><table class="jeu"><thead><tr><th>Moteur</th><th>Ce qui le nourrit</th><th>Son trait</th><th>Phase clé</th><th>Rejeté : gêne dès</th><th>Dans la courbe</th></tr></thead><tbody>
+    ${M.moteurs.map(m => { const d = MOTEURS_JEU[m.code]; if (!d) return "";
+      return `<tr><td><b style="color:${esc(coul(m))}">${esc(m.nom)}</b><br><small class="vide">${esc(Mo[m.code].fragilite || "")}</small></td>
+        <td>${Object.entries(d.nourrit).sort((a, b) => b[1] - a[1]).map(([c, l]) => `<a href="#p-${esc(c)}">${esc(nomP(c))}</a> ${l === 2 ? "++" : "+"}`).join(", ")}</td>
+        <td>${esc(d.traitTxt)}</td><td>${m.climax_phase ? esc(m.climax_phase) + (m.climax_jalon != null ? ` (${fmt(m.climax_jalon, 1)})` : "") : "transversale"}</td>
+        <td class="n">jalon ${d.rejet} (${esc(JALONS[d.rejet].nom)})</td><td>${esc(EFFETS[m.code] || "")}</td></tr>`; }).join("")}</tbody></table></div>
+    <p class="vide">Points ouverts : aucun axe ne mesure la tension (lue dans ALÉATOIRE, INTERACTION et LIEN), la difficulté (EXIG1 en tient lieu pour les coopératifs), ni la performance devant les autres.</p>
+    <h3 class="section" id="x-heat">Exemple : Heat</h3>
+    <div class="texte"><p>Note pour tous : <b>${fmt(r.noteBase, 2)}</b>. Du sous-profil le mieux servi au moins bien servi : <b>${fmt(r.lignes[0].note, 2)}</b> (${esc(r.lignes[0].sp.nom)}) à <b>${fmt(r.lignes.at(-1).note, 2)}</b> (${esc(r.lignes.at(-1).sp.nom)}).</p></div>
+    <figure class="courbe-box">${rosaceSVG(r.spectre, M.moteurs.map(m => ({ code:m.code, nom:m.nom, couleur:coul(m) })))}<figcaption>Pointillés : ce que Heat offre à chaque moteur (le trait). Surface : ce qu'il réussit pour lui.</figcaption></figure>
+    <div class="defile"><table class="jeu"><thead><tr><th>Archétype</th><th>Note</th><th>α moyen</th></tr></thead><tbody>
+      ${r.archetypes.map(a => `<tr><td><a href="#ar-${esc(a.a.code)}">${esc(a.a.nom)}</a></td><td class="n"><b>${fmt(a.note, 2)}</b></td><td class="n">${fmt(a.alpha, 2)}</td></tr>`).join("")}</tbody></table></div>
+    <div class="defile"><table class="jeu"><thead><tr><th>Les cinq mieux servis</th><th>Note</th><th>α</th><th>Demi-vie</th></tr></thead><tbody>${r.lignes.slice(0, 5).map(sp).join("")}</tbody></table></div>
+    <div class="defile"><table class="jeu"><thead><tr><th>Les cinq moins bien servis</th><th>Note</th><th>α</th><th>Demi-vie</th></tr></thead><tbody>${r.lignes.slice(-5).map(sp).join("")}</tbody></table></div>
+    <p class="vide">Les moins bien servis rejettent tous Triompher : Heat reste une course compétitive. La gêne commence au jalon 5, quand la compétition se durcit.</p>`;
+}
 function sectionTemps(toc){
   const ouvert = M.paires.length > 0;
   const n1 = { id:"temps", titre:"Le temps (la timeline)", enfants:[{ id:"t-jalons", titre:"Jalons et phases" }] };
@@ -419,6 +466,8 @@ const GLOSSAIRE = [
   ["Lassitude", "Le poids croissant de ce qui se répète (manipulation, attente) à mesure qu'on rejoue."],
   ["α, β, γ", "L'apogée de la courbe, le début de sa chute, le palier où elle se stabilise."],
   ["Demi-vie", "Le nombre de parties au bout duquel le flow tombe sous la moitié de son apogée."],
+  ["Trait d'un moteur", "À quel point le jeu est tourné vers ce moteur, lu dans les axes 1 ; il devient une gêne pour qui rejette ce moteur."],
+  ["Spectromètre", "Le jeu recalculé pour chacun des 60 sous-profils : une note et une courbe par joueur type."],
   ["Moteur", "L'une des cinq motivations de PRISMEplayer ; chaque joueur les porte toutes, à des degrés divers."]
 ];
 function sectionGlossaire(toc){

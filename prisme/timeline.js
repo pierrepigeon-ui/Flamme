@@ -1,6 +1,6 @@
 /* PRISME — timeline du jeu : jalons, durées, flow, α β γ, demi-vie.
    Module partagé par l'encyclopédie et l'outil d'évaluation. Méthode arrêtée le 08/10/2026 (jeu d'essai : Heat). */
-const TIMELINE_VERSION = { numero:"1.0", date:"2026-10-08 17:56" };   // à incrémenter à chaque livraison
+const TIMELINE_VERSION = { numero:"1.1", date:"2026-10-08 18:30" };   // à incrémenter à chaque livraison
 
 const JALONS = [
   { n:0, nom:"identifié", quoi:"Le jeu est connu de loin : critique, vitrine, recommandation." },
@@ -34,34 +34,72 @@ const TERMES = {
   7:{ s:"(VAR, SCAL, MAN2, LIEN2) × usure", f:"A, M, M2, 5 − SCAL, 5 − VAR" }
 };
 // notes utilisées : axes (avec chiffre) et notes retenues de paires (sans chiffre)
-const TIMELINE_AXES = ["POID1","VAR1","ALEA1","ALEA2","EXIG1","RYT1","RYT2","MAN1","MAN2","THEM1","LIEN2","INT2","ART2a","ART2b","TRAN2","VAL1"];
+const TIMELINE_AXES = ["POID1","PROF1","VAR1","ALEA1","ALEA2","EXIG1","RYT1","RYT2","MAN1","MAN2","THEM1","LIEN1","LIEN2","INT1","INT2","NEG1","NEG2","ART2a","ART2b","TRAN2","VAL1"];
 const TIMELINE_PAIRES = ["POID","PROF","VAR","EXIG","SCAL","MAT","THEM"];
 const CLASSES_DEMIVIE = [[10, "éphémère"], [100, "durable"], [1000, "classique"], [Infinity, "inusable"]];
 
+/* ---- les moteurs de PRISMEplayer vus par le jeu (revue du 08/10/2026) ----
+   nourrit : paires dont la réussite compte davantage (2 = ++, 1 = +) ; trait : à quel point le jeu est tourné vers ce moteur (axes 1, 0 à 5) ;
+   rejet : jalon à partir duquel le trait devient friction pour qui rejette ce moteur ; elan : paires et jalons où le moteur pèse encore plus. */
+const MOTEURS_JEU = {
+  U:{ nourrit:{ EXIG:2, PROF:2, POID:1, TRAN:1, ALEA:1 }, rejet:3, elan:{ paires:["EXIG","PROF"], de:3, a:6 },
+      trait:n => moyT(n.EXIG1, n.PROF1, n.POID1), traitTxt:"moy(EXIG1, PROF1, POID1)" },
+  B:{ nourrit:{ LIEN:2, ALEA:2, PROF:1, INT:1, SCAL:1 }, rejet:5, elan:{ paires:["LIEN","PROF"], de:4, a:6 },
+      trait:n => moyT(n.LIEN1 == null ? null : n.LIEN1 >= 2 ? n.LIEN1 : Math.max(n.LIEN1, n.EXIG1 ?? 0), n.ALEA1 == null ? null : 5 - n.ALEA1),
+      traitTxt:"moy(adversité, 5 − ALEA1) ; adversité = LIEN1, ou max(LIEN1, EXIG1) si LIEN1 ≤ 1 (l'adversaire peut être le jeu)" },
+  R:{ nourrit:{ RYT:2, ALEA:2, INT:1, LIEN:1, THEM:1, MAT:1, ART:1 }, rejet:2, elan:{ paires:["MAT","ART","THEM"], de:1, a:3 },
+      trait:n => moyT(n.RYT1, n.ALEA1, n.INT1), traitTxt:"moy(RYT1, ALEA1, INT1)" },
+  W:{ nourrit:{ LIEN:2, NEG:2, SCAL:2, INT:1, TRAN:1 }, rejet:2, elan:{ paires:["LIEN","SCAL"], de:5, a:7 },
+      trait:n => moyT(n.NEG1, n.INT1, n.LIEN1 == null ? null : 5 - n.LIEN1), traitTxt:"moy(NEG1, INT1, 5 − LIEN1)" },
+  G:{ nourrit:{ VAR:2, PROF:1, THEM:1, NEG:1, RYT:1 }, rejet:3, elan:null,
+      trait:n => moyT(n.NEG1, n.VAR1), traitTxt:"moy(NEG1, VAR1)" }
+};
+function moyT(...a){ a = a.filter(v => v != null && !Number.isNaN(v)); return a.length ? a.reduce((s, v) => s + v, 0) / a.length : null; }
+// un sous-profil : { dom:"U", autres:["W","B"], rejet:"G" } → poids 1 pour le dominant, 0,5 pour les autres (3 / 1,5 / 1,5)
+const poidsProfil = pr => pr ? { [pr.dom]:1, [pr.autres[0]]:.5, [pr.autres[1]]:.5 } : {};
+const geneRejet = (n, pr) => { if (!pr) return 0; const t = MOTEURS_JEU[pr.rejet].trait(n); return t == null ? 0 : Math.max(0, t - 2) / 3; };   // 0 à 1
+function poidsPaire(code, pr, j){
+  let w = 1; const k = poidsProfil(pr);
+  Object.entries(k).forEach(([m, km]) => { const l = MOTEURS_JEU[m].nourrit[code] || 0, e = MOTEURS_JEU[m].elan;
+    if (l) w += km * l * (e && j != null && j >= e.de && j <= e.a && e.paires.includes(code) ? 1.5 : 1); });
+  return w;
+}
+
 /* n : { code: valeur } ; une valeur absente (paire sans objet) est retirée des moyennes.
-   contenu_parties : plancher du jalon 6 (facultatif). */
-function flowJeu(n){
+   contenu_parties : plancher du jalon 6 (facultatif). pr : sous-profil (facultatif) → courbe vue par ce joueur. */
+function flowJeu(n, pr){
   const ok = v => v != null && !Number.isNaN(v);
   const moy = (...a) => { a = a.filter(ok); return a.length ? a.reduce((s, v) => s + v, 0) / a.length : null; };
   const quad = (...a) => { a = a.filter(ok); return a.length ? Math.sqrt(a.reduce((s, v) => s + v * v, 0) / a.length) : 0; };
   const inv = v => ok(v) ? 5 - v : null, fois = (v, k) => ok(v) ? v * k : null;
-  const lassitude = N => 1 + .1 * Math.log2(1 + N);
+  const k = poidsProfil(pr), kR = k.R || 0, kG = k.G || 0, kW = k.W || 0;
+  const penteL = .1 - .03 * kG;                                   // Rayonner prolonge l'apogée
+  const lassitude = N => 1 + penteL * Math.log2(1 + N);
+  const exces = Math.max(0, (n.EXIG1 ?? 0) - 2);
+  const fAttente = (1 + kR * exces / 5) * (1 + kG * exces / 10) * (1 - kW * (n.NEG2 ?? 0) / 10);   // paralysie subie ; la parole fait passer le temps
+  const gene = geneRejet(n, pr) * 5, deRejet = pr ? MOTEURS_JEU[pr.rejet].rejet : 99;
   const d = [ (n.VAL1 ?? 0) / 4, (n.POID1 ?? 0) / 5 + (n.MAN1 ?? 0) / 10, 1 + (inv(n.TRAN2) ?? 0) / 10,
     2 ** ((moy(n.POID1, n.EXIG1, n.VAR1, inv(n.TRAN2), inv(n.ART2b)) ?? 0) - 1), 2 ** ((moy(n.PROF, n.EXIG1, n.POID1) ?? 0) - 1),
     2 ** ((moy(n.PROF, n.EXIG, n.VAR1) ?? 0) + .1 - 1), 2 ** ((moy(n.VAR, n.SCAL, n.MAN2) ?? 0) - 1) ];
   const N = [0];
-  d.forEach((k, i) => { N.push(N[i] + k); if (i === 5 && n.contenu_parties > 0 && N[6] < n.contenu_parties){ d[5] += n.contenu_parties - N[6]; N[6] = n.contenu_parties; } });
-  const x = [0]; d.forEach((k, i) => x.push(x[i] + Math.log2(1 + k)));
+  d.forEach((x, i) => { N.push(N[i] + x); if (i === 5 && n.contenu_parties > 0 && N[6] < n.contenu_parties){ d[5] += n.contenu_parties - N[6]; N[6] = n.contenu_parties; } });
+  const x = [0]; d.forEach((v, i) => x.push(x[i] + Math.log2(1 + v)));
   const plafond = ok(n.ALEA1) && ok(n.ALEA2) ? 1 - (n.ALEA1 / 5) * ((5 - n.ALEA2) / 5) : 1;
   const usure = .5 + (ok(n.VAR) ? n.VAR : (n.VAR1 ?? 0)) / 10;
   const termes = (j, Nj) => {
-    const L = lassitude(Nj), M = fois(n.MAN1, L), M2 = fois(inv(n.MAN2), L), A = fois(moy(inv(n.RYT1), inv(n.RYT2)), L);
+    const L = lassitude(Nj), M = fois(n.MAN1, L), M2 = fois(inv(n.MAN2), L), A = fois(moy(inv(n.RYT1), inv(n.RYT2)), L * fAttente);
     const f5 = [A, inv(n.ALEA2), inv(n.LIEN2), inv(n.INT2), inv(n.PROF), M];
-    const S = { 1:[n.MAT, n.ART2a, n.THEM1], 2:[n.THEM, n.MAT, n.ART2a], 3:[n.THEM, n.INT2, n.EXIG, n.ALEA2], 4:[n.EXIG, n.PROF, n.INT2, n.LIEN2],
-      5:[n.PROF, n.EXIG, n.POID, n.LIEN2], 6:[n.PROF, n.VAR, n.POID, n.LIEN2], 7:[n.VAR, n.SCAL, n.MAN2, n.LIEN2] }[j];
+    const S = { 1:[["MAT",n.MAT],["ART",n.ART2a],["THEM",n.THEM1]], 2:[["THEM",n.THEM],["MAT",n.MAT],["ART",n.ART2a]],
+      3:[["THEM",n.THEM],["INT",n.INT2],["EXIG",n.EXIG],["ALEA",n.ALEA2]], 4:[["EXIG",n.EXIG],["PROF",n.PROF],["INT",n.INT2],["LIEN",n.LIEN2]],
+      5:[["PROF",n.PROF],["EXIG",n.EXIG],["POID",n.POID],["LIEN",n.LIEN2]], 6:[["PROF",n.PROF],["VAR",n.VAR],["POID",n.POID],["LIEN",n.LIEN2]],
+      7:[["VAR",n.VAR],["SCAL",n.SCAL],["MAN",n.MAN2],["LIEN",n.LIEN2]] }[j];
+    if (pr && kW && (j === 6 || j === 7) && ok(n.NEG2)) S.push(["NEG", n.NEG2]);        // vraie négociation, pour un Rassembleur
     const F = { 1:[n.POID1, M, inv(n.ART2b)], 2:[n.POID1, inv(n.TRAN2), M, inv(n.ART2b)], 3:[inv(n.TRAN2), inv(n.ART2b), A, M, n.POID1], 4:[A, M, inv(n.ART2b)],
       5:f5, 6:[...f5, inv(n.VAR)], 7:[A, M, M2, inv(n.SCAL), inv(n.VAR)] }[j];
-    const s = (moy(...S) ?? 0) * (j === 5 || j === 6 ? plafond : j === 7 ? usure : 1), f = quad(...F);
+    let sw = 0, sv = 0; S.forEach(([c, v]) => { if (!ok(v)) return; const w = pr ? poidsPaire(c, pr, j) : 1; sw += w; sv += w * v; });
+    const s = (sw ? sv / sw : 0) * (j === 5 || j === 6 ? plafond : j === 7 ? usure : 1);
+    let f = quad(...F); const nf = F.filter(ok).length || 1;
+    if (gene > 0 && j >= deRejet) f = Math.sqrt(f * f + gene * gene / nf);            // ce que le joueur rejette devient friction
     return { s, f, brut: 2 * R_REGIME[j] * (s - f), L };
   };
   const det = [null], y = [0], brut = [0];
@@ -89,7 +127,7 @@ function flowJeu(n){
 }
 
 /* Graphique SVG : phases en bandes, jalons numérotés (nom au survol), α β γ, α / 2, demi-vie, pointillés. */
-function courbeSVG(c, titre){
+function courbeSVG(c, titre, ref){
   const e = s => String(s ?? "").replace(/[&<>"']/g, k => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[k]));
   const f = (v, k = 2) => Number(v).toFixed(k).replace(".", ",");
   const W = 760, H = 330, g = 46, dr = 16, h0 = 26, b = 42;
@@ -107,6 +145,7 @@ function courbeSVG(c, titre){
   const cible = c.y[c.alpha] / 2;
   if (cible > 0) s += `<line x1="${g}" x2="${W - dr}" y1="${Y(cible)}" y2="${Y(cible)}" class="demi"/><text x="${W - dr - 4}" y="${Y(cible) - 5}" class="gl" style="text-anchor:end">α / 2</text>`;
   if (c.xDemi != null){ const xd = X(Math.min(c.xDemi, xFin)); s += `<line x1="${xd}" x2="${xd}" y1="${Y(cible)}" y2="${H - b}" class="demi"/><text x="${Math.min(xd, W - dr - 70)}" y="${H - b + 34}" class="gl">demi-vie ≈ ${arrondiDemiVie(c.demivie)} parties</text>`; }
+  if (ref) s += `<polyline class="ref" points="${ref.x.map((v, j) => `${X(v)},${Y(ref.y[j])}`).join(" ")}"><title>Flow pour tous</title></polyline><text x="${X(ref.x[7]) + 6}" y="${Y(ref.y[7]) + 4}" class="gl" style="text-anchor:start">pour tous</text>`;
   const fin = c.gamma ?? 7, pts = j => `${X(c.x[j])},${Y(c.y[j])}`;
   s += `<polyline class="trait" points="${[...Array(fin + 1).keys()].map(pts).join(" ")}"/>`;
   const loin = [...Array(8 - fin).keys()].map(k => pts(fin + k));
@@ -148,6 +187,66 @@ svg.courbe .gl{font-size:12px;fill:var(--muted);text-anchor:middle} svg.courbe .
 svg.courbe .trait{fill:none;stroke:var(--ink);stroke-width:2.5;stroke-linejoin:round}
 svg.courbe .pointille{fill:none;stroke:var(--ink);stroke-width:2;stroke-dasharray:5 5}
 svg.courbe .demi{stroke:var(--warn);stroke-width:1.2;stroke-dasharray:2 4}
+svg.courbe .ref{fill:none;stroke:var(--muted);stroke-width:1.5;stroke-dasharray:1 3;opacity:.9}
 svg.courbe .pt{fill:var(--panel);stroke:var(--ink);stroke-width:2} svg.courbe .pt.alpha{fill:var(--ink)}`;
   const st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
+})();
+
+/* ---------------- le spectromètre : le jeu vu par chacun des 60 sous-profils ---------------- */
+// note finale vue par un sous-profil : dans chaque chapitre, moyenne des paires pondérée par ses moteurs ; puis moyenne des chapitres ; puis pénalité de rejet
+function noteProfil(paires, n, pr){
+  const parChap = {};
+  paires.forEach(p => { if (p.note == null) return; const w = poidsPaire(p.code, pr, null); (parChap[p.chap] ??= { sw:0, sv:0 }); parChap[p.chap].sw += w; parChap[p.chap].sv += w * p.note; });
+  const ch = Object.values(parChap).map(c => c.sv / c.sw); if (!ch.length) return null;
+  return ch.reduce((a, b) => a + b, 0) / ch.length * (1 - .5 * geneRejet(n, pr));
+}
+// ce que le jeu offre à chaque moteur (trait) et ce qu'il réussit pour lui (moyenne des paires qu'il aime, pondérée)
+function spectreMoteurs(paires, n){
+  return Object.fromEntries(Object.entries(MOTEURS_JEU).map(([m, def]) => {
+    let sw = 0, sv = 0; paires.forEach(p => { const l = def.nourrit[p.code]; if (l && p.note != null){ sw += l; sv += l * p.note; } });
+    return [m, { trait: def.trait(n), reussite: sw ? sv / sw : null }];
+  }));
+}
+// pl : { moteurs, archetypes, profils, sousprofils } (tables PRISMEplayer)
+function spectrometre(n, paires, pl){
+  const base = flowJeu(n), noteBase = noteProfil(paires, n, null);
+  const P = Object.fromEntries(pl.profils.map(p => [p.code, p])), A = Object.fromEntries(pl.archetypes.map(a => [a.code, a]));
+  const lignes = pl.sousprofils.map(s => {
+    const p = P[s.profil], arc = p.archetype, pr = { dom:s.dominante, autres:[...arc].filter(c => c !== s.dominante), rejet:p.rejetee };
+    const c = flowJeu(n, pr), note = noteProfil(paires, n, pr);
+    const gene = geneRejet(n, pr);
+    return { sp:s, profil:p, archetype:A[arc], pr, c, note, gene,
+      decroche: c.beta != null ? c.beta : gene > 0 ? MOTEURS_JEU[pr.rejet].rejet : null };
+  }).sort((a, b) => (b.note ?? -1) - (a.note ?? -1));
+  const archetypes = pl.archetypes.map(a => { const L = lignes.filter(l => l.archetype.code === a.code);
+    return { a, note: L.reduce((s, l) => s + (l.note ?? 0), 0) / L.length, alpha: L.reduce((s, l) => s + l.c.y[l.c.alpha], 0) / L.length, lignes:L }; })
+    .sort((x, y) => y.note - x.note);
+  return { base, noteBase, lignes, archetypes, spectre: spectreMoteurs(paires, n) };
+}
+
+/* Rosace : 5 moteurs, l'offre (trait) en contour, la réussite en surface. couleurs : { code: couleur } */
+function rosaceSVG(spectre, moteurs){
+  const e = s => String(s ?? "").replace(/[&<>"']/g, k => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[k]));
+  const f = v => v == null ? "—" : Number(v).toFixed(2).replace(".", ",");
+  const W = 400, cx = 200, cy = 168, R = 104, M = moteurs.map(m => m.code);
+  const pt = (i, v) => { const a = -Math.PI / 2 + i * 2 * Math.PI / M.length; return [cx + Math.cos(a) * R * v / 5, cy + Math.sin(a) * R * v / 5]; };
+  let s = `<svg class="rosace" viewBox="0 0 ${W} 360" role="img" aria-label="Rosace des cinq moteurs">`;
+  [1,2,3,4,5].forEach(v => s += `<polygon points="${M.map((_, i) => pt(i, v).join(",")).join(" ")}" class="anneau"/>`);
+  M.forEach((_, i) => { const [x, y] = pt(i, 5); s += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" class="rayon"/>`; });
+  s += `<polygon points="${M.map((m, i) => pt(i, spectre[m]?.reussite ?? 0).join(",")).join(" ")}" class="reussite"/>`;
+  s += `<polygon points="${M.map((m, i) => pt(i, spectre[m]?.trait ?? 0).join(",")).join(" ")}" class="offre"/>`;
+  moteurs.forEach((m, i) => { const [x, y] = pt(i, i === 0 ? 7.3 : 6.1), anc = x < cx - 10 ? "end" : x > cx + 10 ? "start" : "middle";
+    s += `<text x="${x}" y="${y}" class="mot" style="text-anchor:${anc};fill:${e(m.couleur)}">${e(m.nom)}</text>
+      <text x="${x}" y="${y + 16}" class="val" style="text-anchor:${anc}">offre ${f(spectre[m.code]?.trait)}</text>
+      <text x="${x}" y="${y + 31}" class="val" style="text-anchor:${anc}">réussite ${f(spectre[m.code]?.reussite)}</text>`; });
+  return s + `</svg>`;
+}
+(function(){
+  const st = document.createElement("style");
+  st.textContent = `svg.rosace{width:100%;max-width:440px;height:auto;display:block;margin:0 auto;font-family:inherit}
+svg.rosace .anneau{fill:none;stroke:var(--line)} svg.rosace .rayon{stroke:var(--line)}
+svg.rosace .reussite{fill:color-mix(in srgb, var(--accent) 22%, transparent);stroke:var(--accent);stroke-width:1.5}
+svg.rosace .offre{fill:none;stroke:var(--ink);stroke-width:2;stroke-dasharray:5 4}
+svg.rosace .mot{font-size:15px;font-weight:600} svg.rosace .val{font-size:13px;fill:var(--muted)}`;
+  document.head.appendChild(st);
 })();
