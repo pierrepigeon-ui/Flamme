@@ -1,6 +1,6 @@
 /* PRISME — timeline du jeu : jalons, durées, flow, α β γ, demi-vie.
    Module partagé par l'encyclopédie et l'outil d'évaluation. Méthode arrêtée le 08/10/2026 (jeu d'essai : Heat). */
-const TIMELINE_VERSION = { numero:"1.1", date:"2026-10-08 18:30" };   // à incrémenter à chaque livraison
+const TIMELINE_VERSION = { numero:"1.2", date:"2026-10-08 18:41" };   // à incrémenter à chaque livraison
 
 const JALONS = [
   { n:0, nom:"identifié", quoi:"Le jeu est connu de loin : critique, vitrine, recommandation." },
@@ -250,3 +250,58 @@ svg.rosace .offre{fill:none;stroke:var(--ink);stroke-width:2;stroke-dasharray:5 
 svg.rosace .mot{font-size:15px;font-weight:600} svg.rosace .val{font-size:13px;fill:var(--muted)}`;
   document.head.appendChild(st);
 })();
+
+/* ---------------- d'une fiche d'évaluation aux entrées du calcul (partagé : outil, rosace) ---------------- */
+// note d'une paire à partir de la saisie { axe: { valeur, sans_objet } } ; ax : les axes de la paire
+function noteDePaire(p, s, ax){
+  const val = r => s[ax.find(a => a.rang === r)?.code]?.valeur;
+  const enS = x0 => { const t = (x0 + 2) / 9; return t <= .5 ? 10 * t * t : 5 * (1 - 2 * (1 - t) * (1 - t)); };
+  if (ax.some(a => s[a.code]?.sans_objet)) return { complete:true, so:true, note:null };
+  if (p.mecanisme === "composite" || p.mecanisme === "moyenne"){
+    const t1 = val("1"), a = val("2a"), b = val("2b");
+    if (t1 == null || a == null || b == null) return { complete:false, note:null };
+    return { complete:true, note: p.mecanisme === "composite" ? (b * t1 + a * (5 - t1)) / 5 : (a + b) / 2 };
+  }
+  const v1 = val("1"), v2 = val("2");
+  if (v1 != null && p.na_si_axe1_nul && Math.round(v1) === 0) return { complete:true, na1:true, note:null };
+  if (v1 != null && p.seuil_axe1 != null && v1 < Number(p.seuil_axe1) && (v2 == null || v2 > 1)) return { complete:true, seuil:true, note:null };
+  if (v1 == null || v2 == null) return { complete:false, note:null };
+  return { complete:true, note: p.mecanisme === "liee" ? enS(v1 + v2) : p.mecanisme === "crans5" ? 2.5 + v2 * 1.25 : v2 };
+}
+// toutes les entrées d'une fiche : n (pour la courbe), paires (pour les notes), manque (paires à remplir), absents (sans objet)
+function entreesFiche(s, paires, axes, contenu){
+  const axesDeP = code => axes.filter(a => a.paire === code);
+  const etats = Object.fromEntries(paires.map(p => [p.code, noteDePaire(p, s, axesDeP(p.code))]));
+  const n = { contenu_parties: Number(contenu) || null }, manque = new Set(), absents = new Set();
+  TIMELINE_PAIRES.forEach(code => { const r = etats[code]; if (!r) return;
+    if (!r.complete) manque.add(code); else if (r.note == null) absents.add(code); else n[code] = r.note; });
+  TIMELINE_AXES.forEach(code => {
+    const a = axes.find(x => x.code === code); if (!a) return;
+    const r = etats[a.paire], v = s[code]?.valeur;
+    if (r?.seuil && a.rang !== "1") return;
+    if (r?.so || (r?.na1 && a.rang !== "1")){ absents.add(a.paire); return; }
+    if (v == null) manque.add(a.paire); else n[code] = v;
+  });
+  return { n, manque:[...manque], absents:[...absents], etats,
+    paires: paires.map(p => ({ chap:p.chapitre, code:p.code, note:etats[p.code].note })) };
+}
+// le meilleur des jeux pour un sous-profil, un profil ou un archétype : fiches = [{ jeu, statut, saisie, contenu_parties }]
+function jeuxPourJoueurs(fiches, paires, axes, pl, codes){
+  const P = Object.fromEntries(pl.profils.map(p => [p.code, p]));
+  const prs = pl.sousprofils.filter(s => codes.includes(s.code)).map(s => { const p = P[s.profil];
+    return { dom:s.dominante, autres:[...p.archetype].filter(c => c !== s.dominante), rejet:p.rejetee }; });
+  const parJeu = {};
+  fiches.forEach(f => {
+    const e = entreesFiche(f.saisie, paires, axes, f.contenu_parties);
+    if (e.manque.length) return;                                   // fiche incomplète : pas de calcul
+    const base = noteProfil(e.paires, e.n, null), cb = flowJeu(e.n);
+    const res = prs.map(pr => ({ note: noteProfil(e.paires, e.n, pr), c: flowJeu(e.n, pr) }));
+    const moy = k => res.reduce((t, r) => t + k(r), 0) / res.length;
+    (parJeu[f.jeu] ??= []).push({ finale: f.statut === "finale", base, alphaBase: cb.y[cb.alpha],
+      note: moy(r => r.note), alpha: moy(r => r.c.y[r.c.alpha]), demivie: moy(r => Math.min(r.c.demivie ?? 1e7, 1e7)) });
+  });
+  return Object.entries(parJeu).map(([jeu, L]) => {
+    const F = L.some(x => x.finale) ? L.filter(x => x.finale) : L, m = k => F.reduce((t, x) => t + x[k], 0) / F.length;
+    return { jeu, fiches:F.length, finale:F[0].finale, note:m("note"), base:m("base"), alpha:m("alpha"), demivie:m("demivie") };
+  }).sort((a, b) => b.note - a.note);
+}

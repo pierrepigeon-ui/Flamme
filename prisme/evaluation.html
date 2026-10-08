@@ -202,9 +202,9 @@ table.recap .aller{cursor:pointer;text-decoration:underline;text-decoration-colo
 <dialog id="dlg-recap"><div id="recap"></div><p style="text-align:right;margin:12px 0 0"><button class="btn" id="fermer-recap" type="button">Fermer</button></p></dialog>
 <div class="wrap"><p class="version" id="version"></p></div>
 
-<script src="timeline.js?v=1.1"></script>
+<script src="timeline.js?v=1.2"></script>
 <script>
-const VERSION = { numero:"3.8", date:"2026-10-08 18:37" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"3.9", date:"2026-10-08 18:41" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -266,6 +266,11 @@ async function demarrer(){
   } catch (e){ $("#msg-accueil").className = "msg err"; $("#msg-accueil").textContent = "Lecture du modèle impossible : " + e.message; return; }
   M.paires.sort((a, b) => M.chapitres.find(c => c.code === a.chapitre).ordre - M.chapitres.find(c => c.code === b.chapitre).ordre || a.ordre - b.ordre);
   remplirJeux(); await chargerFiches(); afficherFiches();
+  const q = new URLSearchParams(location.search).get("jeu");
+  if (q && M.jeux.some(j => j.code === q)){
+    const f = toutes.find(e => e.jeu === q && e.evaluateur === user.id) || toutes.find(e => e.jeu === q && e.statut === "finale") || toutes.find(e => e.jeu === q);
+    f ? ouvrirFiche(f) : ouvrirJeu(q);
+  }
 }
 async function chargerFiches(){
   [toutes, valeurs] = await Promise.all([lireTout("prisme_evaluations", q => q.order("modifie_le", { ascending:false })), lireTout("prisme_evaluation_valeurs")]);
@@ -539,24 +544,7 @@ function majPaliers(div){
 }
 
 /* ---------------- calcul ---------------- */
-function noteDe(p, s){
-  const ax = axesDe(p.code), val = r => s[ax.find(a => a.rang === r)?.code]?.valeur;
-  if (ax.some(a => s[a.code]?.sans_objet)) return { complete:true, so:true, note:null };
-  if (p.mecanisme === "composite"){
-    const t1 = val("1"), a = val("2a"), b = val("2b");
-    return (t1 != null && a != null && b != null) ? { complete:true, note:(b * t1 + a * (5 - t1)) / 5 } : { complete:false, note:null };
-  }
-  if (p.mecanisme === "moyenne"){
-    const t1 = val("1"), a = val("2a"), b = val("2b");
-    return (t1 != null && a != null && b != null) ? { complete:true, note:(a + b) / 2 } : { complete:false, note:null };
-  }
-  const v1 = val("1"), v2 = val("2");
-  if (v1 != null && p.na_si_axe1_nul && Math.round(v1) === 0) return { complete:true, na1:true, note:null };
-  // seuil (NÉGOCIATION) : sous le seuil, l'axe 2 ne compte que si le manque est ressenti (1 ou moins)
-  if (v1 != null && p.seuil_axe1 != null && v1 < Number(p.seuil_axe1) && (v2 == null || v2 > 1)) return { complete:true, seuil:true, note:null };
-  if (v1 == null || v2 == null) return { complete:false, note:null };
-  return { complete:true, note: p.mecanisme === "liee" ? courbeS(v1 + v2) : p.mecanisme === "crans5" ? 2.5 + v2 * 1.25 : v2 };
-}
+function noteDe(p, s){ return noteDePaire(p, s, axesDe(p.code)); }   // calcul partagé : timeline.js
 const estComplete = (p, s) => noteDe(p, s).complete;
 function calculer(s){
   const parChap = {}; let faites = 0;
@@ -593,23 +581,8 @@ function recalculer(){
 }
 
 /* ---------------- timeline ---------------- */
-// rassemble les notes utiles à la timeline ; une paire sans objet retire son terme, une paire non remplie bloque le calcul
-function entreesTimeline(){
-  const n = { contenu_parties: Number(fiche.contenu_parties) || null }, manque = new Set(), absents = new Set();
-  const etat = code => { const p = M.paires.find(x => x.code === code); return p ? noteDe(p, saisie) : null; };
-  TIMELINE_PAIRES.forEach(code => {
-    const r = etat(code); if (!r) return;
-    if (!r.complete) manque.add(code); else if (r.note == null) absents.add(code); else n[code] = r.note;
-  });
-  TIMELINE_AXES.forEach(code => {
-    const a = M.axes.find(x => x.code === code); if (!a) return;
-    const r = etat(a.paire), v = saisie[code]?.valeur;
-    if (r?.seuil && a.rang !== "1") return;                       // pas de vraie négociation : NEG2 ne compte pas
-    if (r?.so || (r?.na1 && a.rang !== "1")) { absents.add(a.paire); return; }
-    if (v == null) manque.add(a.paire); else n[code] = v;
-  });
-  return { n, manque:[...manque], absents:[...absents] };
-}
+// rassemble les notes utiles à la timeline (calcul partagé : timeline.js)
+function entreesTimeline(){ const e = entreesFiche(saisie, M.paires, M.axes, fiche.contenu_parties); return { n:e.n, manque:e.manque, absents:e.absents }; }
 // pied de page : α, puis β et γ s'il y a une chute (sinon « pas de chute »), puis la demi-vie
 function piedTimeline(c){
   const chute = c.beta == null ? "pas de chute" : `β j${c.beta} · γ j${c.gamma}`;
