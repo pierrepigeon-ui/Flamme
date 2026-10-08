@@ -73,6 +73,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px} .field{display:block;margi
   <div class="actions">
     <a class="btn" href="questionnaire.html">Passer le questionnaire du joueur</a>
     <a class="btn ghost" href="rosace.html">Explorer la rosace</a>
+    <a class="btn ghost" href="encyclopedie.html">L'encyclopédie</a>
     <a class="btn ghost" id="btn-login-2" href="../">Se connecter</a>
   </div>
 </section>
@@ -90,7 +91,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px} .field{display:block;margi
   <article class="bloc"><h2>Le joueur</h2><p class="question">Qu'est-ce que je recherche en jouant ?</p>
     <p>Dix archétypes pour savoir pourquoi l'on joue, vingt profils pour ce qui fait décrocher, soixante sous-profils pour ce qui nourrit le plus.</p></article>
   <article class="bloc"><h2>Le jeu</h2><p class="question">Qu'est-ce que ce jeu est, objectivement ?</p>
-    <p>Quinze paires d'axes, du système à l'édition, pour décrire un jeu tel qu'il est, avant de se demander à qui il plaira.</p></article>
+    <p>Seize paires d'axes, du système à l'édition, pour décrire un jeu tel qu'il est, avant de se demander à qui il plaira.</p></article>
   <article class="bloc"><h2>Le temps</h2><p class="question">Comment l'expérience évolue-t-elle ?</p>
     <p>Une première partie ne ressemble pas à la vingtième : de la découverte à la maîtrise, chaque joueur a son moment d'apogée.</p></article>
 </section>
@@ -98,7 +99,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px} .field{display:block;margi
 <footer><span>PRISME — l'Arpenteur <a class="contact" href="../?contact&amp;depuis=prisme">Écrire à l'Arpenteur</a></span><span id="version"></span></footer>
 
 <script>
-const VERSION = { numero:"1.7", date:"2026-10-04 17:30" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"1.8", date:"2026-10-08 17:00" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -148,6 +149,7 @@ async function afficherEspace(){
   t += tuile("rosace.html", "La rosace", dernier ? "Votre place parmi les soixante sous-profils" : "Les dix archétypes, vingt profils, soixante sous-profils");
   t += tuile("questionnaire.html", "Questionnaire du joueur", dernier ? "Revoir ou modifier vos réponses" : "Vingt-cinq situations de jeu, dix minutes");
   if (["proprietaire","editeur","evaluateur"].includes(role)) t += tuile("evaluation.html", "Évaluer un jeu", "Remplir ou reprendre une fiche PRISMEgame");
+  t += tuile("encyclopedie.html", "L'encyclopédie", "Le modèle complet : le jeu, le joueur, leurs grilles et leurs exemples");
   if (role) t += tuile("console.html", ["proprietaire","editeur"].includes(role) ? "Console" : "Le modèle",
                        ["proprietaire","editeur"].includes(role) ? "Parcourir et éditer le modèle PRISME" : "Parcourir le modèle PRISME");
   $("#tuiles").innerHTML = t;
