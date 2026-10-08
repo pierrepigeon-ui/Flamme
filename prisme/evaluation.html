@@ -135,6 +135,7 @@ table.recap .aller{cursor:pointer;text-decoration:underline;text-decoration-colo
 .na-droite:has(input:checked){border-color:var(--warn);color:var(--warn)}
 .axe .titre button.calc{border-radius:12px;padding:0 9px;width:auto}
 .entete-axe{display:flow-root}
+.ecart-saisi{font:500 12.5px var(--sans);color:var(--muted);min-width:2.8em;text-align:left;opacity:.8}
 .retenue{font:500 13.5px var(--sans);color:var(--chap);text-align:right;margin-top:2px;min-height:1.2em} .retenue b{font-size:16px}
 @media (max-width:760px){ .chiffres .grille{grid-template-columns:repeat(2,minmax(0,1fr))} }
 </style>
@@ -183,7 +184,7 @@ table.recap .aller{cursor:pointer;text-decoration:underline;text-decoration-colo
 <div class="wrap"><p class="version" id="version"></p></div>
 
 <script>
-const VERSION = { numero:"3.3", date:"2026-10-08 16:25" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"3.4", date:"2026-10-08 16:35" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -326,6 +327,7 @@ const paliersDe = code => M.paliers.filter(p => p.axe === code).sort((a, b) => a
 const MECA = { liee:"paire liée : l'axe 2 juge l'écart à l'attente", independante:"deux notes indépendantes", crans5:"axe 2 en cinq crans",
   composite:"note composite", moyenne:"axe 2 : moyenne de deux notes" };
 const estEcart = (p, a) => a.rang === "2" && (p.mecanisme === "liee" || p.mecanisme === "crans5");
+const ecartTexte = v => (v > 0 ? "+" : v < 0 ? "−" : "±") + fmt(Math.abs(v));
 const aDeuxNotes = p => p.mecanisme === "composite" || p.mecanisme === "moyenne";   // axe 2 calculé à partir de 2a et 2b
 
 /* ---- aides : ce que mesure la paire, « ? » sur la paire et sur chaque axe, méthode de calcul ---- */
@@ -411,12 +413,12 @@ function blocAxe(p, axe){
   const sug = !lectureSeule && suggestion(axe.code);
   const calcule = p.mecanisme !== "independante";                                       // la note retenue diffère de la saisie
   const porteCalc = axe.rang === "2" || (aDeuxNotes(p) && axe.rang === "2a");           // le bouton « méthode de calcul » va sur la note 2
-  const porteRetenue = calcule && (axe.rang === "2" || (aDeuxNotes(p) && axe.rang === "2b"));
+  const porteRetenue = aDeuxNotes(p) && axe.rang === "2b";                              // note composée : sous la dernière note intermédiaire
   return `<div class="axe" data-axe="${esc(axe.code)}">
     <div class="entete-axe"><div class="titre">${esc(axe.code)} — ${esc(axe.nom)}<button type="button" data-aide-axe="${esc(axe.code)}" aria-expanded="false" title="Ce que mesure cet axe, et comment le noter">?</button>${porteCalc ? `<button type="button" class="calc" data-panneau="calc-${esc(p.code)}" aria-expanded="false" title="Comment la note de la paire est calculée">Méthode de calcul</button>` : ""}</div>${axe.question ? `<div class="q">${esc(axe.question)}</div>` : ""}</div>
     <div class="panneau hidden" id="aide-${esc(axe.code)}">${aideAxe(axe)}</div>${porteCalc ? `<div class="panneau hidden" id="calc-${esc(p.code)}"></div>` : ""}
-    <div class="ligne"><div class="piste"><input type="range" min="${min}" max="${max}" step="0.1" value="${v ?? milieu}" class="${v == null ? "vierge" : ""}" data-axe="${esc(axe.code)}" aria-label="${esc(axe.nom)}" ${lectureSeule ? "disabled" : ""}>
-      <div class="grad">${grad.map(g => `<span>${g}</span>`).join("")}</div></div><span class="num">${v == null ? "—" : fmt(v)}</span></div>
+    <div class="ligne">${ecart ? `<span class="ecart-saisi" title="Écart saisi">${v == null ? "" : ecartTexte(v)}</span>` : ""}<div class="piste"><input type="range" min="${min}" max="${max}" step="0.1" value="${v ?? milieu}" class="${v == null ? "vierge" : ""}" data-axe="${esc(axe.code)}" aria-label="${esc(axe.nom)}" ${lectureSeule ? "disabled" : ""}>
+      <div class="grad">${grad.map(g => `<span>${g}</span>`).join("")}</div></div><span class="num"${ecart ? ' title="Note retenue, calculée à partir de l\'écart"' : ""}>${ecart ? "—" : v == null ? "—" : fmt(v)}</span></div>
     ${porteRetenue ? `<div class="retenue" id="ret-${esc(p.code)}"></div>` : ""}
     ${pal.length ? `<ul class="paliers">${pal.map(x => `<li data-v="${x.valeur}"><b>${esc(x.symbole || fmt(x.valeur, 0))}</b><span>${esc(x.libelle)}</span></li>`).join("")}</ul>` : ""}
     ${sug ? `<div class="suggestion">D'après le jeu en chiffres (${esc(sug.source)}) : <b>${sug.v}</b>${v === sug.v ? " ✓" : `<button type="button" data-appliquer="${esc(axe.code)}" data-v="${sug.v}">Appliquer</button>`}</div>` : ""}
@@ -538,6 +540,10 @@ function recalculer(){
       seuil ? `Axe 2 sans objet : l'axe 1 est sous ${fmt(p.seuil_axe1, 0)}. Si le manque est ressenti par la table, note l'axe 2 à 1 ou moins : il comptera.` : "En attente des notes.";
     $("#note-" + p.code).textContent = so || na1 || seuil ? "sans objet" : note != null ? fmt(note, 2) : "";
     const calc = document.getElementById("calc-" + p.code); if (calc && !calc.classList.contains("hidden")) calc.innerHTML = methodeCalcul(p);
+    if (p.mecanisme === "liee" || p.mecanisme === "crans5"){
+      const a2 = axesDe(p.code).find(a => a.rang === "2"), n2 = a2 && document.querySelector(`.axe[data-axe="${CSS.escape(a2.code)}"] .num`);
+      if (n2) n2.textContent = so || na1 ? "—" : note != null ? fmt(note, 2) : "—";
+    }
     const ret = document.getElementById("ret-" + p.code);
     if (ret) ret.innerHTML = so || na1 || seuil ? "Note retenue : sans objet" : note != null ? `Note retenue${aDeuxNotes(p) ? " (" + esc(p.code) + "2)" : ""} : <b>${fmt(note, 2)}</b>` : "";
     document.getElementById("p-" + p.code).classList.toggle("faite", complete);
@@ -556,7 +562,8 @@ function poser(code, v){
   saisie[code] = { valeur: Math.round(v * 10) / 10, sans_objet: s.sans_objet || false, commentaire: s.commentaire ?? null };
   const div = document.querySelector(`.axe[data-axe="${CSS.escape(code)}"]`);
   const inp = div.querySelector("input"); inp.value = v; inp.classList.remove("vierge");
-  div.querySelector(".num").textContent = fmt(v);
+  const es = div.querySelector(".ecart-saisi");
+  if (es) es.textContent = ecartTexte(v); else div.querySelector(".num").textContent = fmt(v);
   majPaliers(div);
   const sg = div.querySelector(".suggestion"); if (sg){ const b = sg.querySelector("button"); if (b && +b.dataset.v === v) b.replaceWith(" ✓"); }
   recalculer(); planifier(code);
