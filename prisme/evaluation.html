@@ -94,6 +94,17 @@ table.fiches td{border-bottom:1px solid var(--line);padding:9px 12px} table.fich
 .modele{font:14.5px/1.5 var(--serif)} .modele .src{font:600 12.5px var(--sans);color:var(--muted)}
 .modele p{margin:2px 0} .modele .amorce{font-style:italic}
 .modele button{font:12px var(--sans);padding:1px 8px;border:1px solid var(--line);background:var(--panel);border-radius:5px;cursor:pointer;margin-left:6px}
+.timeline{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:26px 0 10px}
+.timeline h2{font:600 20px var(--serif);margin:0 0 4px} .timeline .courbe-box{background:var(--paper)}
+.tl-bandeau{font:600 15px/1.5 var(--serif);border-left:3px solid var(--accent);padding:6px 12px;margin:10px 0;background:var(--paper);border-radius:0 8px 8px 0}
+.tl-attente{color:var(--muted);font-style:italic} .tl-attente a{color:inherit}
+.defile{overflow-x:auto;max-width:100%}
+table.tl-table{border-collapse:collapse;width:100%;font-size:13.5px;margin:8px 0}
+table.tl-table th{text-align:left;font-weight:500;color:var(--muted);border-bottom:1px solid var(--line);padding:5px 8px;white-space:nowrap}
+table.tl-table td{border-bottom:1px solid var(--line);padding:5px 8px} table.tl-table td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+table.tl-table tr.tl-phase td{font:600 12px var(--sans,inherit);text-transform:uppercase;letter-spacing:.04em;color:var(--muted);background:var(--paper);padding-top:8px}
+table.tl-table tr.alpha td{background:color-mix(in srgb, var(--accent) 9%, transparent)} table.tl-table tr.chute td:first-child{color:var(--err)}
+#pied .tl-pied{cursor:pointer} #pied .tl-pied b{font-size:16px}
 .carnet{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:26px 0 10px}
 .carnet h2{font:600 20px var(--serif);margin:0 0 4px}
 .carnet textarea{min-height:220px}
@@ -183,8 +194,9 @@ table.recap .aller{cursor:pointer;text-decoration:underline;text-decoration-colo
 <dialog id="dlg-recap"><div id="recap"></div><p style="text-align:right;margin:12px 0 0"><button class="btn" id="fermer-recap" type="button">Fermer</button></p></dialog>
 <div class="wrap"><p class="version" id="version"></p></div>
 
+<script src="timeline.js?v=1.0"></script>
 <script>
-const VERSION = { numero:"3.5", date:"2026-10-08 17:00" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"3.6", date:"2026-10-08 17:56" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -193,7 +205,7 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt
 const norm = s => String(s ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
 const slug = s => norm(s).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 const fmt = (v, d = 1) => Number(v).toFixed(d).replace(".", ",");
-$("#version").textContent = `Évaluation des jeux ${VERSION.numero}, version du ${VERSION.date.replace(/(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d)/,"$3/$2/$1 à $4h$5")}`;
+$("#version").textContent = `Évaluation des jeux ${VERSION.numero}, version du ${VERSION.date.replace(/(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d)/,"$3/$2/$1 à $4h$5")} · timeline ${TIMELINE_VERSION.numero}`;
 
 /* ---- connexion : tout passe par la Forge (portail commun, à la racine du site) ---- */
 const versForge = () => "../?retour=" + encodeURIComponent(location.href);
@@ -453,6 +465,11 @@ function construireGrille(){
     });
     h += "</div>";
   });
+  h += `<section class="timeline" id="timeline"><h2>Timeline</h2>
+    <p class="aide">La vie du jeu, de la vitrine à l'étagère : à chaque jalon, le flow (stimulation moins friction, sur 10) calculé à partir des notes de la fiche, au meilleur effectif.
+      Elle se met à jour à chaque saisie. <a href="encyclopedie.html#temps" target="_blank" rel="noopener">La méthode dans l'encyclopédie</a>.</p>
+    <div id="tl-corps"></div></section>`;
+  $("#aller").insertAdjacentHTML("beforeend", '<option value="timeline">Timeline</option>');
   h += `<section class="carnet"><h2>Carnet d'article</h2>
     <p class="aide">Idées, anecdotes de partie, citations, plan : tout ce qui servira à écrire un article sur ce jeu. Visible par les autres évaluateurs, comme le reste de la fiche.</p>
     <textarea id="carnet" ${lectureSeule ? "disabled" : ""}>${esc(fiche.notes_article || "")}</textarea></section>`;
@@ -554,8 +571,56 @@ function recalculer(){
   $("#prog-txt").textContent = `${c.faites} / ${M.paires.length}`;
   $("#pied").innerHTML = M.chapitres.map(ch => `<div style="--c:var(--${esc(ch.code)})"><small>${esc(ch.nom)}</small><b>${c.chap[ch.code] == null ? "—" : fmt(c.chap[ch.code], 2)}</b></div>`).join("") +
     `<div class="final"><small>Évaluation finale</small><b>${c.finale == null ? "—" : fmt(c.finale, 2)}</b></div>`;
+  const tl = majTimeline();
+  $("#pied").insertAdjacentHTML("beforeend", `<div class="tl-pied" data-tl title="${tl.c ? esc(syntheseTimeline(tl.c)) : "Timeline incomplète"}"><small>Timeline · α / demi-vie</small><b>${tl.c ? fmt(tl.c.y[tl.c.alpha], 2) + " · " + arrondiDemiVie(tl.c.demivie) : "—"}</b></div>`);
   return c;
 }
+
+/* ---------------- timeline ---------------- */
+// rassemble les notes utiles à la timeline ; une paire sans objet retire son terme, une paire non remplie bloque le calcul
+function entreesTimeline(){
+  const n = { contenu_parties: Number(fiche.contenu_parties) || null }, manque = new Set(), absents = new Set();
+  const etat = code => { const p = M.paires.find(x => x.code === code); return p ? noteDe(p, saisie) : null; };
+  TIMELINE_PAIRES.forEach(code => {
+    const r = etat(code); if (!r) return;
+    if (!r.complete) manque.add(code); else if (r.note == null) absents.add(code); else n[code] = r.note;
+  });
+  TIMELINE_AXES.forEach(code => {
+    const a = M.axes.find(x => x.code === code); if (!a) return;
+    const r = etat(a.paire), v = saisie[code]?.valeur;
+    if (r?.so || (r?.na1 && a.rang !== "1")) { absents.add(a.paire); return; }
+    if (v == null) manque.add(a.paire); else n[code] = v;
+  });
+  return { n, manque:[...manque], absents:[...absents] };
+}
+function majTimeline(){
+  const box = document.getElementById("tl-corps"); if (!box) return {};
+  const { n, manque, absents } = entreesTimeline();
+  const nomP = code => M.paires.find(p => p.code === code)?.nom || code;
+  if (manque.length){
+    box.innerHTML = `<p class="tl-attente">La courbe s'affichera quand ces paires seront remplies : ${manque.map(c => `<a href="#p-${esc(c)}" data-ouvrir="${esc(c)}">${esc(nomP(c))}</a>`).join(", ")}.</p>`;
+    return {};
+  }
+  const c = flowJeu(n);
+  box.innerHTML = `<div class="tl-bandeau">${esc(syntheseTimeline(c))}</div>
+    <figure class="courbe-box">${courbeSVG(c, nomJeu(fiche.jeu))}<figcaption>Trait plein : les jalons calculés${c.gamma != null ? " jusqu'à γ" : ""}. Pointillés : la suite, où seule la lassitude progresse. Abscisse : les jalons, espacés selon le log2 des parties cumulées. Bandes : les phases. Survole un point pour son détail.</figcaption></figure>
+    ${absents.length ? `<p class="aide">Sans objet pour ce jeu, donc retiré du calcul : ${absents.map(x => esc(nomP(x))).join(", ")}.</p>` : ""}
+    ${fiche.contenu_parties ? "" : `<p class="aide">« Parties pour tout exploiter » est vide : pas de plancher pour le jalon 6 (jeu rejouable sans fin).</p>`}
+    <div class="defile"><table class="tl-table"><thead><tr><th>Jalon</th><th>Parties</th><th>Stimulation</th><th>Friction</th><th>Flow</th><th>Puis : sous-phase</th><th>Durée</th></tr></thead><tbody>
+    ${JALONS.map(j => { const sp = SOUSPHASES[j.n], prev = j.n === 0 || SOUSPHASES[j.n - 1].phase !== sp.phase;
+      return `${prev ? `<tr class="tl-phase"><td colspan="7">Phase ${sp.phase} — ${esc(PHASES[sp.phase])}</td></tr>` : ""}
+      <tr class="${j.n === c.alpha ? "alpha" : ""}${j.n === c.beta || j.n === c.gamma ? " chute" : ""}"><td><b>${j.n}</b> ${esc(j.nom)}${j.n === c.alpha ? " · α" : ""}${j.n === c.beta ? " · β" : ""}${j.n === c.gamma ? " · γ" : ""}</td>
+        <td class="n">${fmt(c.N[j.n], 1)}</td><td class="n">${j.n ? fmt(c.det[j.n].s, 2) : "—"}</td><td class="n">${j.n ? fmt(c.det[j.n].f, 2) : "—"}</td><td class="n"><b>${fmt(c.y[j.n], 2)}</b></td>
+        <td>${esc(sp.nom)}</td><td class="n">${j.n < 7 ? fmt(c.d[j.n], 2) + " partie" + (c.d[j.n] >= 2 ? "s" : "") : "∞"}</td></tr>`; }).join("")}
+    </tbody></table></div>
+    <p class="aide">Plafond d'aléa ${fmt(c.plafond, 2)} (jalons 5 et 6) · usure ${fmt(c.usure, 2)} (jalon 7) · lassitude au jalon 7 : ×${fmt(c.det[7].L, 2)}.</p>`;
+  return { c };
+}
+document.addEventListener("click", e => {
+  const o = e.target.closest("[data-ouvrir]");
+  if (o){ e.preventDefault(); const el = document.getElementById("p-" + o.dataset.ouvrir); el.classList.remove("repliee"); aligner(); el.scrollIntoView({ behavior:"smooth" }); return; }
+  if (e.target.closest("[data-tl]")) document.getElementById("timeline")?.scrollIntoView({ behavior:"smooth" });
+});
 
 /* ---------------- saisie ---------------- */
 function poser(code, v){
@@ -575,7 +640,7 @@ $("#grille").addEventListener("input", e => {
   else if (e.target.dataset.justif){ const c = e.target.dataset.justif, s = saisie[c] || { valeur:null, sans_objet:false };
     saisie[c] = { ...s, commentaire: e.target.value.trim() || null }; e.target.rows = Math.min(5, 1 + Math.floor(e.target.value.length / 90)); planifier(c); }
   else if (e.target.dataset.donnee){ const k = e.target.dataset.donnee; fiche[k] = e.target.value.trim() === "" ? null : (e.target.type === "text" ? e.target.value.trim() : Number(e.target.value)); ficheModifiee = true; planifier();
-    rafraichirSuggestions(); }
+    rafraichirSuggestions(); if (k === "contenu_parties") recalculer(); }
   else if (e.target.id === "carnet"){ fiche.notes_article = e.target.value; ficheModifiee = true; planifier(); }
 });
 function rafraichirSuggestions(){
@@ -674,6 +739,7 @@ $("#btn-recap").addEventListener("click", () => {
   $("#recap").innerHTML = `<h2>${esc(nomJeu(fiche.jeu))} : récapitulatif</h2>
     <p class="aide">${manque.length ? `Il manque ${manque.length} paire${manque.length > 1 ? "s" : ""} : ${manque.map(l => esc(l.p.nom)).join(", ")}.` : `Les ${M.paires.length} paires sont remplies.`}
       Note finale : <b>${c.finale == null ? "—" : fmt(c.finale, 2)}</b> (${M.chapitres.map(ch => `${esc(ch.nom)} ${c.chap[ch.code] == null ? "—" : fmt(c.chap[ch.code], 2)}`).join(", ")}).</p>
+    ${(() => { const t = majTimeline(); return `<p class="aide">Timeline : ${t.c ? esc(syntheseTimeline(t.c)) : "incomplète"}.</p>`; })()}
     <table class="recap"><thead><tr><th>Paire</th><th>Saisie</th><th>Note retenue</th><th>Justification</th></tr></thead><tbody>
     ${L.map(l => `<tr class="${l.n.complete ? "" : "manque"}"><td><span class="aller" data-aller="${esc(l.p.code)}">${esc(l.p.nom)}</span></td><td>${l.notes}</td>
       <td>${l.n.so ? "sans objet" : l.n.note == null ? (l.n.na1 || l.n.seuil ? "axe 2 sans objet" : "—") : fmt(l.n.note, 2)}</td><td>${esc(l.justif)}</td></tr>`).join("")}</tbody></table>`;
@@ -690,6 +756,8 @@ $("#btn-export").addEventListener("click", () => {
   let md = `# ${nomJeu(d.jeu)}\n\nFiche PRISMEgame de ${noms[d.evaluateur] || "l'évaluateur"}, ${d.statut === "finale" ? "finale" : "brouillon"}, exportée le ${new Date().toLocaleDateString("fr-FR")}.\n\n`;
   if (chiffres) md += `**Le jeu en chiffres** : ${chiffres}.\n\n`;
   md += `**Note finale : ${c.finale == null ? "—" : fmt(c.finale, 2)}** (${M.chapitres.map(ch => `${ch.nom} ${c.chap[ch.code] == null ? "—" : fmt(c.chap[ch.code], 2)}`).join(", ")})\n`;
+  const tl = majTimeline();
+  if (tl.c) md += `\n**Timeline** : ${syntheseTimeline(tl.c)}.\n\nFlow par jalon : ${tl.c.y.map((v, j) => `${j} ${fmt(v, 2)}`).join(" · ")}\n`;
   M.chapitres.forEach(ch => {
     md += `\n## ${ch.nom}\n`;
     L.filter(l => l.p.chapitre === ch.code).forEach(l => {
