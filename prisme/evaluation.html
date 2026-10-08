@@ -134,6 +134,7 @@ table.recap .aller{cursor:pointer;text-decoration:underline;text-decoration-colo
 .na-droite{margin-left:auto;display:flex;gap:7px;align-items:center;font:500 13.5px var(--sans);padding:3px 10px;border:1px solid var(--line);border-radius:12px;background:var(--panel);cursor:pointer}
 .na-droite:has(input:checked){border-color:var(--warn);color:var(--warn)}
 .axe .titre button.calc{border-radius:12px;padding:0 9px;width:auto}
+.entete-axe{display:flow-root}
 .retenue{font:500 13.5px var(--sans);color:var(--chap);text-align:right;margin-top:2px;min-height:1.2em} .retenue b{font-size:16px}
 @media (max-width:760px){ .chiffres .grille{grid-template-columns:repeat(2,minmax(0,1fr))} }
 </style>
@@ -182,7 +183,7 @@ table.recap .aller{cursor:pointer;text-decoration:underline;text-decoration-colo
 <div class="wrap"><p class="version" id="version"></p></div>
 
 <script>
-const VERSION = { numero:"3.2", date:"2026-10-08 15:35" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"3.3", date:"2026-10-08 16:25" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -412,7 +413,7 @@ function blocAxe(p, axe){
   const porteCalc = axe.rang === "2" || (aDeuxNotes(p) && axe.rang === "2a");           // le bouton « méthode de calcul » va sur la note 2
   const porteRetenue = calcule && (axe.rang === "2" || (aDeuxNotes(p) && axe.rang === "2b"));
   return `<div class="axe" data-axe="${esc(axe.code)}">
-    <div class="titre">${esc(axe.code)} — ${esc(axe.nom)}<button type="button" data-aide-axe="${esc(axe.code)}" aria-expanded="false" title="Ce que mesure cet axe, et comment le noter">?</button>${porteCalc ? `<button type="button" class="calc" data-panneau="calc-${esc(p.code)}" aria-expanded="false" title="Comment la note de la paire est calculée">Méthode de calcul</button>` : ""}</div>${axe.question ? `<div class="q">${esc(axe.question)}</div>` : ""}
+    <div class="entete-axe"><div class="titre">${esc(axe.code)} — ${esc(axe.nom)}<button type="button" data-aide-axe="${esc(axe.code)}" aria-expanded="false" title="Ce que mesure cet axe, et comment le noter">?</button>${porteCalc ? `<button type="button" class="calc" data-panneau="calc-${esc(p.code)}" aria-expanded="false" title="Comment la note de la paire est calculée">Méthode de calcul</button>` : ""}</div>${axe.question ? `<div class="q">${esc(axe.question)}</div>` : ""}</div>
     <div class="panneau hidden" id="aide-${esc(axe.code)}">${aideAxe(axe)}</div>${porteCalc ? `<div class="panneau hidden" id="calc-${esc(p.code)}"></div>` : ""}
     <div class="ligne"><div class="piste"><input type="range" min="${min}" max="${max}" step="0.1" value="${v ?? milieu}" class="${v == null ? "vierge" : ""}" data-axe="${esc(axe.code)}" aria-label="${esc(axe.nom)}" ${lectureSeule ? "disabled" : ""}>
       <div class="grad">${grad.map(g => `<span>${g}</span>`).join("")}</div></div><span class="num">${v == null ? "—" : fmt(v)}</span></div>
@@ -455,7 +456,21 @@ function construireGrille(){
   $("#grille").innerHTML = h;
   document.querySelectorAll(".axe").forEach(majPaliers);
   M.paires.forEach(p => { if (estComplete(p, saisie)) document.getElementById("p-" + p.code).classList.add("repliee"); });   // ce qui est fait se replie
+  aligner();
 }
+// curseurs alignés : l'en-tête (titre + question) des deux colonnes prend la même hauteur
+function aligner(){
+  document.querySelectorAll(".paire:not(.repliee) .axes").forEach(g => {
+    const gauche = g.querySelector(":scope > .axe .entete-axe"), droite = g.querySelector(":scope > .axe + .axe .entete-axe, :scope > .pile > .axe:first-child .entete-axe");
+    if (!gauche || !droite) return;
+    gauche.style.minHeight = droite.style.minHeight = "";
+    if (window.innerWidth <= 640) return;
+    const h = Math.max(gauche.offsetHeight, droite.offsetHeight) + "px";
+    gauche.style.minHeight = droite.style.minHeight = h;
+  });
+}
+window.addEventListener("resize", () => { clearTimeout(aligner.t); aligner.t = setTimeout(aligner, 150); });
+document.fonts?.ready.then(() => aligner());
 /* ---- textes modèles : les exemples rédigés dans le modop (justifications, amorces littéraires) ---- */
 const modelesDe = ax => M.exemples.filter(x => ax.some(a => a.code === x.axe) && (x.justification || x.amorce));
 function boutonModeles(p, ax){
@@ -584,7 +599,7 @@ $("#grille").addEventListener("click", e => {
     box.classList.toggle("hidden", !ouvrir); pan.setAttribute("aria-expanded", String(ouvrir)); return;
   }
   const t = e.target.closest("[data-replier]");
-  if (t) document.getElementById("p-" + t.dataset.replier).classList.toggle("repliee");
+  if (t){ document.getElementById("p-" + t.dataset.replier).classList.toggle("repliee"); aligner(); }
 });
 $("#grille").addEventListener("change", e => {
   if (!e.target.dataset.na || lectureSeule) return;
@@ -603,10 +618,10 @@ $("#suivante").addEventListener("click", () => {
   const p = M.paires.find(x => !estComplete(x, saisie));
   M.paires.forEach(x => { if (estComplete(x, saisie)) document.getElementById("p-" + x.code).classList.add("repliee"); });
   if (!p){ $("#etat").textContent = "Toutes les paires sont remplies."; return; }
-  const el = document.getElementById("p-" + p.code); el.classList.remove("repliee"); el.scrollIntoView({ behavior:"smooth" });
+  const el = document.getElementById("p-" + p.code); el.classList.remove("repliee"); aligner(); el.scrollIntoView({ behavior:"smooth" });
   el.querySelector('input[type="range"]')?.focus({ preventScroll:true });
 });
-$("#aller").addEventListener("change", e => { if (e.target.value){ const el = document.getElementById(e.target.value); el.classList.remove("repliee"); el.scrollIntoView({ behavior:"smooth" }); } e.target.value = ""; });
+$("#aller").addEventListener("change", e => { if (e.target.value){ const el = document.getElementById(e.target.value); el.classList.remove("repliee"); aligner(); el.scrollIntoView({ behavior:"smooth" }); } e.target.value = ""; });
 $("#finale").addEventListener("change", e => { fiche.statut = e.target.checked ? "finale" : "brouillon"; ficheModifiee = true; planifier(); });
 
 /* ---------------- enregistrement automatique ---------------- */
