@@ -177,7 +177,7 @@ table.recap .aller{cursor:pointer;text-decoration:underline;text-decoration-colo
 <div class="wrap"><p class="version" id="version"></p></div>
 
 <script>
-const VERSION = { numero:"3.0", date:"2026-10-08 14:45" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"3.1", date:"2026-10-08 15:15" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -203,7 +203,7 @@ let saisie = {};             // axe -> { valeur, sans_objet, commentaire }
 let lectureSeule = false;
 let enAttente = new Set(), ficheModifiee = false, minuteur = null;
 const DONNEES = [["pages","Pages des règles"],["prix","Prix (€)"],["prix_source","Source du prix (enseigne, date)","texte"],["poids_bgg","Poids BGG (1 à 5)"],["joueurs_min","Joueurs min."],
-  ["joueurs_max","Joueurs max."],["effectif_reference","Joueurs de référence"],["duree_min","Durée min. (min)"],["duree_max","Durée max. (min)"],["contenu_parties","Contenu fini (parties)"]];
+  ["joueurs_max","Joueurs max."],["effectif_reference","Meilleur effectif"],["duree_min","Durée min. (min)"],["duree_max","Durée max. (min)"],["contenu_parties","Parties pour tout exploiter"]];
 const CHAMPS = DONNEES.map(d => d[0]);
 
 function courbeS(x0){ const t = (x0 + 2) / 9; return t <= .5 ? 10 * t * t : 5 * (1 - 2 * (1 - t) * (1 - t)); }
@@ -416,7 +416,7 @@ function construireGrille(){
   const d = fiche;
   let h = `<section class="chiffres ${lectureSeule ? "ro" : ""}"><h2>Le jeu en chiffres</h2>
     <p class="aide">Ces données proposent les notes factuelles (POIDS, VALEUR, SCALABILITÉ) et serviront à la timeline. Prix : le prix public actuel, avec l'enseigne et la date.
-      Joueurs de référence : l'effectif recommandé par l'éditeur, à défaut le milieu de la plage (RYTHME se note à cet effectif). Contenu fini : le nombre de parties que dure le contenu à découvrir (scénarios, campagne) ; laisser vide si le jeu se rejoue à l'infini.</p>
+      Meilleur effectif : le nombre de joueurs auquel le jeu est le meilleur ; c'est l'effectif de référence (RYTHME se note à cet effectif). Parties pour tout exploiter : le nombre minimum de parties pour avoir fait le tour de ce que la boîte propose (circuits, scénarios, modules, factions…).</p>
     <div class="grille">${DONNEES.map(([k, l, t]) => `<div><label for="d-${k}">${l}</label><input id="d-${k}" data-donnee="${k}" ${t === "texte" ? 'type="text"' : `type="number" min="0" step="${k === "prix" ? "0.05" : k === "poids_bgg" ? "0.01" : "1"}"`} value="${esc(d[k] ?? "")}" ${lectureSeule ? "disabled" : ""}></div>`).join("")}</div></section>`;
   $("#aller").innerHTML = '<option value="">Aller à…</option>';
   M.chapitres.forEach(c => {
