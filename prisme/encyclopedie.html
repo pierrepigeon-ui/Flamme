@@ -99,6 +99,21 @@ table.jeu td{border-bottom:1px solid var(--line);padding:6px 10px;vertical-align
 .defile{overflow-x:auto;max-width:100%} .formule{max-width:100%;overflow-x:auto}
 main{overflow-wrap:break-word}
 .version{font-size:12px;color:var(--muted);text-align:right;margin:40px 0 0}
+.figure{margin:12px 0 16px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.figure figcaption{font-size:13px;color:var(--muted);margin-top:4px}
+svg.courbe{width:100%;height:auto;display:block;font-family:var(--sans)}
+svg.courbe .bande0{fill:var(--paper)} svg.courbe .bande1{fill:color-mix(in srgb, var(--accent) 7%, var(--panel))}
+svg.courbe .phase{font-size:12px;fill:var(--muted);text-anchor:middle;font-weight:600}
+svg.courbe .grille{stroke:var(--line);stroke-width:1} svg.courbe .axe-l{stroke:var(--ink);stroke-width:1.2}
+svg.courbe .gy{font-size:12px;fill:var(--muted);text-anchor:end} svg.courbe .gx{font-size:12.5px;fill:var(--ink);text-anchor:middle;font-weight:600}
+svg.courbe .gl{font-size:12px;fill:var(--muted);text-anchor:middle} svg.courbe .gl.fort{fill:var(--ink);font-weight:600;font-size:13px}
+svg.courbe .trait{fill:none;stroke:var(--ink);stroke-width:2.5;stroke-linejoin:round}
+svg.courbe .pointille{fill:none;stroke:var(--ink);stroke-width:2;stroke-dasharray:5 5}
+svg.courbe .demi{stroke:var(--warn);stroke-width:1.2;stroke-dasharray:2 4}
+svg.courbe .pt{fill:var(--panel);stroke:var(--ink);stroke-width:2} svg.courbe .pt.alpha{fill:var(--ink)}
+dl.glossaire{display:grid;grid-template-columns:max-content 1fr;gap:6px 18px;font:16px/1.55 var(--serif);max-width:80ch}
+dl.glossaire dt{font:600 14.5px var(--sans)} dl.glossaire dd{margin:0}
+@media (max-width:600px){dl.glossaire{grid-template-columns:1fr} dl.glossaire dd{margin-bottom:6px}}
 mark{background:#FFE58A;color:#1B2430;border-radius:2px}
 @media (max-width:900px){
   nav#sommaire summary{display:block}
@@ -117,7 +132,7 @@ mark{background:#FFE58A;color:#1B2430;border-radius:2px}
 <div class="page">
   <header class="titre">
     <div><h1>L'encyclopédie</h1>
-      <p>Le modèle PRISME tel qu'il est dans la base, à jour en direct : le jeu, ses chapitres, ses paires d'axes et leurs grilles ; le joueur, ses moteurs, archétypes, profils et sous-profils.</p></div>
+      <p>Le modèle PRISME tel qu'il est dans la base, à jour en direct : le jeu, ses chapitres, ses paires d'axes et leurs grilles ; le joueur, ses moteurs, archétypes, profils et sous-profils ; le temps, ses jalons et la courbe du flow.</p></div>
     <div class="actions"><button class="btn" id="imprimer" type="button">Imprimer ou enregistrer en PDF</button></div>
   </header>
   <nav id="sommaire" aria-label="Sommaire"><input id="cherche" type="search" placeholder="Chercher dans l'encyclopédie…" aria-label="Chercher"><details id="tocbox" open><summary>Sommaire</summary><p class="plis"><button type="button" id="tout-deplier">Tout déplier</button> · <button type="button" id="tout-replier">Tout replier</button></p><ol id="toc"></ol></details></nav>
@@ -126,7 +141,7 @@ mark{background:#FFE58A;color:#1B2430;border-radius:2px}
 <div style="max-width:1240px;margin:0 auto;padding:0 20px 30px"><p class="version" id="version"></p></div>
 
 <script>
-const VERSION = { numero:"1.1", date:"2026-10-08 17:05" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"1.2", date:"2026-10-08 17:50" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -194,6 +209,8 @@ async function charger(){
   h.push(sectionPresentation(toc));
   h.push(M.paires.length ? sectionJeu(toc) : sectionJeuFermee(toc));
   h.push(sectionJoueur(toc));
+  h.push(sectionTemps(toc));
+  h.push(sectionGlossaire(toc));
   $("#contenu").innerHTML = h.join("");
   $("#toc").innerHTML = noeuds(toc, 1);
   if (window.innerWidth <= 900) $("#tocbox").removeAttribute("open");
@@ -209,7 +226,7 @@ function sectionPresentation(toc){
     <p class="chapo">PRISME : Pourquoi Restons-nous Impliqués, Stimulés, Motivés, Engagés ? Trois regards sur une même expérience.</p>
     <div class="texte"><p><b>Le joueur</b> (PRISMEplayer) : qu'est-ce que je recherche en jouant ? Cinq moteurs, dix archétypes pour savoir pourquoi l'on joue, vingt profils pour ce qui fait décrocher, soixante sous-profils pour ce qui nourrit le plus.</p>
     <p><b>Le jeu</b> (PRISMEgame) : qu'est-ce que ce jeu est, objectivement ? ${M.paires.length || 16} paires d'axes réparties en trois chapitres, du système à l'édition, pour décrire un jeu tel qu'il est avant de se demander à qui il plaira.</p>
-    <p><b>Le temps</b> (la timeline) : une première partie ne ressemble pas à la vingtième. De la découverte à la maîtrise, chaque joueur a son moment d'apogée, et chaque jeu ses frictions et ses stimulations.</p></div>`;
+    <p><b>Le temps</b> (<a href="#temps">la timeline</a>) : une première partie ne ressemble pas à la vingtième. De la découverte à la maîtrise, chaque joueur a son moment d'apogée, et chaque jeu ses frictions et ses stimulations ; la courbe du flow en donne l'apogée, la chute éventuelle et la demi-vie.</p></div>`;
 }
 
 /* ---------------- PRISMEgame ---------------- */
@@ -313,6 +330,224 @@ function sectionJoueur(toc){
           <span class="l">Adore</span> ${esc(s.adore)} · <span class="l">Déteste</span> ${esc(s.deteste)} · <span class="l">On lui reproche</span> ${esc(s.reproche)}</div>`).join("")}</div>`).join("")}</div></section>`;
   });
   return h;
+}
+
+/* ---------------- le temps : timeline et flow ---------------- */
+// Méthode arrêtée le 08/10/2026 (jeu d'essai : Heat). Une seule fonction, réutilisable par l'outil d'évaluation.
+const JALONS = [
+  { n:0, nom:"identifié", quoi:"Le jeu est connu de loin : critique, vitrine, recommandation." },
+  { n:1, nom:"ouvert", quoi:"La boîte est ouverte : on découvre le matériel et les règles." },
+  { n:2, nom:"jouable", quoi:"La mise en place est faite, les règles sont lues : on peut lancer la partie." },
+  { n:3, nom:"compris", quoi:"Une première partie a eu lieu, même hésitante." },
+  { n:4, nom:"maîtrisé", quoi:"Les règles sont intégrées, la partie est fluide." },
+  { n:5, nom:"exploré", quoi:"Les stratégies principales sont connues et utilisées." },
+  { n:6, nom:"révélé", quoi:"Tout le contenu a été vu : modules, cartes, scénarios." },
+  { n:7, nom:"archivé", quoi:"Le jeu entre en routine : classique régulier ou souvenir qui s'efface." }
+];
+const SOUSPHASES = [
+  { nom:"Préparation", de:0, phase:"I", quoi:"La promesse du jeu : on se projette, on l'achète, on l'emprunte.", duree:"VAL1 / 4" },
+  { nom:"Accès", de:1, phase:"I", quoi:"La porte d'entrée pratique : boîte, matériel, organisation des règles.", duree:"POID1 / 5 + MAN1 / 10" },
+  { nom:"Premiers pas", de:2, phase:"II", quoi:"La première mise en mouvement, avec des allers-retours au livret.", duree:"1 + (5 − TRAN2) / 10" },
+  { nom:"Expérimentations", de:3, phase:"II", quoi:"On rejoue, on apprend en jouant : le jeu devient intelligible.", duree:"2^(moy(POID1, EXIG1, VAR1, 5 − TRAN2, 5 − ART2b) − 1)" },
+  { nom:"Rôdage", de:4, phase:"III", quoi:"La pratique standard : on ne lutte plus contre les règles.", duree:"2^(moy(PROF, EXIG1, POID1) − 1)" },
+  { nom:"Aguerrissement", de:5, phase:"III", quoi:"La mise à l'épreuve : plans avancés, contre-stratégies, finesses.", duree:"2^(moy(PROF, EXIG, VAR1) + 0,1 − 1) ; le 0,1 est un bonus de confrontation. Plancher : contenu_parties" },
+  { nom:"Habitude", de:6, phase:"IV", quoi:"Le jeu est pleinement connu et tourne à vitesse de croisière.", duree:"2^(moy(VAR, SCAL, MAN2) − 1)" },
+  { nom:"Souvenir", de:7, phase:"IV", quoi:"La vie longue : pilier du répertoire ou oubli progressif.", duree:"sans fin : la courbe se prolonge en pointillés" }
+];
+const PHASES = { I:"Entrée", II:"Apprentissage", III:"Maîtrise et profondeur", IV:"Maturité" };
+const R = [0, .45, .6, .8, 1, 1, 1, 1];          // montée en régime, jalons 0 à 7
+const TERMES = {                                  // stimulation et friction par jalon, en clair
+  1:{ s:"MAT, ART2a, THEM1", f:"POID1, M, 5 − ART2b" },
+  2:{ s:"THEM, MAT, ART2a", f:"POID1, 5 − TRAN2, M, 5 − ART2b" },
+  3:{ s:"THEM, INT2, EXIG, ALEA2", f:"5 − TRAN2, 5 − ART2b, A, M, POID1" },
+  4:{ s:"EXIG, PROF, INT2, LIEN2", f:"A, M, 5 − ART2b" },
+  5:{ s:"(PROF, EXIG, POID, LIEN2) × plafond d'aléa", f:"A, 5 − ALEA2, 5 − LIEN2, 5 − INT2, 5 − PROF, M" },
+  6:{ s:"(PROF, VAR, POID, LIEN2) × plafond d'aléa", f:"les termes du jalon 5, plus 5 − VAR" },
+  7:{ s:"(VAR, SCAL, MAN2, LIEN2) × usure", f:"A, M, M2, 5 − SCAL, 5 − VAR" }
+};
+// Heat (boîte de base, toutes options) : notes de la fiche validée le 08/10/2026 ; POID, PROF… = notes retenues des paires.
+const HEAT = { nom:"Heat: Pedal to the Metal", POID1:2.5, POID:3.49, PROF:3.49, VAR1:3, VAR:3.89, ALEA1:2, ALEA2:4, EXIG1:3.5, EXIG:4.23,
+  RYT1:3, RYT2:3, MAN1:2, MAN2:4, THEM1:3, THEM:3.9, LIEN2:4.5, INT2:4, SCAL:3.89, MAT:3.02, ART2a:4.5, ART2b:3, TRAN2:3.5, VAL1:2,
+  contenu_parties:12, effectif_reference:6 };
+
+function flowJeu(n){
+  const moy = (...a) => a.reduce((s, v) => s + v, 0) / a.length;
+  const quad = (...a) => Math.sqrt(a.reduce((s, v) => s + v * v, 0) / a.length);
+  const lassitude = N => 1 + .1 * Math.log2(1 + N);
+  // durées des sous-phases, en parties
+  const d = [n.VAL1 / 4, n.POID1 / 5 + n.MAN1 / 10, 1 + (5 - n.TRAN2) / 10,
+    2 ** (moy(n.POID1, n.EXIG1, n.VAR1, 5 - n.TRAN2, 5 - n.ART2b) - 1), 2 ** (moy(n.PROF, n.EXIG1, n.POID1) - 1),
+    2 ** (moy(n.PROF, n.EXIG, n.VAR1) + .1 - 1), 2 ** (moy(n.VAR, n.SCAL, n.MAN2) - 1)];
+  const N = [0]; d.forEach((k, i) => { N.push(N[i] + k); if (i === 5 && n.contenu_parties && N[6] < n.contenu_parties){ d[5] += n.contenu_parties - N[6]; N[6] = n.contenu_parties; } });
+  const x = [0]; d.forEach((k, i) => x.push(x[i] + Math.log2(1 + k)));
+  const plafond = 1 - (n.ALEA1 / 5) * ((5 - n.ALEA2) / 5), usure = .5 + n.VAR / 10;
+  const termes = (j, Nj) => {
+    const L = lassitude(Nj), M = n.MAN1 * L, M2 = (5 - n.MAN2) * L, A = moy(5 - n.RYT1, 5 - n.RYT2) * L;
+    const f5 = [A, 5 - n.ALEA2, 5 - n.LIEN2, 5 - n.INT2, 5 - n.PROF, M];
+    const S = { 1:[n.MAT, n.ART2a, n.THEM1], 2:[n.THEM, n.MAT, n.ART2a], 3:[n.THEM, n.INT2, n.EXIG, n.ALEA2], 4:[n.EXIG, n.PROF, n.INT2, n.LIEN2],
+      5:[n.PROF, n.EXIG, n.POID, n.LIEN2], 6:[n.PROF, n.VAR, n.POID, n.LIEN2], 7:[n.VAR, n.SCAL, n.MAN2, n.LIEN2] }[j];
+    const F = { 1:[n.POID1, M, 5 - n.ART2b], 2:[n.POID1, 5 - n.TRAN2, M, 5 - n.ART2b], 3:[5 - n.TRAN2, 5 - n.ART2b, A, M, n.POID1], 4:[A, M, 5 - n.ART2b],
+      5:f5, 6:[...f5, 5 - n.VAR], 7:[A, M, M2, 5 - n.SCAL, 5 - n.VAR] }[j];
+    const s = moy(...S) * (j === 5 || j === 6 ? plafond : j === 7 ? usure : 1), f = quad(...F);
+    return { s, f, brut: 2 * R[j] * (s - f), L };
+  };
+  const det = [null], y = [0], brut = [0];
+  for (let j = 1; j <= 7; j++){ const t = termes(j, N[j]); det.push(t); brut.push(t.brut); y.push(Math.min(10, Math.max(0, t.brut))); }
+  // α, β, γ
+  const pente = j => (y[j + 1] - y[j]) / (x[j + 1] - x[j]);
+  let alpha = 1; for (let j = 2; j <= 7; j++) if (y[j] > y[alpha]) alpha = j;
+  let beta = null, gamma = null;
+  const purge = brut.findIndex((v, j) => j >= 1 && v < 0);
+  if (purge > 0){ beta = purge - 1; gamma = purge; }
+  else {
+    for (let j = alpha; j < 7; j++) if (pente(j) <= -.5){ beta = j; break; }
+    if (beta != null) for (let k = beta + 1; k <= 7; k++) if (k === 7 || y[k] < 1 || pente(k) > -.5){ gamma = k; break; }
+  }
+  // suite en pointillés : modèle du jalon 7, seule la lassitude monte
+  const yLoin = Nk => Math.min(10, Math.max(0, 2 * (termes(7, Nk).s - termes(7, Nk).f)));
+  const xLoin = Nk => x[7] + Math.log2((1 + Nk) / (1 + N[7]));
+  const perte = (yLoin(N[7] * 4 + 3) - yLoin(N[7])) / (xLoin(N[7] * 4 + 3) - x[7]);
+  // demi-vie : premier passage sous α / 2 après α, jalons puis pointillés
+  const cible = y[alpha] / 2; let demivie = null, xDemi = null;
+  for (let j = alpha + 1; j <= 7 && demivie == null; j++) if (y[j] < cible){
+    const t = (y[j - 1] - cible) / (y[j - 1] - y[j]), xs = x[j - 1] + t * (x[j] - x[j - 1]);
+    demivie = N[j - 1] + 2 ** (xs - x[j - 1]) - 1; xDemi = xs;
+  }
+  if (demivie == null && yLoin(1e7) < cible){ let a = N[7], b = 1e7; for (let i = 0; i < 80; i++){ const m = Math.sqrt(a * b); yLoin(m) > cible ? a = m : b = m; } demivie = a; xDemi = xLoin(a); }
+  const classe = demivie == null ? "inusable" : demivie < 10 ? "éphémère" : demivie < 100 ? "durable" : demivie < 1000 ? "classique" : "inusable";
+  return { d, N, x, y, det, alpha, beta, gamma, plafond, usure, perte, demivie, xDemi, classe, yLoin, xLoin };
+}
+
+function courbeSVG(c){
+  const W = 760, H = 330, g = 46, dr = 16, h0 = 22, b = 44;
+  const xFin = Math.max(c.x[7] + 4, Math.min(c.x[7] + 9, c.xDemi ? c.xDemi + 1.5 : 0));
+  const yMax = Math.max(5, Math.ceil(c.y[c.alpha] + 1));
+  const X = v => g + v / xFin * (W - g - dr), Y = v => H - b - v / yMax * (H - b - h0);
+  let s = `<svg class="courbe" viewBox="0 0 ${W} ${H}" role="img" aria-label="Courbe du flow de ${esc(HEAT.nom)}">`;
+  // bandes des phases
+  [["I", 0, 2], ["II", 2, 4], ["III", 4, 6], ["IV", 6, null]].forEach(([p, a, z], i) => {
+    const x1 = X(c.x[a]), x2 = z == null ? X(xFin) : X(c.x[z]);
+    s += `<rect x="${x1}" y="${h0}" width="${x2 - x1}" height="${H - b - h0}" class="bande${i % 2}"/><text x="${(x1 + x2) / 2}" y="${h0 - 6}" class="phase">${p}</text>`;
+  });
+  for (let v = 0; v <= yMax; v++) s += `<line x1="${g}" x2="${W - dr}" y1="${Y(v)}" y2="${Y(v)}" class="grille"/><text x="${g - 8}" y="${Y(v) + 4}" class="gy">${v}</text>`;
+  s += `<text x="${g - 34}" y="${h0 - 6}" class="gy" style="text-anchor:start">flow</text>`;
+  // α / 2 et demi-vie
+  const cible = c.y[c.alpha] / 2;
+  s += `<line x1="${g}" x2="${W - dr}" y1="${Y(cible)}" y2="${Y(cible)}" class="demi"/><text x="${W - dr - 4}" y="${Y(cible) - 5}" class="gl" style="text-anchor:end">α / 2</text>`;
+  if (c.demivie){ const xd = X(c.xDemi); s += `<line x1="${xd}" x2="${xd}" y1="${Y(cible)}" y2="${H - b}" class="demi"/><text x="${xd}" y="${H - b + 30}" class="gl">demi-vie ≈ ${Math.round(c.demivie)} parties</text>`; }
+  // courbe : trait plein jusqu'à γ (ou jalon 7), pointillés ensuite
+  const fin = c.gamma ?? 7, pts = j => `${X(c.x[j])},${Y(c.y[j])}`;
+  s += `<polyline class="trait" points="${[...Array(fin + 1).keys()].map(pts).join(" ")}"/>`;
+  const loin = [...Array(fin < 7 ? 8 - fin : 1).keys()].map(k => pts(fin + k));
+  for (let xv = c.x[7] + .25; xv <= xFin; xv += .25){ const Nk = (1 + c.N[7]) * 2 ** (xv - c.x[7]) - 1; loin.push(`${X(xv)},${Y(c.yLoin(Nk))}`); }
+  s += `<polyline class="pointille" points="${loin.join(" ")}"/>`;
+  for (let j = 0; j <= 7; j++){
+    s += `<circle cx="${X(c.x[j])}" cy="${Y(c.y[j])}" r="${j === c.alpha ? 6 : 4}" class="${j === c.alpha ? "pt alpha" : "pt"}"/>
+      <text x="${X(c.x[j])}" y="${H - b + 15}" class="gx">${j}</text>`;
+  }
+  s += `<text x="${X(c.x[c.alpha])}" y="${Y(c.y[c.alpha]) - 12}" class="gl fort">α ${fmt(c.y[c.alpha], 2)}</text>`;
+  if (c.beta != null) s += `<text x="${X(c.x[c.beta])}" y="${Y(c.y[c.beta]) - 12}" class="gl fort">β</text>`;
+  if (c.gamma != null) s += `<text x="${X(c.x[c.gamma])}" y="${Y(c.y[c.gamma]) - 12}" class="gl fort">γ</text>`;
+  s += `<line x1="${g}" x2="${W - dr}" y1="${H - b}" y2="${H - b}" class="axe-l"/><text x="${g}" y="${H - 3}" class="gl" style="text-anchor:start">jalons (abscisse : log2 des parties cumulées)</text>`;
+  return s + `</svg>`;
+}
+
+function sectionTemps(toc){
+  const ouvert = M.paires.length > 0;
+  const n1 = { id:"temps", titre:"Le temps (la timeline)", enfants:[{ id:"t-jalons", titre:"Jalons et phases" }] };
+  toc.push(n1);
+  let h = `<h2 id="temps" style="--c:var(--accent)">Le temps (la timeline)</h2>
+    <p class="chapo">Une première partie ne ressemble pas à la vingtième. La timeline suit un jeu de la vitrine à l'étagère, et calcule à chaque étape le plaisir qu'il procure une fois retirées les frictions : le flow.</p>
+    <h3 class="section" id="t-jalons">Jalons et phases</h3>
+    <div class="texte"><p>Huit jalons, numérotés de 0 à 7, découpent la vie d'un jeu. Entre deux jalons s'étend une sous-phase, et les sous-phases se regroupent en quatre phases.</p></div>
+    <div class="defile"><table class="jeu"><thead><tr><th>Jalon</th><th>Situation</th><th>Sous-phase qui suit</th><th>Phase</th></tr></thead><tbody>
+    ${JALONS.map(j => { const sp = SOUSPHASES[j.n]; return `<tr><td class="n"><b>${j.n}</b> ${esc(j.nom)}</td><td>${esc(j.quoi)}</td><td><b>${esc(sp.nom)}</b> — ${esc(sp.quoi)}</td><td>${sp.phase} ${esc(PHASES[sp.phase])}</td></tr>`; }).join("")}
+    </tbody></table></div>`;
+  if (M.moteurs.length){
+    n1.enfants.push({ id:"t-moteurs", titre:"Le moment de chaque moteur" });
+    h += `<h3 class="section" id="t-moteurs">Le moment de chaque moteur</h3>
+      <div class="texte"><p>Chaque moteur de PRISMEplayer culmine à un moment de la timeline. Un jeu dont le flow est haut à ce moment-là nourrit ce moteur ; un jeu qui s'effondre avant le perd en route.</p></div>
+      <div class="defile"><table class="jeu"><thead><tr><th>Moteur</th><th>Son moment</th></tr></thead><tbody>
+      ${M.moteurs.map(m => `<tr><td><a href="#moteurs">${esc(m.nom)}</a></td><td>${m.climax_phase ? esc(m.climax_phase) + (m.duree_apogee ? `, apogée ${esc(m.duree_apogee)}` : "") : "transversal : prolonge l'apogée des autres"}</td></tr>`).join("")}
+      </tbody></table></div>`;
+  }
+  if (!ouvert) return h + `<p class="vide">Le calcul du flow utilise les axes de PRISMEgame : cette partie est réservée aux membres de PRISME.</p>`;
+
+  const c = flowJeu(HEAT);
+  n1.enfants.push({ id:"t-abscisse", titre:"La durée (abscisse)" }, { id:"t-flow", titre:"Le flow (ordonnée)" },
+    { id:"t-points", titre:"α, β, γ : les points remarquables" }, { id:"t-demivie", titre:"La suite et la demi-vie" }, { id:"t-heat", titre:"Exemple : Heat" });
+  const lien = code => `<a href="#p-${code}">${code}</a>`;
+  h += `<h3 class="section" id="t-abscisse">La durée (abscisse)</h3>
+    <div class="texte"><p>Chaque sous-phase dure un certain nombre de parties, tiré des notes du jeu. Les fractions de partie comptent : la Préparation (lire une critique, acheter) ou l'Accès (dépiauter, lire les règles) représentent une part de soirée.</p>
+    <p>On place les jalons en cumulant le logarithme de ces durées. Ainsi, la première partie et la centième ne pèsent pas pareil : doubler son expérience d'un jeu fait avancer d'une unité, quel que soit le point de départ.</p></div>
+    <div class="formule">x(0) = 0 ; x(j) = x(j − 1) + log2(1 + durée de la sous-phase)</div>
+    <div class="defile"><table class="jeu"><thead><tr><th>Sous-phase</th><th>Durée, en parties</th><th>Heat</th></tr></thead><tbody>
+    ${SOUSPHASES.slice(0, 7).map((sp, i) => `<tr><td>${esc(sp.nom)}</td><td>${esc(sp.duree)}</td><td class="n">${fmt(c.d[i], 2)}</td></tr>`).join("")}</tbody></table></div>
+    <div class="texte"><p><b>Plancher du jalon 6.</b> On ne peut pas avoir tout vu avant d'avoir joué le nombre minimum de parties que demande le contenu (« Parties pour tout exploiter », dans le jeu en chiffres). Si le calcul place le jalon 6 plus tôt, l'Aguerrissement s'allonge d'autant. Champ vide : jeu rejouable sans fin, pas de plancher.</p>
+    <p>Le prix (${lien("VAL")}) ne joue que sur la durée de la Préparation, pas sur le plaisir de jeu.</p></div>
+
+    <h3 class="section" id="t-flow">Le flow (ordonnée)</h3>
+    <div class="texte"><p>À chaque jalon, on met en balance ce qui stimule le joueur et ce qui le freine. Le flow vaut zéro au jalon 0 : rien n'est encore joué.</p></div>
+    <div class="formule">flow = 2 × r × (S − F), borné entre 0 et 10</div>
+    <div class="texte"><ul>
+      <li><b>S, la stimulation</b>, est la <b>moyenne simple</b> de ses termes.</li>
+      <li><b>F, la friction</b>, est leur <b>moyenne quadratique</b> (racine de la moyenne des carrés) : un gros défaut n'est pas noyé dans la moyenne. L'asymétrie est voulue : un défaut gâche plus de plaisir qu'une qualité n'en ajoute.</li>
+      <li><b>r, la montée en régime</b> : ${R.slice(1).map(v => fmt(v, 2)).join(" / ")} pour les jalons 1 à 7. Au début, tout se ressent moins fort, le plaisir comme la gêne.</li>
+      <li><b>La lassitude</b> L = 1 + 0,1 × log2(1 + parties jouées) alourdit ce qui se répète : la manipulation M = MAN1 × L à tous les jalons ; l'attente A = moyenne(5 − RYT1, 5 − RYT2) × L, des jalons 3 à 7 ; la corvée M2 = (5 − MAN2) × L, au jalon 7.</li>
+      <li><b>Le plafond d'aléa</b> = 1 − (ALEA1 / 5) × ((5 − ALEA2) / 5) réduit la stimulation aux jalons 5 et 6 : quand le hasard décide, la maîtrise pèse moins sur l'issue. Un aléa bien géré (ALEA2 haut) lève le plafond.</li>
+      <li><b>L'usure</b> = 0,5 + VAR / 10 réduit la stimulation au jalon 7 : seul le renouvellement entretient l'envie.</li>
+      <li>Un code sans chiffre (POID, PROF, EXIG…) désigne la note retenue de la paire ; avec un chiffre (POID1, EXIG1…), la note de l'axe.</li></ul></div>
+    <div class="defile"><table class="jeu"><thead><tr><th>Jalon</th><th>Stimulation S</th><th>Friction F</th></tr></thead><tbody>
+    ${[1,2,3,4,5,6,7].map(j => `<tr><td class="n"><b>${j}</b> ${esc(JALONS[j].nom)}</td><td>${esc(TERMES[j].s)}</td><td>${esc(TERMES[j].f)}</td></tr>`).join("")}</tbody></table></div>
+
+    <h3 class="section" id="t-points">α, β, γ : les points remarquables</h3>
+    <div class="texte"><ul>
+      <li><b>α, l'apogée</b> : le premier jalon où le flow atteint son maximum.</li>
+      <li><b>La chute</b> : le premier segment après α dont la pente descend à −0,5 ou moins par unité d'abscisse. <b>β</b> en marque le début.</li>
+      <li><b>γ, le palier</b> : le premier jalon après β où la pente redevient douce, ou bien où le flow passe sous 1.</li>
+      <li><b>Sans chute</b>, le jeu est un classique : ni β ni γ.</li>
+      <li><b>Un flow négatif</b> signale une purge : le jeu est abandonné sur-le-champ, γ tombe immédiatement.</li></ul></div>
+
+    <h3 class="section" id="t-demivie">La suite et la demi-vie</h3>
+    <div class="texte"><p>Après le jalon 7, ou dès γ pour un jeu qui chute, la courbe se poursuit <b>en pointillés</b>. On prolonge le dernier état connu : la stimulation reste figée, seule la lassitude continue de monter. Comme l'abscisse et la lassitude sont toutes deux logarithmiques, cette suite est une droite. Sa pente est la <b>perte par doublement</b> : ce que le jeu perd de flow chaque fois qu'on double le nombre de parties jouées.</p>
+    <p>La <b>demi-vie</b> est le nombre de parties au bout duquel le flow passe pour la première fois sous la moitié de α, jalons et pointillés compris. Pour un jeu qui s'effondre, elle tombe pendant la chute ; pour un classique, loin dans les pointillés.</p></div>
+    <div class="defile"><table class="ref"><tr><th>Demi-vie</th><th>moins de 10 parties</th><th>10 à 100</th><th>100 à 1 000</th><th>plus de 1 000</th></tr>
+      <tr><th>Lecture</th><td>éphémère</td><td>durable</td><td>classique</td><td>inusable</td></tr></table></div>
+    <p class="vide">Les seuils seront étalonnés sur d'autres jeux d'essai.</p>
+
+    <h3 class="section" id="t-heat">Exemple : Heat</h3>
+    <div class="texte"><p>${esc(HEAT.nom)}, boîte de base, toutes options. Meilleur effectif : ${HEAT.effectif_reference} joueurs ; parties pour tout exploiter : ${HEAT.contenu_parties}. Plafond d'aléa ${fmt(c.plafond, 2)} ; usure ${fmt(c.usure, 2)}.</p></div>
+    <figure class="figure">${courbeSVG(c)}<figcaption>Trait plein : les jalons calculés. Pointillés : la suite, où seule la lassitude progresse. Bandes : les phases I à IV.</figcaption></figure>
+    <div class="defile"><table class="ref"><tr><th>Jalon</th>${[0,1,2,3,4,5,6,7].map(j => `<th>${j}</th>`).join("")}</tr>
+      <tr><th>Parties cumulées</th>${c.N.map(v => `<td>${fmt(v, 1)}</td>`).join("")}</tr>
+      <tr><th>Abscisse</th>${c.x.map(v => `<td>${fmt(v, 2)}</td>`).join("")}</tr>
+      <tr><th>Stimulation S</th><td>—</td>${c.det.slice(1).map(t => `<td>${fmt(t.s, 2)}</td>`).join("")}</tr>
+      <tr><th>Friction F</th><td>—</td>${c.det.slice(1).map(t => `<td>${fmt(t.f, 2)}</td>`).join("")}</tr>
+      <tr><th>Flow</th>${c.y.map((v, j) => `<td class="${j === c.alpha ? "eq" : ""}"><b>${fmt(v, 2)}</b></td>`).join("")}</tr></table></div>
+    <div class="encadre">α ${fmt(c.y[c.alpha], 2)} au jalon ${c.alpha} (${JALONS[c.alpha].nom}, vers ${Math.round(c.N[c.alpha])} parties) · ${c.beta == null ? "pas de chute : un classique" : `chute à partir du jalon ${c.beta}`} · perte ${fmt(c.perte, 2).replace("-", "−")} par doublement · <b>demi-vie ≈ ${c.demivie ? Math.round(c.demivie / 10) * 10 : "∞"} parties (${c.classe})</b></div>`;
+  return h;
+}
+
+/* ---------------- glossaire ---------------- */
+const GLOSSAIRE = [
+  ["Axe 1", "L'axe descriptif d'une paire : ce que le jeu est. Il croît avec ce que dit son nom et ne se juge pas."],
+  ["Axe 2", "L'axe évaluatif : ce que le jeu réussit. C'est lui qui fait la note de la paire."],
+  ["Écart", "Dans une paire liée, la note 2 se donne en écart (−− à ++) par rapport à ce que la note 1 laissait attendre."],
+  ["Note retenue", "La note de la paire, après calcul (courbe en S, composite, moyenne)."],
+  ["Courbe en S", "La fonction qui transforme l'axe 1 et l'écart en note de paire liée ; voir l'annexe."],
+  ["Sans objet", "Une paire ne compte pas quand son axe 1 vaut 0 (rien à juger), ou sous un seuil quand aucun manque n'est ressenti."],
+  ["Meilleur effectif", "Le nombre de joueurs auquel le jeu est le meilleur ; c'est à cet effectif qu'on juge le rythme et qu'on trace la timeline."],
+  ["Faux solo", "Une partie seul contre des automates : elle compte dans la plage de joueurs, contrairement au vrai solo."],
+  ["Jalon", "Un repère de la vie du jeu, de 0 (identifié) à 7 (archivé)."],
+  ["Flow", "Le plaisir net à un jalon : stimulation moins friction, sur 10."],
+  ["Lassitude", "Le poids croissant de ce qui se répète (manipulation, attente) à mesure qu'on rejoue."],
+  ["α, β, γ", "L'apogée de la courbe, le début de sa chute, le palier où elle se stabilise."],
+  ["Demi-vie", "Le nombre de parties au bout duquel le flow tombe sous la moitié de son apogée."],
+  ["Moteur", "L'une des cinq motivations de PRISMEplayer ; chaque joueur les porte toutes, à des degrés divers."]
+];
+function sectionGlossaire(toc){
+  toc.push({ id:"glossaire", titre:"Glossaire" });
+  return `<h2 id="glossaire">Glossaire</h2><dl class="glossaire">${GLOSSAIRE.map(([t, d]) => `<dt>${esc(t)}</dt><dd>${esc(d)}</dd>`).join("")}</dl>`;
 }
 
 /* ---------------- sommaire : arbre dépliable ---------------- */
