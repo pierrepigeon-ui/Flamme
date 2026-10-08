@@ -108,6 +108,29 @@ table.recap td{border-bottom:1px solid var(--line);padding:6px 8px;vertical-alig
 table.recap tr.manque td:first-child{border-left:3px solid var(--warn)}
 table.recap .aller{cursor:pointer;text-decoration:underline;text-decoration-color:var(--line)}
 @media (max-width:760px){ .chiffres .grille{grid-template-columns:repeat(2,minmax(0,1fr))} }
+
+/* --- version 3 : couleur, aides, méthode de calcul --- */
+.chiffres .grille{grid-template-columns:repeat(5,minmax(0,1fr))}
+.paire{border-top:3px solid var(--chap)}
+.paire h3{color:var(--chap)}
+.paire .mesure{font:italic 14px/1.45 var(--serif);color:var(--muted);margin:4px 0 2px;max-width:75ch}
+.paliers li.choisi{border-color:var(--chap);background:color-mix(in srgb, var(--chap) 13%, var(--panel))}
+.paliers li.proche{background:color-mix(in srgb, var(--chap) 6%, var(--panel))}
+.num{color:var(--chap)}
+.piste input{accent-color:var(--chap)}
+.outils{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 8px}
+.outils button,.axe .titre button{font:500 12.5px var(--sans);padding:2px 9px;border:1px solid var(--line);background:var(--panel);border-radius:12px;cursor:pointer;color:var(--muted)}
+.outils button[aria-expanded="true"],.axe .titre button[aria-expanded="true"]{border-color:var(--chap);color:var(--chap)}
+.axe .titre button{padding:0 7px;margin-left:6px;border-radius:50%}
+.panneau{background:color-mix(in srgb, var(--chap) 6%, var(--panel));border:1px solid var(--line);border-left:3px solid var(--chap);border-radius:8px;padding:10px 14px;margin:4px 0 12px;font:14.5px/1.55 var(--serif)}
+.panneau h4{font:600 13px var(--sans);color:var(--chap);margin:10px 0 2px;text-transform:uppercase;letter-spacing:.04em} .panneau h4:first-child{margin-top:0}
+.panneau p{margin:3px 0} .panneau ul{margin:3px 0;padding-left:20px}
+.panneau .formule{font:13.5px/1.5 ui-monospace,Consolas,monospace;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 10px;margin:6px 0}
+.panneau table{border-collapse:collapse;font:12.5px var(--sans);margin-top:6px}
+.panneau td,.panneau th{border:1px solid var(--line);padding:2px 7px;text-align:center} .panneau th{color:var(--muted);font-weight:500}
+.panneau td.ici{background:var(--chap);color:var(--panel);font-weight:600}
+#pied small{color:var(--c,var(--muted))}
+@media (max-width:760px){ .chiffres .grille{grid-template-columns:repeat(2,minmax(0,1fr))} }
 </style>
 </head>
 <body>
@@ -154,7 +177,7 @@ table.recap .aller{cursor:pointer;text-decoration:underline;text-decoration-colo
 <div class="wrap"><p class="version" id="version"></p></div>
 
 <script>
-const VERSION = { numero:"2.1", date:"2026-10-04 18:54" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"3.0", date:"2026-10-08 14:45" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -179,7 +202,9 @@ let fiche = null;            // { id, jeu, statut, evaluateur, pages… notes_ar
 let saisie = {};             // axe -> { valeur, sans_objet, commentaire }
 let lectureSeule = false;
 let enAttente = new Set(), ficheModifiee = false, minuteur = null;
-const CHAMPS = ["pages","prix","joueurs_min","joueurs_max","duree_min","duree_max"];
+const DONNEES = [["pages","Pages des règles"],["prix","Prix (€)"],["prix_source","Source du prix (enseigne, date)","texte"],["poids_bgg","Poids BGG (1 à 5)"],["joueurs_min","Joueurs min."],
+  ["joueurs_max","Joueurs max."],["effectif_reference","Joueurs de référence"],["duree_min","Durée min. (min)"],["duree_max","Durée max. (min)"],["contenu_parties","Contenu fini (parties)"]];
+const CHAMPS = DONNEES.map(d => d[0]);
 
 function courbeS(x0){ const t = (x0 + 2) / 9; return t <= .5 ? 10 * t * t : 5 * (1 - 2 * (1 - t) * (1 - t)); }
 
@@ -206,8 +231,8 @@ async function demarrer(){
   }
   try {
     const lire = (t, o) => lireTout(t, q => q.order(o));
-    [M.chapitres, M.paires, M.axes, M.paliers, M.exemples, M.jeux] = await Promise.all([lire("prisme_chapitres","ordre"), lire("prisme_paires","ordre"),
-      lire("prisme_axes","ordre"), lire("prisme_paliers","valeur"), lire("prisme_exemples","ordre"), lire("prisme_jeux","nom")]);
+    [M.chapitres, M.paires, M.axes, M.paliers, M.exemples, M.jeux, M.notes] = await Promise.all([lire("prisme_chapitres","ordre"), lire("prisme_paires","ordre"),
+      lire("prisme_axes","ordre"), lire("prisme_paliers","valeur"), lire("prisme_exemples","ordre"), lire("prisme_jeux","nom"), lire("prisme_notes","ordre")]);
     const { data: n } = await sb.rpc("prisme_noms"); (n || []).forEach(x => noms[x.user_id] = x.nom);
   } catch (e){ $("#msg-accueil").className = "msg err"; $("#msg-accueil").textContent = "Lecture du modèle impossible : " + e.message; return; }
   M.paires.sort((a, b) => M.chapitres.find(c => c.code === a.chapitre).ordre - M.chapitres.find(c => c.code === b.chapitre).ordre || a.ordre - b.ordre);
@@ -292,13 +317,72 @@ $("#retour").addEventListener("click", async () => {
 /* ---------------- la grille ---------------- */
 const axesDe = code => M.axes.filter(a => a.paire === code).sort((a, b) => a.ordre - b.ordre);
 const paliersDe = code => M.paliers.filter(p => p.axe === code).sort((a, b) => a.valeur - b.valeur);
-const MECA = { liee:"paire liée : l'axe 2 juge l'écart à l'attente", independante:"deux notes indépendantes", crans5:"axe 2 en cinq crans", composite:"note composite" };
+const MECA = { liee:"paire liée : l'axe 2 juge l'écart à l'attente", independante:"deux notes indépendantes", crans5:"axe 2 en cinq crans",
+  composite:"note composite", moyenne:"axe 2 : moyenne de deux notes" };
 const estEcart = (p, a) => a.rang === "2" && (p.mecanisme === "liee" || p.mecanisme === "crans5");
+const aDeuxNotes = p => p.mecanisme === "composite" || p.mecanisme === "moyenne";   // axe 2 calculé à partir de 2a et 2b
+
+/* ---- aides : ce que mesure la paire, « ? » sur la paire et sur chaque axe, méthode de calcul ---- */
+const NOM_TYPE = { regle:"Règle", consigne:"Consigne de rédaction", solo:"Volet solo", note:"À savoir", absorption:"Ce qu'elle a absorbé", reserve:"En réserve", statut:"Statut", historique:"Historique" };
+function premierePhrase(t){
+  const s = String(t || "").replace(/\s*\((?:[A-Z]{2,5}\d[ab]?)[^)]*\)/g, "").replace(/\s*—\s*[A-Z]{2,5}\d[ab]?\s*—\s*/g, " ");   // retire les « (POI1 — Volume) »
+  const m = s.match(/^.*?[.!?](?=\s|$)/); return (m ? m[0] : s).trim();
+}
+// texte de modop → HTML : « - » = puce, « ### » = intertitre
+function texteRiche(t){
+  let h = "", liste = false;
+  String(t || "").split("\n").forEach(l => {
+    if (/^\s*- /.test(l)){ if (!liste){ h += "<ul>"; liste = true; } h += `<li>${esc(l.replace(/^\s*- /, ""))}</li>`; return; }
+    if (liste){ h += "</ul>"; liste = false; }
+    if (/^### /.test(l)) h += `<h4>${esc(l.slice(4))}</h4>`; else if (l.trim()) h += `<p>${esc(l)}</p>`;
+  });
+  return h + (liste ? "</ul>" : "");
+}
+function aidePaire(p){
+  const notes = M.notes.filter(n => n.paire === p.code && n.type !== "historique").sort((a, b) => (a.type === "statut") - (b.type === "statut") || a.ordre - b.ordre);
+  return `<h4>Ce que mesure la paire</h4><p>${esc(p.definition)}</p>`
+    + axesDe(p.code).map(a => `<h4>${esc(a.code)} — ${esc(a.nom)}</h4>${a.question ? `<p><i>${esc(a.question)}</i></p>` : ""}<p>${esc(a.definition ? a.definition.charAt(0).toUpperCase() + a.definition.slice(1) : "")}</p>`).join("")
+    + notes.map(n => `<h4>${esc(NOM_TYPE[n.type] || n.type)}${n.axe ? " (" + esc(n.axe) + ")" : ""}</h4><p>${esc(n.texte)}</p>`).join("");
+}
+function aideAxe(a){
+  return `${a.definition ? `<p>${esc(a.definition.charAt(0).toUpperCase() + a.definition.slice(1))}</p>` : ""}${a.methode ? `<h4>Comment noter</h4>${texteRiche(a.methode.replace(/(Repère[^\n]*|Étape 1[\s\S]*)$/, ""))}` : ""}`;
+}
+function methodeCalcul(p){
+  const ax = axesDe(p.code), s = saisie, v = r => s[ax.find(a => a.rang === r)?.code]?.valeur, c1 = ax.find(a => a.rang === "1")?.code;
+  let h = "";
+  if (p.mecanisme === "liee"){
+    const a1 = v("1"), e = v("2");
+    h = `<p>Paire liée : l'axe 2 ne se note pas dans l'absolu, il juge l'<b>écart</b> à ce que l'axe 1 laissait attendre (−− = −2 … ++ = +2, demi-crans permis).
+      La note de la paire suit une courbe en S, plate aux extrémités, plus raide au centre :</p>
+      <div class="formule">X0 = ${esc(c1)} + écart<br>t = (X0 + 2) / 9<br>si t ≤ 0,5 : note = 10 × t²<br>sinon : note = 5 × (1 − 2 × (1 − t)²)</div>
+      ${a1 != null && e != null ? `<p>Avec tes notes : X0 = ${fmt(a1)} ${e < 0 ? "−" : "+"} ${fmt(Math.abs(e))} = ${fmt(a1 + e)}, note <b>${fmt(courbeS(a1 + e), 2)}</b>.</p>` : ""}
+      <p>La note dépend de l'axe 1 retenu, pas seulement du palier choisi : 2,5 et « + » donnent 3,49 ; 3 et un demi-cran donnent aussi 3,49 ; 2,5 et un demi-cran donnent 3,02.</p>
+      <table><tr><th>${esc(c1)} \\ écart</th>${[-2,-1,0,1,2].map(x => `<th>${["−−","−","=","+","++"][x+2]}</th>`).join("")}</tr>
+      ${[0,1,2,3,4,5].map(a => `<tr><th>${a}</th>${[-2,-1,0,1,2].map(x => `<td class="${a1 === a && e === x ? "ici" : ""}">${fmt(courbeS(a + x), 2)}</td>`).join("")}</tr>`).join("")}</table>`;
+  } else if (p.mecanisme === "composite"){
+    const t1 = v("1"), a = v("2a"), b = v("2b");
+    h = `<p>Note composite : les deux notes de l'axe 2 sont pesées selon la position de l'axe 1 sur le curseur.</p>
+      <div class="formule">${esc(p.code)}2 = [${esc(p.code)}2b × ${esc(c1)} + ${esc(p.code)}2a × (5 − ${esc(c1)})] / 5</div>
+      ${t1 != null && a != null && b != null ? `<p>Avec tes notes : [${fmt(b)} × ${fmt(t1)} + ${fmt(a)} × ${fmt(5 - t1)}] / 5 = <b>${fmt((b * t1 + a * (5 - t1)) / 5, 2)}</b>.</p>` : ""}`;
+  } else if (p.mecanisme === "moyenne"){
+    const a = v("2a"), b = v("2b");
+    h = `<p>L'axe 2 est la moyenne de deux notes toujours demandées. L'axe 1 décrit, il n'entre pas dans le calcul.</p>
+      <div class="formule">${esc(p.code)}2 = (${esc(p.code)}2a + ${esc(p.code)}2b) / 2</div>
+      ${a != null && b != null ? `<p>Avec tes notes : (${fmt(a)} + ${fmt(b)}) / 2 = <b>${fmt((a + b) / 2, 2)}</b>.</p>` : ""}`;
+  } else if (p.mecanisme === "crans5"){
+    h = `<p>Axe 2 en cinq crans : −− = 0 ; − = 1,25 ; = = 2,5 ; + = 3,75 ; ++ = 5.</p>`;
+  } else {
+    h = `<p>Deux notes indépendantes : la note de la paire est celle de l'axe 2, de 0 à 5. L'axe 1 décrit le jeu ; il n'entre pas dans la moyenne.</p>`;
+  }
+  if (p.na_si_axe1_nul) h += `<p>Si ${esc(c1)} vaut 0, l'axe 2 est sans objet et la paire sort de la moyenne du chapitre.</p>`;
+  if (p.seuil_axe1 != null) h += `<p>Si ${esc(c1)} est sous ${fmt(p.seuil_axe1, 0)}, l'axe 2 ne compte que s'il vaut 1 ou moins (le manque est ressenti) ; sinon, la paire sort de la moyenne : un manque ne pénalise que s'il est vécu.</p>`;
+  return h + `<p>La note d'un chapitre est la moyenne des notes de ses paires ; l'évaluation finale, la moyenne des trois chapitres.</p>`;
+}
 
 // notes factuelles proposées à partir du « jeu en chiffres »
 function suggestion(axe){
   const d = fiche, palier = (x, seuils) => { let i = 0; while (i < seuils.length && x > seuils[i]) i++; return i; };
-  if (axe === "POI1" && d.pages) return { v: palier(d.pages, [2, 8, 16, 32, 64]), source: d.pages + " pages" };
+  if (axe === "POI1" && d.pages) return { v: palier(d.pages, [2, 8, 16, 32, 64]), source: d.pages + " pages" + (d.poids_bgg ? ", poids BGG " + fmt(d.poids_bgg, 2) : "") + " ; le nombre de pages n'est qu'un guide" };
   if (axe === "VAL1" && d.prix != null && d.prix !== "") return { v: palier(Number(d.prix), [19.99, 40, 70, 120, 200]), source: fmt(d.prix, 0) + " €" };
   if (axe === "SCAL1" && d.joueurs_max){ const j = d.joueurs_max; return { v: j <= 1 ? 0 : palier(j, [2, 4, 6, 9]) + 1, source: (d.joueurs_min ? d.joueurs_min + " à " : "jusqu'à ") + j + " joueurs" }; }
   return null;
@@ -320,7 +404,8 @@ function blocAxe(p, axe){
   const pal = paliersDe(axe.code);
   const sug = !lectureSeule && suggestion(axe.code);
   return `<div class="axe" data-axe="${esc(axe.code)}">
-    <div class="titre">${esc(axe.code)} — ${esc(axe.nom)}</div>${axe.question ? `<div class="q">${esc(axe.question)}</div>` : ""}
+    <div class="titre">${esc(axe.code)} — ${esc(axe.nom)}<button type="button" data-aide-axe="${esc(axe.code)}" aria-expanded="false" title="Ce que mesure cet axe, et comment le noter">?</button></div>${axe.question ? `<div class="q">${esc(axe.question)}</div>` : ""}
+    <div class="panneau hidden" id="aide-${esc(axe.code)}">${aideAxe(axe)}</div>
     <div class="ligne"><div class="piste"><input type="range" min="${min}" max="${max}" step="0.1" value="${v ?? milieu}" class="${v == null ? "vierge" : ""}" data-axe="${esc(axe.code)}" aria-label="${esc(axe.nom)}" ${lectureSeule ? "disabled" : ""}>
       <div class="grad">${grad.map(g => `<span>${g}</span>`).join("")}</div></div><span class="num">${v == null ? "—" : fmt(v)}</span></div>
     ${pal.length ? `<ul class="paliers">${pal.map(x => `<li data-v="${x.valeur}"><b>${esc(x.symbole || fmt(x.valeur, 0))}</b><span>${esc(x.libelle)}</span></li>`).join("")}</ul>` : ""}
@@ -330,20 +415,25 @@ function blocAxe(p, axe){
 function construireGrille(){
   const d = fiche;
   let h = `<section class="chiffres ${lectureSeule ? "ro" : ""}"><h2>Le jeu en chiffres</h2>
-    <p class="aide">Ces données proposent les notes factuelles (POIDS, VALEUR, SCALABILITÉ) et serviront à la timeline.</p>
-    <div class="grille">${[["pages","Pages des règles"],["prix","Prix (€)"],["joueurs_min","Joueurs min."],["joueurs_max","Joueurs max."],["duree_min","Durée min. (min)"],["duree_max","Durée max. (min)"]]
-      .map(([k, l]) => `<div><label for="d-${k}">${l}</label><input id="d-${k}" data-donnee="${k}" type="number" min="0" step="${k === "prix" ? "0.5" : "1"}" value="${d[k] ?? ""}" ${lectureSeule ? "disabled" : ""}></div>`).join("")}</div></section>`;
+    <p class="aide">Ces données proposent les notes factuelles (POIDS, VALEUR, SCALABILITÉ) et serviront à la timeline. Prix : le prix public actuel, avec l'enseigne et la date.
+      Joueurs de référence : l'effectif recommandé par l'éditeur, à défaut le milieu de la plage (RYTHME se note à cet effectif). Contenu fini : le nombre de parties que dure le contenu à découvrir (scénarios, campagne) ; laisser vide si le jeu se rejoue à l'infini.</p>
+    <div class="grille">${DONNEES.map(([k, l, t]) => `<div><label for="d-${k}">${l}</label><input id="d-${k}" data-donnee="${k}" ${t === "texte" ? 'type="text"' : `type="number" min="0" step="${k === "prix" ? "0.05" : k === "poids_bgg" ? "0.01" : "1"}"`} value="${esc(d[k] ?? "")}" ${lectureSeule ? "disabled" : ""}></div>`).join("")}</div></section>`;
   $("#aller").innerHTML = '<option value="">Aller à…</option>';
   M.chapitres.forEach(c => {
     h += `<div class="chapitre" style="--chap:var(--${c.code})"><h2>${esc(c.nom)}<span class="moy" id="moy-${c.code}"></span></h2>`;
     M.paires.filter(p => p.chapitre === c.code).forEach(p => {
       const ax = axesDe(p.code), a1 = ax.find(a => a.rang === "1"), so = ax.some(a => saisie[a.code]?.sans_objet);
-      const corps = p.mecanisme === "composite"
+      const corps = aDeuxNotes(p)
         ? blocAxe(p, a1) + `<div class="pile">${ax.filter(a => a.rang === "2a" || a.rang === "2b").map(a => blocAxe(p, a)).join("")}</div>`
         : blocAxe(p, a1) + blocAxe(p, ax.find(a => a.rang === "2"));
       h += `<div class="paire${so ? " sans-objet" : ""}${lectureSeule ? " ro" : ""}" id="p-${esc(p.code)}" data-paire="${esc(p.code)}">
         <div class="tete" data-replier="${esc(p.code)}"><h3>${esc(p.nom)}</h3><span class="meca">${MECA[p.mecanisme] || ""}</span><span class="note" id="note-${esc(p.code)}"></span><span class="fleche">▾</span></div>
-        <div class="corps"><label class="na"><input type="checkbox" data-na="${esc(p.code)}" ${so ? "checked" : ""} ${lectureSeule ? "disabled" : ""}> Sans objet pour ce jeu (exclu de la moyenne)</label>
+        <div class="corps"><p class="mesure">${esc(premierePhrase(p.definition))}</p>
+        <div class="outils"><button type="button" data-panneau="aidep-${esc(p.code)}" aria-expanded="false">? En savoir plus</button>
+          <button type="button" data-panneau="calc-${esc(p.code)}" aria-expanded="false">Méthode de calcul</button></div>
+        <div class="panneau hidden" id="aidep-${esc(p.code)}">${aidePaire(p)}</div>
+        <div class="panneau hidden" id="calc-${esc(p.code)}"></div>
+        <label class="na"><input type="checkbox" data-na="${esc(p.code)}" ${so ? "checked" : ""} ${lectureSeule ? "disabled" : ""}> Sans objet pour ce jeu (exclu de la moyenne)</label>
         <div class="axes">${corps}</div><div class="res" id="res-${esc(p.code)}"></div>
         <div class="justif"><label for="j-${esc(p.code)}">Justification (facultative)</label>${boutonModeles(p, ax)}
           <textarea id="j-${esc(p.code)}" rows="1" data-justif="${esc(a1.code)}" ${lectureSeule ? "disabled" : ""} placeholder="Pourquoi ces notes ?">${esc(saisie[a1.code]?.commentaire || "")}</textarea>
@@ -398,8 +488,14 @@ function noteDe(p, s){
     const t1 = val("1"), a = val("2a"), b = val("2b");
     return (t1 != null && a != null && b != null) ? { complete:true, note:(b * t1 + a * (5 - t1)) / 5 } : { complete:false, note:null };
   }
+  if (p.mecanisme === "moyenne"){
+    const t1 = val("1"), a = val("2a"), b = val("2b");
+    return (t1 != null && a != null && b != null) ? { complete:true, note:(a + b) / 2 } : { complete:false, note:null };
+  }
   const v1 = val("1"), v2 = val("2");
   if (v1 != null && p.na_si_axe1_nul && Math.round(v1) === 0) return { complete:true, na1:true, note:null };
+  // seuil (NÉGOCIATION) : sous le seuil, l'axe 2 ne compte que si le manque est ressenti (1 ou moins)
+  if (v1 != null && p.seuil_axe1 != null && v1 < Number(p.seuil_axe1) && (v2 == null || v2 > 1)) return { complete:true, seuil:true, note:null };
   if (v1 == null || v2 == null) return { complete:false, note:null };
   return { complete:true, note: p.mecanisme === "liee" ? courbeS(v1 + v2) : p.mecanisme === "crans5" ? 2.5 + v2 * 1.25 : v2 };
 }
@@ -414,16 +510,18 @@ function calculer(s){
 }
 function recalculer(){
   const c = calculer(saisie);
-  Object.values(c.parChap).flat().forEach(({ p, note, so, na1, complete }) => {
+  Object.values(c.parChap).flat().forEach(({ p, note, so, na1, seuil, complete }) => {
     $("#res-" + p.code).innerHTML = so ? "Sans objet pour ce jeu." : note != null ? `Note retenue : <b>${fmt(note, 2)}</b>` :
-      na1 ? "Axe 2 sans objet : l'axe 1 vaut 0." : "En attente des notes.";
-    $("#note-" + p.code).textContent = so ? "sans objet" : note != null ? fmt(note, 2) : "";
+      na1 ? "Axe 2 sans objet : l'axe 1 vaut 0." :
+      seuil ? `Axe 2 sans objet : l'axe 1 est sous ${fmt(p.seuil_axe1, 0)}. Si le manque est ressenti par la table, note l'axe 2 à 1 ou moins : il comptera.` : "En attente des notes.";
+    $("#note-" + p.code).textContent = so || na1 || seuil ? "sans objet" : note != null ? fmt(note, 2) : "";
+    const calc = document.getElementById("calc-" + p.code); if (calc && !calc.classList.contains("hidden")) calc.innerHTML = methodeCalcul(p);
     document.getElementById("p-" + p.code).classList.toggle("faite", complete);
   });
   M.chapitres.forEach(ch => { const v = c.chap[ch.code]; $("#moy-" + ch.code).textContent = v == null ? "" : fmt(v, 2) + " / 5"; });
   $("#prog").style.width = (c.faites / M.paires.length * 100) + "%";
   $("#prog-txt").textContent = `${c.faites} / ${M.paires.length}`;
-  $("#pied").innerHTML = M.chapitres.map(ch => `<div><small>${esc(ch.nom)}</small><b>${c.chap[ch.code] == null ? "—" : fmt(c.chap[ch.code], 2)}</b></div>`).join("") +
+  $("#pied").innerHTML = M.chapitres.map(ch => `<div style="--c:var(--${esc(ch.code)})"><small>${esc(ch.nom)}</small><b>${c.chap[ch.code] == null ? "—" : fmt(c.chap[ch.code], 2)}</b></div>`).join("") +
     `<div class="final"><small>Évaluation finale</small><b>${c.finale == null ? "—" : fmt(c.finale, 2)}</b></div>`;
   return c;
 }
@@ -444,7 +542,7 @@ $("#grille").addEventListener("input", e => {
   if (e.target.type === "range") poser(e.target.dataset.axe, Number(e.target.value));
   else if (e.target.dataset.justif){ const c = e.target.dataset.justif, s = saisie[c] || { valeur:null, sans_objet:false };
     saisie[c] = { ...s, commentaire: e.target.value.trim() || null }; e.target.rows = Math.min(5, 1 + Math.floor(e.target.value.length / 90)); planifier(c); }
-  else if (e.target.dataset.donnee){ const k = e.target.dataset.donnee; fiche[k] = e.target.value === "" ? null : Number(e.target.value); ficheModifiee = true; planifier();
+  else if (e.target.dataset.donnee){ const k = e.target.dataset.donnee; fiche[k] = e.target.value.trim() === "" ? null : (e.target.type === "text" ? e.target.value.trim() : Number(e.target.value)); ficheModifiee = true; planifier();
     rafraichirSuggestions(); }
   else if (e.target.id === "carnet"){ fiche.notes_article = e.target.value; ficheModifiee = true; planifier(); }
 });
@@ -470,6 +568,12 @@ $("#grille").addEventListener("click", e => {
   if (li && !lectureSeule){ poser(li.closest(".axe").dataset.axe, Number(li.dataset.v)); return; }
   const ap = e.target.closest("[data-appliquer]");
   if (ap){ poser(ap.dataset.appliquer, Number(ap.dataset.v)); return; }
+  const pan = e.target.closest("[data-panneau], [data-aide-axe]");
+  if (pan){
+    const id = pan.dataset.panneau || "aide-" + pan.dataset.aideAxe, box = document.getElementById(id), ouvrir = box.classList.contains("hidden");
+    if (ouvrir && id.startsWith("calc-")) box.innerHTML = methodeCalcul(M.paires.find(p => "calc-" + p.code === id));
+    box.classList.toggle("hidden", !ouvrir); pan.setAttribute("aria-expanded", String(ouvrir)); return;
+  }
   const t = e.target.closest("[data-replier]");
   if (t) document.getElementById("p-" + t.dataset.replier).classList.toggle("repliee");
 });
@@ -529,18 +633,18 @@ window.addEventListener("beforeunload", e => { if (enAttente.size || ficheModifi
 function lignesRecap(){
   return M.paires.map(p => {
     const ax = axesDe(p.code), n = noteDe(p, saisie), a1 = ax.find(a => a.rang === "1");
-    const notes = ax.map(a => { const v = saisie[a.code]?.valeur; return `${a.code} ${v == null ? "—" : (estEcart(p, a) && v > 0 ? "+" : "") + fmt(v)}`; }).join(" · ");
+    const notes = ax.filter(a => a.echelle !== "calcule").map(a => { const v = saisie[a.code]?.valeur; return `${a.code} ${v == null ? "—" : (estEcart(p, a) && v > 0 ? "+" : "") + fmt(v)}`; }).join(" · ");
     return { p, n, notes, justif: saisie[a1.code]?.commentaire || "", chap: M.chapitres.find(c => c.code === p.chapitre).nom };
   });
 }
 $("#btn-recap").addEventListener("click", () => {
   const c = calculer(saisie), L = lignesRecap(), manque = L.filter(l => !l.n.complete);
   $("#recap").innerHTML = `<h2>${esc(nomJeu(fiche.jeu))} : récapitulatif</h2>
-    <p class="aide">${manque.length ? `Il manque ${manque.length} paire${manque.length > 1 ? "s" : ""} : ${manque.map(l => esc(l.p.nom)).join(", ")}.` : "Les quinze paires sont remplies."}
+    <p class="aide">${manque.length ? `Il manque ${manque.length} paire${manque.length > 1 ? "s" : ""} : ${manque.map(l => esc(l.p.nom)).join(", ")}.` : `Les ${M.paires.length} paires sont remplies.`}
       Note finale : <b>${c.finale == null ? "—" : fmt(c.finale, 2)}</b> (${M.chapitres.map(ch => `${esc(ch.nom)} ${c.chap[ch.code] == null ? "—" : fmt(c.chap[ch.code], 2)}`).join(", ")}).</p>
     <table class="recap"><thead><tr><th>Paire</th><th>Saisie</th><th>Note retenue</th><th>Justification</th></tr></thead><tbody>
     ${L.map(l => `<tr class="${l.n.complete ? "" : "manque"}"><td><span class="aller" data-aller="${esc(l.p.code)}">${esc(l.p.nom)}</span></td><td>${l.notes}</td>
-      <td>${l.n.so ? "sans objet" : l.n.note == null ? (l.n.na1 ? "axe 2 sans objet" : "—") : fmt(l.n.note, 2)}</td><td>${esc(l.justif)}</td></tr>`).join("")}</tbody></table>`;
+      <td>${l.n.so ? "sans objet" : l.n.note == null ? (l.n.na1 || l.n.seuil ? "axe 2 sans objet" : "—") : fmt(l.n.note, 2)}</td><td>${esc(l.justif)}</td></tr>`).join("")}</tbody></table>`;
   $("#recap").querySelectorAll("[data-aller]").forEach(x => x.addEventListener("click", () => {
     $("#dlg-recap").close(); const el = document.getElementById("p-" + x.dataset.aller); el.classList.remove("repliee"); el.scrollIntoView({ behavior:"smooth" }); }));
   $("#dlg-recap").showModal();
@@ -557,7 +661,7 @@ $("#btn-export").addEventListener("click", () => {
   M.chapitres.forEach(ch => {
     md += `\n## ${ch.nom}\n`;
     L.filter(l => l.p.chapitre === ch.code).forEach(l => {
-      md += `\n### ${l.p.nom} : ${l.n.so ? "sans objet" : l.n.note == null ? "—" : fmt(l.n.note, 2)}\n\n${l.notes}\n`;
+      md += `\n### ${l.p.nom} : ${l.n.so || l.n.na1 || l.n.seuil ? "sans objet" : l.n.note == null ? "—" : fmt(l.n.note, 2)}\n\n${l.notes}\n`;
       if (l.justif) md += `\n> ${l.justif}\n`;
     });
   });

@@ -220,7 +220,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 16px}
 
 <script>
 /* ================= configuration ================= */
-const VERSION = { numero:"1.10", date:"2026-10-04 17:30" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"1.11", date:"2026-10-08 14:45" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 
@@ -236,7 +236,7 @@ const ROLES = { proprietaire:"propriétaire", editeur:"éditeur", evaluateur:"é
 const OPTIONS = {
   statut:   { stabilisee:"stabilisée", provisoire:"provisoire", ballotage:"en ballotage", en_attente:"en attente" },
   relation: { liee:"liée", neutre:"neutre", penalite_asymetrique:"pénalité asymétrique", ponderation_inverse:"pondération inverse", promesse:"promesse tenue", composite:"composite" },
-  mecanisme:{ liee:"liée (courbe en S)", independante:"indépendante", crans5:"indépendante, 5 crans", composite:"composite (THÈME)" },
+  mecanisme:{ liee:"liée (courbe en S)", independante:"indépendante", crans5:"indépendante, 5 crans", composite:"composite (THÈME)", moyenne:"moyenne de 2a et 2b (ART)" },
   nature:   { descriptif:"descriptif", evaluatif:"évaluatif" },
   echelle:  { "0-5":"0 à 5", ecart:"écart −− à ++", crans5:"5 crans −− à ++", calcule:"calculée" },
   type:     { statut:"statut", solo:"volet solo", absorption:"absorption", consigne:"consigne de rédaction", historique:"historique", reserve:"en réserve", regle:"règle", note:"note" }
@@ -248,7 +248,7 @@ const LIBELLES = { devise1:"Devise (1re partie)", devise2:"Devise (2e partie)", 
   couleur:"Couleur (fond clair)", couleur_sombre:"Couleur (fond sombre)", climax_phase:"Phase du climax (si dominant)",
   climax_jalon:"Jalon du climax (vide = transversal)", duree_apogee:"Durée d'apogée", fragilite:"Fragilité (si rejeté)",
   percu:"Peut être perçu comme", adore:"Adore", deteste:"Déteste", reproche:"On lui reproche",
-  texte_a:"Réponse A", texte_b:"Réponse B", nom:"Nom", statut:"Statut", relation:"Relation entre les axes", mecanisme:"Calcul", na_si_axe1_nul:"Axe 2 sans objet si l'axe 1 vaut 0",
+  texte_a:"Réponse A", texte_b:"Réponse B", nom:"Nom", statut:"Statut", relation:"Relation entre les axes", mecanisme:"Calcul", na_si_axe1_nul:"Axe 2 sans objet si l'axe 1 vaut 0", seuil_axe1:"Seuil de l'axe 1 (en dessous, l'axe 2 ne compte que s'il vaut 1 ou moins)",
   ancien_nom:"Ancien nom", definition:"Définition", nature:"Nature", nature_detail:"Nature (précision)", echelle:"Échelle",
   question:"Question centrale", methode:"Méthode de notation", libelle:"Libellé", type:"Type", texte:"Texte", axe:"Rattaché à",
   jeu:"Jeu", valeur:"Valeur chiffrée", symbole:"Symbole", valeur_texte:"Valeur affichée", remarque:"Remarque",
@@ -464,7 +464,7 @@ function ouvrir(code, force){
     ${bloc("prisme_paires", p, r => `
       <div class="grid3">${champ("nom", r.nom)}${champ("statut", r.statut, { type:"select", options:OPTIONS.statut })}${champ("ancien_nom", r.ancien_nom)}</div>
       <div class="grid2">${champ("relation", r.relation, { type:"select", options:OPTIONS.relation })}${champ("mecanisme", r.mecanisme, { type:"select", options:OPTIONS.mecanisme })}</div>
-      ${champ("na_si_axe1_nul", r.na_si_axe1_nul, { type:"check" })}
+      <div class="grid2">${champ("na_si_axe1_nul", r.na_si_axe1_nul, { type:"check" })}${champ("seuil_axe1", r.seuil_axe1, { type:"number" })}</div>
       ${champ("definition", r.definition, { type:"area", rows:4 })}`)}
     <h4>Encadrés (${notes.length})</h4>
     ${notes.map(n => bloc("prisme_notes", n, r => `
