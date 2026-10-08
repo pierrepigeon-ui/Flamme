@@ -112,7 +112,7 @@ table.tl-table tr.alpha td{background:color-mix(in srgb, var(--accent) 9%, trans
 button.lien,a.lien{border:0;background:none;padding:0;font:inherit;color:inherit;text-decoration:underline;text-decoration-color:var(--line);cursor:pointer}
 table.tl-table tr.choisi td{background:color-mix(in srgb, var(--accent) 9%, transparent)} table.tl-table small{color:var(--muted)}
 .sp-courbe{border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:10px 0;background:var(--paper)} .sp-courbe h3{font:600 17px var(--serif);margin:0 0 4px}
-#pied .tl-pied{cursor:pointer} #pied .tl-pied b{font-size:16px}
+#pied .tl-pied{cursor:pointer} #pied .tl-pied b{font-size:16px;font-weight:600} #pied .tl-pied b small{display:inline;font-size:12px;color:var(--muted);font-weight:400}
 .carnet{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:26px 0 10px}
 .carnet h2{font:600 20px var(--serif);margin:0 0 4px}
 .carnet textarea{min-height:220px}
@@ -204,7 +204,7 @@ table.recap .aller{cursor:pointer;text-decoration:underline;text-decoration-colo
 
 <script src="timeline.js?v=1.1"></script>
 <script>
-const VERSION = { numero:"3.7", date:"2026-10-08 18:30" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"3.8", date:"2026-10-08 18:37" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -588,7 +588,7 @@ function recalculer(){
   $("#pied").innerHTML = M.chapitres.map(ch => `<div style="--c:var(--${esc(ch.code)})"><small>${esc(ch.nom)}</small><b>${c.chap[ch.code] == null ? "—" : fmt(c.chap[ch.code], 2)}</b></div>`).join("") +
     `<div class="final"><small>Évaluation finale</small><b>${c.finale == null ? "—" : fmt(c.finale, 2)}</b></div>`;
   const tl = majTimeline();
-  $("#pied").insertAdjacentHTML("beforeend", `<div class="tl-pied" data-tl title="${tl.c ? esc(syntheseTimeline(tl.c)) : "Timeline incomplète"}"><small>Timeline · α / demi-vie</small><b>${tl.c ? fmt(tl.c.y[tl.c.alpha], 2) + " · " + arrondiDemiVie(tl.c.demivie) : "—"}</b></div>`);
+  $("#pied").insertAdjacentHTML("beforeend", `<div class="tl-pied" data-tl title="${tl.c ? esc(syntheseTimeline(tl.c)) : "Timeline incomplète"}"><small>Timeline</small><b>${tl.c ? piedTimeline(tl.c) : "—"}</b></div>`);
   return c;
 }
 
@@ -610,6 +610,11 @@ function entreesTimeline(){
   });
   return { n, manque:[...manque], absents:[...absents] };
 }
+// pied de page : α, puis β et γ s'il y a une chute (sinon « pas de chute »), puis la demi-vie
+function piedTimeline(c){
+  const chute = c.beta == null ? "pas de chute" : `β j${c.beta} · γ j${c.gamma}`;
+  return `α ${fmt(c.y[c.alpha], 2)} <small>j${c.alpha}</small> · ${chute} · demi-vie ${arrondiDemiVie(c.demivie)} <small>parties</small>`;
+}
 function majTimeline(){
   const box = document.getElementById("tl-corps"); if (!box) return {};
   const { n, manque, absents } = entreesTimeline();
@@ -624,12 +629,12 @@ function majTimeline(){
     <figure class="courbe-box">${courbeSVG(c, nomJeu(fiche.jeu))}<figcaption>Trait plein : les jalons calculés${c.gamma != null ? " jusqu'à γ" : ""}. Pointillés : la suite, où seule la lassitude progresse. Abscisse : les jalons, espacés selon le log2 des parties cumulées. Bandes : les phases. Survole un point pour son détail.</figcaption></figure>
     ${absents.length ? `<p class="aide">Sans objet pour ce jeu, donc retiré du calcul : ${absents.map(x => esc(nomP(x))).join(", ")}.</p>` : ""}
     ${fiche.contenu_parties ? "" : `<p class="aide">« Parties pour tout exploiter » est vide : pas de plancher pour le jalon 6 (jeu rejouable sans fin).</p>`}
-    <div class="defile"><table class="tl-table"><thead><tr><th>Jalon</th><th>Parties</th><th>Stimulation</th><th>Friction</th><th>Flow</th><th>Puis : sous-phase</th><th>Durée</th></tr></thead><tbody>
+    <div class="defile"><table class="tl-table"><thead><tr><th>Jalon</th><th title="Parties jouées pour atteindre ce jalon">Atteint après</th><th>Stimulation</th><th>Friction</th><th>Flow</th><th>Puis : sous-phase</th><th>Durée</th><th title="Parties jouées à la fin de la sous-phase">Durée cumulée</th></tr></thead><tbody>
     ${JALONS.map(j => { const sp = SOUSPHASES[j.n], prev = j.n === 0 || SOUSPHASES[j.n - 1].phase !== sp.phase;
-      return `${prev ? `<tr class="tl-phase"><td colspan="7">Phase ${sp.phase} — ${esc(PHASES[sp.phase])}</td></tr>` : ""}
+      return `${prev ? `<tr class="tl-phase"><td colspan="8">Phase ${sp.phase} — ${esc(PHASES[sp.phase])}</td></tr>` : ""}
       <tr class="${j.n === c.alpha ? "alpha" : ""}${j.n === c.beta || j.n === c.gamma ? " chute" : ""}"><td><b>${j.n}</b> ${esc(j.nom)}${j.n === c.alpha ? " · α" : ""}${j.n === c.beta ? " · β" : ""}${j.n === c.gamma ? " · γ" : ""}</td>
-        <td class="n">${fmt(c.N[j.n], 1)}</td><td class="n">${j.n ? fmt(c.det[j.n].s, 2) : "—"}</td><td class="n">${j.n ? fmt(c.det[j.n].f, 2) : "—"}</td><td class="n"><b>${fmt(c.y[j.n], 2)}</b></td>
-        <td>${esc(sp.nom)}</td><td class="n">${j.n < 7 ? fmt(c.d[j.n], 2) + " partie" + (c.d[j.n] >= 2 ? "s" : "") : "∞"}</td></tr>`; }).join("")}
+        <td class="n">${fmt(c.N[j.n], 1)} p.</td><td class="n">${j.n ? fmt(c.det[j.n].s, 2) : "—"}</td><td class="n">${j.n ? fmt(c.det[j.n].f, 2) : "—"}</td><td class="n"><b>${fmt(c.y[j.n], 2)}</b></td>
+        <td>${esc(sp.nom)}</td><td class="n">${j.n < 7 ? fmt(c.d[j.n], 2) + " partie" + (c.d[j.n] >= 2 ? "s" : "") : "∞"}</td><td class="n">${j.n < 7 ? fmt(c.N[j.n + 1], 1) + " partie" + (c.N[j.n + 1] >= 2 ? "s" : "") : "∞"}</td></tr>`; }).join("")}
     </tbody></table></div>
     <p class="aide">Plafond d'aléa ${fmt(c.plafond, 2)} (jalons 5 et 6) · usure ${fmt(c.usure, 2)} (jalon 7) · lassitude au jalon 7 : ×${fmt(c.det[7].L, 2)}.</p>`;
   return { c, sp: majSpectro(n) };
