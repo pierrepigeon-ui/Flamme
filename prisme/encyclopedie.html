@@ -31,7 +31,12 @@ header.titre .actions{margin-left:auto;display:flex;gap:8px}
 nav#sommaire{position:sticky;top:12px;align-self:start;max-height:calc(100vh - 24px);overflow:auto;font-size:14px;padding:6px 0 20px}
 nav#sommaire input{width:100%;padding:7px 10px;border:1px solid var(--line);border-radius:7px;background:var(--panel);margin-bottom:10px}
 nav#sommaire summary{display:none;font:600 15px var(--sans);cursor:pointer;padding:4px 2px}
-nav#sommaire ol{list-style:none;margin:0;padding:0} nav#sommaire ol ol{padding-left:12px;margin:2px 0 6px}
+nav#sommaire li{position:relative} nav#sommaire li > a{margin-left:18px}
+nav#sommaire .pli,nav#sommaire .pli-vide{position:absolute;left:0;top:3px;width:18px;height:20px;border:0;background:none;padding:0;cursor:pointer;color:var(--muted);font-size:11px;line-height:20px;text-align:center}
+nav#sommaire .pli{transition:transform .15s} nav#sommaire li.ouverte > .pli{transform:rotate(90deg)}
+nav#sommaire li.branche:not(.ouverte) > ol{display:none}
+nav#sommaire .plis{margin:0 0 6px;font-size:12.5px;color:var(--muted)} nav#sommaire .plis button{border:0;background:none;padding:0;cursor:pointer;color:var(--muted);text-decoration:underline;text-decoration-color:var(--line)}
+nav#sommaire ol{list-style:none;margin:0;padding:0} nav#sommaire ol ol{padding-left:10px;margin:2px 0 6px}
 nav#sommaire a{display:block;text-decoration:none;padding:2px 6px;border-radius:5px;color:var(--muted)}
 nav#sommaire a:hover{background:var(--panel);color:var(--ink)}
 nav#sommaire a.actif{color:var(--ink);background:var(--panel);font-weight:500}
@@ -115,13 +120,13 @@ mark{background:#FFE58A;color:#1B2430;border-radius:2px}
       <p>Le modèle PRISME tel qu'il est dans la base, à jour en direct : le jeu, ses chapitres, ses paires d'axes et leurs grilles ; le joueur, ses moteurs, archétypes, profils et sous-profils.</p></div>
     <div class="actions"><button class="btn" id="imprimer" type="button">Imprimer ou enregistrer en PDF</button></div>
   </header>
-  <nav id="sommaire" aria-label="Sommaire"><input id="cherche" type="search" placeholder="Chercher dans l'encyclopédie…" aria-label="Chercher"><details id="tocbox" open><summary>Sommaire</summary><ol id="toc"></ol></details></nav>
+  <nav id="sommaire" aria-label="Sommaire"><input id="cherche" type="search" placeholder="Chercher dans l'encyclopédie…" aria-label="Chercher"><details id="tocbox" open><summary>Sommaire</summary><p class="plis"><button type="button" id="tout-deplier">Tout déplier</button> · <button type="button" id="tout-replier">Tout replier</button></p><ol id="toc"></ol></details></nav>
   <main id="contenu"><p class="vide">Chargement du modèle…</p></main>
 </div>
 <div style="max-width:1240px;margin:0 auto;padding:0 20px 30px"><p class="version" id="version"></p></div>
 
 <script>
-const VERSION = { numero:"1.0", date:"2026-10-08 17:00" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"1.1", date:"2026-10-08 17:05" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -190,7 +195,7 @@ async function charger(){
   h.push(M.paires.length ? sectionJeu(toc) : sectionJeuFermee(toc));
   h.push(sectionJoueur(toc));
   $("#contenu").innerHTML = h.join("");
-  $("#toc").innerHTML = toc.map(n => `<li class="niv1"><a href="#${n.id}">${n.pastille ? `<span class="pastille" style="background:${n.pastille}"></span>` : ""}${esc(n.titre)}</a>${n.enfants?.length ? `<ol>${n.enfants.map(e => `<li><a href="#${e.id}">${e.pastille ? `<span class="pastille" style="background:${e.pastille}"></span>` : ""}${esc(e.titre)}</a>${e.enfants?.length ? `<ol>${e.enfants.map(f => `<li><a href="#${f.id}">${esc(f.titre)}</a></li>`).join("")}</ol>` : ""}</li>`).join("")}</ol>` : ""}</li>`).join("");
+  $("#toc").innerHTML = noeuds(toc, 1);
   if (window.innerWidth <= 900) $("#tocbox").removeAttribute("open");
   document.querySelectorAll("#toc a").forEach(a => a.addEventListener("click", () => { if (window.innerWidth <= 900) $("#tocbox").removeAttribute("open"); }));
   suivreLecture();
@@ -310,11 +315,28 @@ function sectionJoueur(toc){
   return h;
 }
 
+/* ---------------- sommaire : arbre dépliable ---------------- */
+// niveau 1 (Présentation, le jeu, le joueur) déplié ; les sous-arbres (chapitres, archétypes…) repliés au départ
+function noeuds(liste, niv){
+  return liste.map(n => {
+    const kids = n.enfants?.length ? n.enfants : null, ouvert = niv === 1;
+    return `<li class="niv${niv}${kids ? " branche" + (ouvert ? " ouverte" : "") : ""}">
+      ${kids ? `<button type="button" class="pli" aria-expanded="${ouvert}" aria-label="Déplier ou replier">▸</button>` : `<span class="pli-vide"></span>`}<a href="#${n.id}">${n.pastille ? `<span class="pastille" style="background:${n.pastille}"></span>` : ""}${esc(n.titre)}</a>
+      ${kids ? `<ol>${noeuds(kids, niv + 1)}</ol>` : ""}</li>`;
+  }).join("");
+}
+function plier(li, ouvrir){ li.classList.toggle("ouverte", ouvrir); li.querySelector(":scope > .pli")?.setAttribute("aria-expanded", String(ouvrir)); }
+$("#toc").addEventListener("click", e => { const b = e.target.closest(".pli"); if (b){ const li = b.parentElement; plier(li, !li.classList.contains("ouverte")); } });
+$("#tout-deplier").addEventListener("click", () => document.querySelectorAll("#toc li.branche").forEach(li => plier(li, true)));
+$("#tout-replier").addEventListener("click", () => document.querySelectorAll("#toc li.branche").forEach(li => plier(li, false)));
+// la branche de la section lue s'ouvre d'elle-même
+function devoiler(a){ let li = a.closest("li")?.parentElement?.closest("li"); while (li){ plier(li, true); li = li.parentElement?.closest("li"); } }
+
 /* ---------------- sommaire actif et recherche ---------------- */
 function suivreLecture(){
   const liens = [...document.querySelectorAll("#toc a")], cibles = liens.map(a => document.getElementById(a.getAttribute("href").slice(1))).filter(Boolean);
   const obs = new IntersectionObserver(es => es.forEach(e => {
-    if (e.isIntersecting){ liens.forEach(a => a.classList.toggle("actif", a.getAttribute("href") === "#" + e.target.id)); }
+    if (e.isIntersecting){ liens.forEach(a => { const ici = a.getAttribute("href") === "#" + e.target.id; a.classList.toggle("actif", ici); if (ici) devoiler(a); }); }
   }), { rootMargin:"0px 0px -75% 0px" });
   cibles.forEach(c => obs.observe(c));
 }
