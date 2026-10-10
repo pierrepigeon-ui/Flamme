@@ -67,7 +67,7 @@ aside .vous-badge{display:inline-block;font:600 12px var(--sans);color:#fff;back
 <script src="timeline.js?v=1.4"></script>
 <script src="totems.js?v=1"></script>
 <script>
-const VERSION = { numero:"2.3", date:"2026-10-11 01:05" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"2.4", date:"2026-10-11 00:45" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -218,6 +218,7 @@ function montrer(code){
       <span class="lib">À la table, il peut</span>${puces(t.a_la_table)}
       <span class="lib">Quand il décroche</span><p>${esc(t.quand_decroche)}</p>
       ${t.totem ? `<span class="lib">Son totem</span><p>${esc(maj(t.totem))}. ${esc(t.totem_raison || "")}</p>` : ""}
+      ${B.T[t.fuit + "/" + t.moteur.toLowerCase()] ? `<span class="lib">Son rival</span><p>${lien(t.fuit + "/" + t.moteur.toLowerCase(), maj(B.T[t.fuit + "/" + t.moteur.toLowerCase()].nom))} : ce qui le fait décrocher nourrit l'autre, et inversement.</p>` : ""}
       ${t.fb_verbe ? `<span class="lib">Dans Flamme Bleue</span><p>${esc(t.fb_verbe)} (« ${esc(t.fb_devise)} »)</p>` : ""}
       <span class="lib">Ses trois styles</span><ul>${B.styles.filter(s => s.temperament === code).map(s => `<li>${lien(s.code, maj(s.nom))} : avec ${esc(M[s.second].nom.toLowerCase())}</li>`).join("")}</ul>`;
   } else {

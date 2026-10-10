@@ -134,7 +134,7 @@ mark{background:#FFE58A;color:#1B2430;border-radius:2px}
 <script src="timeline.js?v=1.4"></script>
 <script src="totems.js?v=1"></script>
 <script>
-const VERSION = { numero:"2.3", date:"2026-10-11 01:05" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"2.4", date:"2026-10-11 00:45" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -329,6 +329,7 @@ function sectionJoueur(toc){
       <span class="groupe">À la table, il peut</span>${pucesE(t.a_la_table)}
       <p><span class="groupe">Quand il décroche</span>${esc(t.quand_decroche)}</p>
       ${t.totem ? `<p><span class="groupe">Son totem</span>${esc(majE(t.totem))}. ${esc(t.totem_raison || "")}</p>` : ""}
+      ${(() => { const r = M.temperaments.find(x => x.code === t.fuit + "/" + t.moteur.toLowerCase()); return r ? `<p><span class="groupe">Son rival</span><a href="#${idTem(r.code)}">${esc(majE(r.nom))}</a> (${esc(r.code)}) : ce qui fait décrocher l'un nourrit l'autre.</p>` : ""; })()}
       <span class="groupe">Ses trois styles</span>
       ${M.styles.filter(x => x.temperament === t.code).map(x => `<div class="sp"><b>${esc(majE(x.nom))}</b> <span class="dom">${esc(x.code)} · second moteur : ${esc(Mo[x.second]?.nom || "")}</span>${x.texte ? `<br>${esc(x.texte)}` : ""}</div>`).join("")}</section>`;
   });

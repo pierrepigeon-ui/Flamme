@@ -55,6 +55,15 @@ section p{margin:0 0 10px;font:16.5px/1.65 var(--serif)}
 .moteur .pct{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted);font-size:14px}
 .moteur .role{grid-column:2 / 4;font-size:12.5px;color:var(--muted);margin:-6px 0 2px}
 section ul{margin:2px 0 12px;padding-left:20px;font:16px/1.55 var(--serif)}
+section h3{font:600 19px/1.3 var(--serif);margin:6px 0 6px} section h3 small.code,.rival small.code{font:13px var(--sans);color:var(--muted);font-weight:400}
+.facettes{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 14px}
+.facette{display:flex;align-items:center;gap:9px;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:12px;padding:6px 12px 6px 6px;cursor:pointer;font:14px var(--sans);text-align:left}
+.facette svg{width:34px;height:34px;flex:none}
+.facette span{display:flex;flex-direction:column;line-height:1.25} .facette small{font-size:12px;color:var(--muted)}
+.facette[aria-selected="true"]{border-color:var(--ink);background:var(--panel);box-shadow:0 0 0 1px var(--ink)}
+.rival{display:grid;grid-template-columns:84px 1fr;gap:16px;align-items:start;margin-bottom:6px}
+.rival .r-totem{width:84px;height:84px;padding:10px;border-radius:16px;background:var(--paper)}
+#rival table.pj-jeux{font-size:15px}
 .fb{font-size:14px;color:var(--muted)}
 /* timeline */
 .timeline svg{width:100%;height:auto;display:block}
@@ -81,7 +90,7 @@ details.repli > section{border:0;margin:0;padding-top:0}
 <script src="timeline.js?v=1.4"></script>
 <script src="totems.js?v=1"></script>
 <script>
-const VERSION = { numero:"2.3", date:"2026-10-11 00:20" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"2.4", date:"2026-10-11 00:45" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -127,8 +136,11 @@ async function afficher(user){
     sb.from("prisme_player_moteurs").select("*").order("ordre")
   ]);
   if (!st) return vide("Ce résultat date d'une version précédente du modèle et n'a pas de style. <a href=\"questionnaire.html\">Repasser le questionnaire</a>.");
-  const { data: tem } = await sb.from("prisme_player_temperaments").select("*").eq("code", st.temperament).single();
-  const M = Object.fromEntries(mot.map(m => [m.code, m])), dom = M[st.moteur];
+  const { data: tems } = await sb.from("prisme_player_temperaments").select("*").order("ordre");
+  TEMS = Object.fromEntries((tems || []).map(t => [t.code, t]));
+  const tem = TEMS[st.temperament];
+  const M = Object.fromEntries(mot.map(m => [m.code, m])), dom = M[st.moteur]; MOT = M;
+  const facs = facettes(r.scores, st.temperament), rival = tem.fuit + "/" + tem.moteur.toLowerCase(), tr = TEMS[rival];
   const autre = r.user_id !== user.id;
   document.documentElement.style.setProperty("--arch", dom.couleur || "#888");
   document.title = `PRISME — ${maj(st.nom)}`;
@@ -158,12 +170,10 @@ async function afficher(user){
     <section><h2>Vos moteurs</h2><p class="question">Ce qui vous met en mouvement à la table, du plus fort au plus faible.</p>
       <div class="moteurs">${moteurs}</div></section>
 
-    <section><h2>${esc(maj(tem.nom))}</h2><p class="question">Ce que je cherche, ce que je fuis : votre tempérament (${esc(dom.nom)}, fuit ${esc(M[tem.fuit].nom)}).</p>
-      <p>${esc(tem.qui_il_est)}</p>
-      <span class="libelle">À la table, il peut</span>${puces(tem.a_la_table)}
-      <p><span class="libelle">Quand il décroche</span>${esc(tem.quand_decroche)}</p>
-      ${tem.totem ? `<p><span class="libelle">Son totem</span>${esc(maj(tem.totem))}. ${esc(tem.totem_raison || "")}</p>` : ""}
-      ${tem.fb_verbe ? `<p class="fb">Dans Flamme Bleue : ${esc(tem.fb_verbe)} (« ${esc(tem.fb_devise)} »).</p>` : ""}</section>
+    <section id="temperaments"><h2>${autre ? "Ses" : "Vos"} tempéraments</h2><p class="question">Ce que je cherche, ce que je fuis. Le premier est ${autre ? "son" : "votre"} tempérament ; les suivants, des facettes presque aussi marquées.</p>
+      ${facs.length > 1 ? `<div class="facettes" role="tablist">${facs.map((f, i) => `<button type="button" role="tab" class="facette" data-tem="${esc(f.code)}" aria-selected="${i === 0}">
+        ${totemSVG(f.code, M[f.code[0]].couleur, { titre:"" })}<span><b>${esc(maj(TEMS[f.code]?.nom || f.code))}</b><small>${esc(f.code)} · ${Math.round(f.part * 100)} %</small></span></button>`).join("")}</div>` : ""}
+      <div id="tem-corps">${blocTemperament(st.temperament)}</div></section>
 
     <section><h2>Votre style : ${esc(qualif)}</h2><p class="question">Avec quoi je le vis : votre second moteur.</p>
       <p>${st.texte ? esc(st.texte) : `Style ${esc(st.code)} : ${esc(st.temperament_nom)}, avec ${esc(st.second_nom)} en second moteur.`}</p>
@@ -180,17 +190,62 @@ async function afficher(user){
       ${frise(ordre.map(c => M[c]))}
       <p class="note">Épaisseur et intensité suivent le poids de chaque moteur dans votre profil (3, 1,5, 0,5, 0,5). Le moteur que vous fuyez ne culmine pas : il gêne, à partir du jalon indiqué. Hypothèse de travail du modèle, pas encore validée sur des cas réels.</p></section></details>
 
+    ${tr ? `<section id="rival"><h2>${autre ? "Son" : "Votre"} rival</h2><p class="question">Son tempérament est l'inverse du ${autre ? "sien" : "vôtre"} : ce qui ${autre ? "le" : "vous"} fait décrocher le nourrit, et inversement.</p>
+      <div class="rival">${totemSVG(rival, M[tr.moteur].couleur, { cls:"r-totem", titre: tr.totem ? maj(tr.totem) : undefined })}
+        <div><p><b>${esc(maj(tr.nom))}</b> <small class="code">${esc(rival)} · ${esc(M[tr.moteur].nom)}, fuit ${esc(M[tr.fuit].nom.toLowerCase())}</small></p>
+        <p>${esc(tr.qui_il_est)}</p></div></div>
+      <h3>Quels jeux pour vous deux ?</h3>
+      <div id="rival-jeux"><p class="pj-discret">Calcul en cours…</p></div></section>` : ""}
+
     <section id="vos-jeux"><h2>${autre ? "Ses jeux" : "Vos jeux"}</h2><p class="question">Les jeux évalués dans PRISME, vus par ${autre ? "ce" : "votre"} style de joueur.</p>
       <div id="vos-jeux-corps"><p class="pj-discret">Calcul en cours…</p></div></section>`;
   afficherVosJeux(code, autre);
+  document.querySelectorAll(".facette").forEach(b => b.addEventListener("click", () => {
+    document.querySelectorAll(".facette").forEach(x => x.setAttribute("aria-selected", x === b));
+    $("#tem-corps").innerHTML = blocTemperament(b.dataset.tem);
+  }));
   if (TOTEMS.svg[st.temperament]) $("#credit").innerHTML = TOTEMS_CREDIT;
 }
+let TEMS = {}, MOT = {};
+// les tempéraments significatifs d'un profil : affinité de X/y = (score X − moyenne) × (moyenne − score Y), les deux écarts devant être positifs ;
+// on garde ceux qui atteignent 40 % du premier, quatre au plus ; le tempérament du classement passe toujours en tête
+function facettes(scores, principal){
+  const S = scores || {}, C = "WUBRG".split("").filter(c => S[c] != null);
+  if (C.length < 5) return [{ code:principal, aff:1, part:1 }];
+  const m = C.reduce((t, c) => t + Number(S[c]), 0) / 5, L = [];
+  C.forEach(a => C.forEach(e => { const h = Number(S[a]) - m, b = m - Number(S[e]); if (a !== e && h > 0 && b > 0) L.push({ code:a + "/" + e.toLowerCase(), aff:h * b }); }));
+  L.sort((x, y) => (y.code === principal) - (x.code === principal) || y.aff - x.aff);
+  const max = Math.max(...L.map(x => x.aff), 1e-9);
+  return (L.length ? L : [{ code:principal, aff:1 }]).filter((x, i) => i === 0 || x.aff >= .4 * max).slice(0, 4).map(x => ({ ...x, part: x.aff / max }));
+}
+function blocTemperament(code){
+  const t = TEMS[code]; if (!t) return "";
+  return `<h3>${esc(maj(t.nom))} <small class="code">${esc(t.code)} · ${esc(MOT[t.moteur].nom)}, fuit ${esc(MOT[t.fuit].nom.toLowerCase())}</small></h3>
+      <p>${esc(t.qui_il_est)}</p>
+      <span class="libelle">À la table, il peut</span>${puces(t.a_la_table)}
+      <p><span class="libelle">Quand il décroche</span>${esc(t.quand_decroche)}</p>
+      ${t.totem ? `<p><span class="libelle">Son totem</span>${esc(maj(t.totem))}. ${esc(t.totem_raison || "")}</p>` : ""}
+      ${t.fb_verbe ? `<p class="fb">Dans Flamme Bleue : ${esc(t.fb_verbe)} (« ${esc(t.fb_devise)} »).</p>` : ""}`;
+}
 async function afficherVosJeux(code, autre){
-  const box = $("#vos-jeux-corps"), d = await lireJeuxEvalues(sb);
-  if (d.refus){ box.innerHTML = `<p class="pj-discret">Les jeux évalués sont réservés aux membres de PRISME pour l'instant.</p>`; return; }
+  const box = $("#vos-jeux-corps"), d = await lireJeuxEvalues(sb), rj = $("#rival-jeux");
+  if (d.refus){ box.innerHTML = `<p class="pj-discret">Les jeux évalués sont réservés aux membres de PRISME pour l'instant.</p>`; if (rj) rj.innerHTML = box.innerHTML; return; }
   const L = jeuxPourJoueurs(d.fiches, d.paires, d.axes, null, [code]);
   box.innerHTML = tableJeuxHTML(L, d, autre ? "ce joueur" : "vous", false);
+  if (!rj) return;
+  // quels jeux pour vous deux : la note du rival est la moyenne de ses trois styles ; on classe selon la plus basse des deux notes
+  const rival = code[4].toUpperCase() + "/" + code[0].toLowerCase();
+  const R2 = Object.fromEntries(jeuxPourJoueurs(d.fiches, d.paires, d.axes, null, stylesDe(rival, STYLES_TOUS(rival))).map(x => [x.jeu, x]));
+  const D = L.filter(x => R2[x.jeu]).map(x => ({ jeu:x.jeu, finale:x.finale, a:x.note, b:R2[x.jeu].note, n:Math.min(x.note, R2[x.jeu].note) })).sort((x, y) => y.n - x.n);
+  const nom = c => d.jeux.find(j => j.code === c)?.nom || c, f = v => Number(v).toFixed(2).replace(".", ",");
+  rj.innerHTML = D.length ? `<p class="pj-discret">Classés selon la note la plus basse des deux : le jeu qui ne laisse personne sur le bord.</p>
+    <table class="pj-jeux"><thead><tr><th></th><th>Jeu</th><th class="n">${autre ? "Pour lui" : "Pour vous"}</th><th class="n">${autre ? "Pour son rival" : "Pour votre rival"}</th><th class="n">Ensemble</th></tr></thead><tbody>
+    ${D.slice(0, 8).map((x, i) => `<tr><td class="rang">${i + 1}</td><td><a href="evaluation.html?jeu=${encodeURIComponent(x.jeu)}">${esc(nom(x.jeu))}</a>${x.finale ? "" : ' <small class="pj-discret">brouillon</small>'}</td>
+      <td class="n">${f(x.a)}</td><td class="n">${f(x.b)}</td><td class="n"><b>${f(x.n)}</b></td></tr>`).join("")}</tbody></table>`
+    : `<p class="pj-discret">Aucun jeu n'a encore de fiche complète.</p>`;
 }
+// les trois codes de style d'un tempérament X/y (sans lire la base : le second est l'un des trois autres moteurs)
+const STYLES_TOUS = t => "WUBRG".split("").filter(c => c !== t[0] && c !== t[2].toUpperCase()).map(b => ({ code: t[0] + "." + b.toLowerCase() + "/" + t[2] }));
 
 // frise des jalons 0 à 7+ : une ligne par moteur, dans l'ordre du joueur ; apogée de chacun, gêne du moteur fui
 function frise(mots){
