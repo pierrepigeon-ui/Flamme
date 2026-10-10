@@ -98,7 +98,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px} .field{display:block;margi
   <p class="msg" id="login-msg" role="status"></p></form></dialog>
 
 <script>
-const VERSION = { numero:"1.5", date:"2026-10-04 12:35" };
+const VERSION = { numero:"1.6", date:"2026-10-10 18:55" };
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -123,9 +123,9 @@ sb.auth.onAuthStateChange(async (_e, session) => {
   $("#who").textContent = user ? user.email : "";
   if (!user){ $("#espace").classList.add("hidden"); return; }
   const [{ data: role }, { data: moi }, { data: res }, { data: rolePrisme }] = await Promise.all([
-    sb.rpc("mon_role"),
-    sb.from("roles_utilisateurs").select("nom").eq("user_id", user.id).maybeSingle(),
-    sb.from("resultats").select("id,passe_le,codes").eq("user_id", user.id).order("passe_le", { ascending:false }).limit(1),
+    sb.rpc("flamme_mon_role"),
+    sb.from("forge_utilisateurs").select("nom").eq("user_id", user.id).maybeSingle(),
+    sb.from("flamme_resultats").select("id,passe_le,codes").eq("user_id", user.id).order("passe_le", { ascending:false }).limit(1),
     sb.rpc("prisme_mon_role")   // rôle PRISME, indépendant de Flamme Bleue
   ]);
   // la tuile PRISME n'apparaît qu'aux personnes qui ont un rôle PRISME

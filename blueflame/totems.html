@@ -85,7 +85,7 @@ dialog{border:1px solid var(--line);border-radius:10px;background:var(--panel);c
   <div style="display:flex;gap:10px"><button class="btn" type="submit">Se connecter</button><button class="btn ghost" type="button" id="login-fermer">Fermer</button></div>
   <p class="msg" id="login-msg" role="status"></p></form></dialog>
 <script>
-const VERSION = { numero:"1.4", date:"2026-10-04 13:22" };
+const VERSION = { numero:"1.5", date:"2026-10-10 18:55" };
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";
 const M = window.FLAMME_MOTEUR;
@@ -145,8 +145,8 @@ $("#recherche").addEventListener("input", afficher);
 
 async function charger(){
   const [{ data: els, error }, { data: cols }] = await Promise.all([
-    sb.from("elements").select("*"),
-    sb.from("couleurs").select("*")]);
+    sb.from("flamme_elements").select("*"),
+    sb.from("flamme_couleurs").select("*")]);
   if (error) throw new Error(error.message);
   PROFILS = els.filter(e => e.couche === "profil").sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0)); C = Object.fromEntries((cols || []).map(c => [c.code, c]));
   try {
@@ -169,7 +169,7 @@ sb.auth.onAuthStateChange(async (_e, session) => {
   $("#who").textContent = user ? user.email : "";
   $("#page").classList.add("hidden"); $("#bloque").classList.remove("hidden");
   if (!user){ $("#bloque").textContent = "Les totems sont réservés aux personnes qui ont un compte. Connecte-toi pour les afficher."; return; }
-  const { data: r } = await sb.rpc("mon_role"); role = r || "";
+  const { data: r } = await sb.rpc("flamme_mon_role"); role = r || "";
   if (!role){ $("#bloque").textContent = "Ton compte n'a pas encore accès à Flamme Bleue."; return; }
   try { await charger(); $("#bloque").classList.add("hidden"); $("#page").classList.remove("hidden"); }
   catch (err){ $("#bloque").textContent = err.message; }

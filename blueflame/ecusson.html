@@ -85,7 +85,7 @@ dialog{border:1px solid var(--line);border-radius:10px;background:var(--panel);c
   <div style="display:flex;gap:10px"><button class="btn" type="submit">Se connecter</button><button class="btn ghost" type="button" id="login-fermer">Fermer</button></div>
   <p class="msg" id="login-msg" role="status"></p></form></dialog>
 <script>
-const VERSION = { numero:"2.0", date:"2026-10-08 15:30" };
+const VERSION = { numero:"2.1", date:"2026-10-10 18:55" };
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";
 const M = window.FLAMME_MOTEUR, B = window.FLAMME_BLASON;
@@ -104,11 +104,11 @@ async function lireSource(){
     return { scores: M.scoresTypes(code), date: null, qui: "", type: code, classement: null };
   }
   if (q.get("resultat")){
-    const { data, error } = await sb.from("resultats").select("*").eq("id", q.get("resultat")).maybeSingle();
+    const { data, error } = await sb.from("flamme_resultats").select("*").eq("id", q.get("resultat")).maybeSingle();
     if (error || !data) throw new Error("Ce résultat est introuvable, ou tu n'as pas le droit de le consulter.");
     let qui = "";
     if (role === "proprietaire" && data.user_id !== user.id){
-      const { data: pers } = await sb.rpc("personnes"); const p = (pers || []).find(x => x.user_id === data.user_id); qui = p ? (p.nom || p.email) : "";
+      const { data: pers } = await sb.rpc("flamme_personnes"); const p = (pers || []).find(x => x.user_id === data.user_id); qui = p ? (p.nom || p.email) : "";
     }
     return { scores: data.scores, date: data.passe_le, qui, classement: data.classement };
   }
@@ -222,10 +222,10 @@ sb.auth.onAuthStateChange(async (_e, session) => {
   $("#who").textContent = user ? user.email : "";
   ["#page", "#outils"].forEach(s => $(s).classList.add("hidden")); $("#bloque").classList.remove("hidden");
   if (!user){ $("#bloque").textContent = "L'écusson est réservé aux personnes qui ont un compte. Connecte-toi pour l'afficher."; return; }
-  const { data: r } = await sb.rpc("mon_role"); role = r || "";
+  const { data: r } = await sb.rpc("flamme_mon_role"); role = r || "";
   if (!role){ $("#bloque").textContent = "Ton compte n'a pas encore accès à Flamme Bleue."; return; }
   try {
-    const [{ data: els, error }, { data: cols }] = await Promise.all([sb.from("elements").select("*"), sb.from("couleurs").select("*")]);
+    const [{ data: els, error }, { data: cols }] = await Promise.all([sb.from("flamme_elements").select("*"), sb.from("flamme_couleurs").select("*")]);
     if (error) throw new Error(error.message);
     E = Object.fromEntries(els.map(e => [e.code, e])); C = Object.fromEntries((cols || []).map(c => [c.code, c]));
     await rendre(await lireSource());

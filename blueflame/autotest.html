@@ -169,7 +169,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px}
 </dialog>
 
 <script>
-const VERSION = { numero:"1.9", date:"2026-10-04 13:22" };
+const VERSION = { numero:"1.10", date:"2026-10-10 18:55" };
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";
 const M = window.FLAMME_MOTEUR;
@@ -191,7 +191,7 @@ $("#version").textContent = `Autotest ${VERSION.numero}, version du ${VERSION.da
 
 /* ---------- chargement ---------- */
 async function charger(){
-  const { data, error } = await sb.rpc("autotest_contenu", { p_langue: "fr" });
+  const { data, error } = await sb.rpc("flamme_autotest_contenu", { p_langue: "fr" });
   if (error || !data?.elements){
     $("#grille").innerHTML = `<p class="msg err">Le contenu du test n'a pas pu être chargé${error ? " : " + esc(error.message) : ""}.</p>`;
     return false;
@@ -208,7 +208,7 @@ async function charger(){
 }
 async function chargerTextesComplets(){
   // réservés aux comptes : RLS de la table elements
-  const { data } = await sb.from("elements").select("code,titre,texte1,texte2,texte3").in("couche", ["temperament","profil"]);
+  const { data } = await sb.from("flamme_elements").select("code,titre,texte1,texte2,texte3").in("couche", ["temperament","profil"]);
   (data || []).forEach(d => { if (E[d.code]) Object.assign(E[d.code], d); });
   textesComplets = (data || []).length > 0;
 }
@@ -221,7 +221,7 @@ sb.auth.onAuthStateChange(async (_e, session) => {
   if (u?.id === user?.id) return;
   user = u; role = null; textesComplets = false;
   if (user){
-    const { data } = await sb.rpc("mon_role"); role = data || null;
+    const { data } = await sb.rpc("flamme_mon_role"); role = data || null;
     if (role){ await chargerTextesComplets(); await reprendreDernier(); }
   } else {
     Object.values(E).forEach(e => { delete e.texte1; delete e.texte2; delete e.texte3; });
@@ -377,7 +377,7 @@ function restaurer(r){
   return true;
 }
 async function reprendreDernier(){
-  const { data } = await sb.from("resultats").select("passe_le,classement").eq("user_id", user.id).order("passe_le", { ascending:false }).limit(1);
+  const { data } = await sb.from("flamme_resultats").select("passe_le,classement").eq("user_id", user.id).order("passe_le", { ascending:false }).limit(1);
   const r = data?.[0]; dernierEnregistre = r ? r.classement.join() : null;
   if (!r) return;
   const pasEncoreTouche = liste.join() === temperamentsInitiaux.join();
@@ -390,7 +390,7 @@ $("#btn-save").addEventListener("click", async () => {
   if (!role || !dernier) return;
   if (dernierEnregistre === dernier.classement.join()){ msg("Ce classement est déjà enregistré : modifiez-le avant d'enregistrer un nouveau résultat.", "warn"); return; }
   $("#btn-save").disabled = true;
-  const { error } = await sb.from("resultats").insert({
+  const { error } = await sb.from("flamme_resultats").insert({
     classement: dernier.classement, scores: dernier.p, codes: [dernier.r.code, ...dernier.r.voisins], frontiere: dernier.r.voisins.length > 0,
     version_moteur: M.VERSION.numero, version_autotest: VERSION.numero
   });
@@ -413,7 +413,7 @@ $("#btn-reset").addEventListener("click", () => {
 async function historique(){
   const bloc = $("#bloc-historique");
   if (!role){ bloc.classList.add("hidden"); return; }
-  const { data, error } = await sb.from("resultats").select("id,passe_le,codes,frontiere,classement").eq("user_id", user.id).order("passe_le", { ascending:false }).limit(20);
+  const { data, error } = await sb.from("flamme_resultats").select("id,passe_le,codes,frontiere,classement").eq("user_id", user.id).order("passe_le", { ascending:false }).limit(20);
   if (error){ bloc.classList.add("hidden"); return; }
   bloc.classList.remove("hidden");
   $("#historique").innerHTML = data.length
@@ -432,7 +432,7 @@ async function historique(){
   $("#historique").querySelectorAll(".effacer").forEach(b => b.addEventListener("click", async e => {
     e.stopPropagation();
     if (!confirm("Effacer définitivement ce résultat ?")) return;
-    const { error } = await sb.from("resultats").delete().eq("id", b.dataset.id);
+    const { error } = await sb.from("flamme_resultats").delete().eq("id", b.dataset.id);
     msg(error ? "Effacement refusé : " + error.message : "Résultat effacé.", error ? "err" : "ok"); historique();
   }));
 }

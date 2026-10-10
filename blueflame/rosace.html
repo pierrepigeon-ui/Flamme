@@ -77,7 +77,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px} .field{display:block;margi
   <div style="display:flex;gap:10px"><button class="btn" type="submit">Se connecter</button><button class="btn ghost" type="button" id="login-fermer">Fermer</button></div>
   <p class="msg" id="login-msg" role="status"></p></form></dialog>
 <script>
-const VERSION = { numero:"1.5", date:"2026-10-04 13:22" };
+const VERSION = { numero:"1.6", date:"2026-10-10 18:55" };
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";
 const ACCES = ["proprietaire"];   // rôles autorisés (en attendant la table des droits d'accès)
@@ -200,9 +200,9 @@ sb.auth.onAuthStateChange(async (_e, session) => {
   $("#who").textContent = user ? user.email : "";
   $("#contenu").classList.add("hidden"); $("#bloque").classList.remove("hidden");
   if (!user){ $("#bloque").textContent = "La rosace est réservée. Connecte-toi pour l'afficher."; return; }
-  const { data: r } = await sb.rpc("mon_role"); role = r || "";
+  const { data: r } = await sb.rpc("flamme_mon_role"); role = r || "";
   if (!ACCES.includes(role)){ $("#bloque").textContent = "Ton compte n'a pas accès à la rosace pour l'instant."; return; }
-  const { data, error } = await sb.from("elements").select("*");
+  const { data, error } = await sb.from("flamme_elements").select("*");
   if (error){ $("#bloque").textContent = "Lecture de la base impossible : " + error.message; return; }
   E = Object.fromEntries(data.map(e => [e.code, e]));
   const profils = data.filter(e => e.couche === "profil").sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0));

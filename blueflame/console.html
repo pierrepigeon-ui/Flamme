@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Flamme Bleue — console 1.23</title>
+<title>Flamme Bleue — console 1.24</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
@@ -248,7 +248,7 @@ table.j td{border-bottom:1px solid var(--line);padding:8px 10px;vertical-align:t
 
 <script>
 /* ================= configuration ================= */
-const VERSION = { numero:"1.23", date:"2026-10-04 13:22" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"1.24", date:"2026-10-10 18:55" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 
@@ -328,11 +328,11 @@ sb.auth.onAuthStateChange((_evt, session) => {
 async function demarrer(){
   $("#login").classList.add("hidden"); $("#app").classList.remove("hidden");
   const [{ data: role }, { data: roles }, { data: couleurs, error: e1 }, { data: els, error: e2 }, { data: vocab }] = await Promise.all([
-    sb.rpc("mon_role"),
-    sb.from("roles_utilisateurs").select("*"),
-    sb.from("couleurs").select("*").order("ordre"),
-    sb.from("elements").select("*").order("ordre"),
-    sb.from("vocabulaire").select("*").eq("langue", LANGUE)
+    sb.rpc("flamme_mon_role"),
+    sb.from("forge_utilisateurs").select("*"),
+    sb.from("flamme_couleurs").select("*").order("ordre"),
+    sb.from("flamme_elements").select("*").order("ordre"),
+    sb.from("flamme_vocabulaire").select("*").eq("langue", LANGUE)
   ]);
   (vocab || []).forEach(v => ((state.vocab[v.domaine] ??= {})[v.cle] = v));
   remplirFiltres();
@@ -391,7 +391,7 @@ const peutEcrire = () => state.role === "proprietaire" || state.role === "editeu
 
 async function ouvrir(code){
   if (state.current && estModifie() && !confirm("Des modifications n'ont pas été enregistrées. Les abandonner ?")) return;
-  const { data, error } = await sb.from("elements").select("*").eq("code", code).single();
+  const { data, error } = await sb.from("flamme_elements").select("*").eq("code", code).single();
   if (error){ alert("Lecture impossible : " + error.message); return; }
   state.current = code; state.loaded = data;
   majLocale(data);
@@ -465,7 +465,7 @@ async function enregistrer(){
   if ($("#bump").checked) maj.date_revision = new Date().toLocaleDateString("sv-SE");   // AAAA-MM-JJ
   $("#save").disabled = true; msg.className = "msg"; msg.textContent = "Enregistrement…";
   // on n'écrit que si personne n'a modifié la fiche depuis son ouverture
-  const { data, error } = await sb.from("elements").update(maj)
+  const { data, error } = await sb.from("flamme_elements").update(maj)
     .eq("code", state.current).eq("modifie_le", state.loaded.modifie_le).select();
   if (error){ msg.className = "msg err"; msg.textContent = "Enregistrement refusé : " + error.message; $("#save").disabled = false; return; }
   if (!data.length){
@@ -495,7 +495,7 @@ function ligneJournal(j, avecCle){
   return `<tr><td>${new Date(j.le).toLocaleString("fr-FR")}</td><td>${qui}</td>${avecCle ? `<td>${esc(j.cle)}</td>` : ""}<td class="diff">${diffHtml(j)}</td></tr>`;
 }
 async function historique(code){
-  const { data } = await sb.from("journal").select("*").eq("cle", code).not("table_nom", "like", "prisme_%").order("id", { ascending:false }).limit(50);
+  const { data } = await sb.from("forge_journal").select("*").eq("cle", code).not("table_nom", "like", "prisme_%").order("id", { ascending:false }).limit(50);
   const host = $("#hist"); if (!host) return;
   host.innerHTML = `<h3>Historique de la fiche</h3>
     <table class="j"><thead><tr><th>Date</th><th>Par</th><th>Changements</th></tr></thead>
@@ -504,7 +504,7 @@ async function historique(code){
 async function afficherJournal(){
   const host = $("#journal-pane");
   host.innerHTML = '<p class="count">Chargement…</p>';
-  const { data, error } = await sb.from("journal").select("*").neq("action","INSERT").not("table_nom", "like", "prisme_%").order("id", { ascending:false }).limit(300);
+  const { data, error } = await sb.from("forge_journal").select("*").neq("action","INSERT").not("table_nom", "like", "prisme_%").order("id", { ascending:false }).limit(300);
   if (error){ host.innerHTML = `<p class="msg err">Lecture du journal impossible : ${esc(error.message)}</p>`; return; }
   host.innerHTML = data.length
     ? `<table class="j"><thead><tr><th>Date</th><th>Par</th><th>Élément</th><th>Changements</th></tr></thead>
@@ -515,7 +515,7 @@ async function afficherJournal(){
 
 
 /* ================= sauvegarde ================= */
-const TABLES_SAUVEGARDE = ["couleurs","vocabulaire","elements","elements_traductions","roles_utilisateurs","journal","resultats"];
+const TABLES_SAUVEGARDE = ["flamme_couleurs","flamme_vocabulaire","flamme_elements","flamme_elements_traductions","forge_utilisateurs","forge_journal","flamme_resultats"];
 async function lireTout(table){
   const tout = [], pas = 1000;
   for (let debut = 0; ; debut += pas){
@@ -588,14 +588,14 @@ const ROLES = { proprietaire:"propriétaire", editeur:"éditeur", invite:"invit�
 const selRole = (v, attrs = "") => `<select ${attrs}>${Object.entries(ROLES).map(([k,l]) => `<option value="${k}"${k === v ? " selected" : ""}>${l}</option>`).join("")}</select>`;
 async function afficherPersonnes(msg){
   const host = $("#personnes-pane");
-  const { data, error } = await sb.rpc("personnes");
+  const { data, error } = await sb.rpc("flamme_personnes");
   if (error){
     host.innerHTML = `<p class="msg err">Liste des comptes impossible à lire : ${esc(error.message)}. As-tu exécuté la migration 04 ?</p>`;
     return;
   }
   (data || []).forEach(p => { if (p.role) state.noms[p.user_id] = p.nom || p.role; });
   const date = d => d ? new Date(d).toLocaleString("fr-FR") : "jamais";
-  const { data: tousRes } = await sb.from("resultats").select("user_id");
+  const { data: tousRes } = await sb.from("flamme_resultats").select("user_id");
   const nbRes = {}; (tousRes || []).forEach(r => nbRes[r.user_id] = (nbRes[r.user_id] || 0) + 1);
   personnesCache = data || [];
   host.innerHTML = `
@@ -629,14 +629,14 @@ async function afficherPersonnes(msg){
       const propose = motDePasseProvisoire();
       const mdp = prompt(`Nouveau mot de passe provisoire pour ${tr.dataset.email} (8 caractères au moins).\nTu peux garder celui qui est proposé :`, propose);
       if (mdp === null) return;
-      const { error } = await sb.rpc("reinitialiser_mdp", { p_user: tr.dataset.id, p_mdp: mdp });
+      const { error } = await sb.rpc("forge_reinitialiser_mdp", { p_user: tr.dataset.id, p_mdp: mdp });
       afficherPersonnes(error
         ? { cls:"err", txt:"Réinitialisation refusée : " + error.message + (/function|fonction/i.test(error.message) ? " (as-tu exécuté la migration 07 ?)" : "") }
         : { cls:"ok", txt:`Mot de passe provisoire de ${tr.dataset.email} : ${mdp} — transmets-le-lui, et demande-lui de le changer avec « Mon mot de passe » dans la console.` });
     });
     tr.querySelector(".p-retirer")?.addEventListener("click", async () => {
       if (!confirm(`Retirer l'accès de ${tr.dataset.email} ? Son compte existera toujours, mais il ne verra plus rien.`)) return;
-      const { error } = await sb.rpc("retirer_role", { p_user: tr.dataset.id });
+      const { error } = await sb.rpc("flamme_retirer_role", { p_user: tr.dataset.id });
       afficherPersonnes(error ? { cls:"err", txt:"Retrait refusé : " + error.message } : { cls:"ok", txt:`Accès retiré pour ${tr.dataset.email}.` });
     });
   });
@@ -649,8 +649,8 @@ async function afficherProduction(userId, msg){
   const nom = p.nom || p.email;
   host.innerHTML = '<p class="count">Chargement…</p>';
   const [{ data: res, error: e1 }, { data: jr, error: e2 }] = await Promise.all([
-    sb.from("resultats").select("*").eq("user_id", userId).order("passe_le", { ascending:false }),
-    sb.from("journal").select("*").eq("par", userId).not("table_nom", "like", "prisme_%").order("id", { ascending:false }).limit(200)
+    sb.from("flamme_resultats").select("*").eq("user_id", userId).order("passe_le", { ascending:false }),
+    sb.from("forge_journal").select("*").eq("par", userId).not("table_nom", "like", "prisme_%").order("id", { ascending:false }).limit(200)
   ]);
   if (e1 || e2){ host.innerHTML = `<p class="msg err">Lecture impossible : ${esc((e1 || e2).message)}</p>`; return; }
   const date = d => d ? new Date(d).toLocaleString("fr-FR") : "jamais";
@@ -677,7 +677,7 @@ async function afficherProduction(userId, msg){
   host.querySelectorAll(".prod-suppr").forEach(b => b.addEventListener("click", async () => {
     const r = res.find(x => String(x.id) === b.dataset.id);
     if (!confirm(`Effacer définitivement le résultat de ${nom} du ${new Date(r.passe_le).toLocaleDateString("fr-FR")} ?`)) return;
-    const { error } = await sb.from("resultats").delete().eq("id", r.id);
+    const { error } = await sb.from("flamme_resultats").delete().eq("id", r.id);
     afficherProduction(userId, error ? { cls:"err", txt:"Effacement refusé : " + error.message } : { cls:"ok", txt:"Résultat effacé." });
   }));
 }
@@ -689,7 +689,7 @@ function motDePasseProvisoire(){
 }
 async function attribuer(email, role, nom){
   if (!email.trim()){ $("#pers-msg").className = "msg err"; $("#pers-msg").textContent = "Indique l'e-mail du compte."; return; }
-  const { error } = await sb.rpc("attribuer_role", { p_email: email, p_role: role, p_nom: nom });
+  const { error } = await sb.rpc("flamme_attribuer_role", { p_email: email, p_role: role, p_nom: nom });
   afficherPersonnes(error ? { cls:"err", txt:"Refusé : " + error.message } : { cls:"ok", txt:`${email.trim()} : ${ROLES[role]}, accès enregistré.` });
 }
 
@@ -699,8 +699,8 @@ async function afficherResultats(filtre = ""){
   const host = $("#resultats-pane");
   host.innerHTML = '<p class="count">Chargement…</p>';
   const [{ data, error }, { data: pers }] = await Promise.all([
-    sb.from("resultats").select("*").order("passe_le", { ascending:false }).limit(1000),
-    sb.rpc("personnes")
+    sb.from("flamme_resultats").select("*").order("passe_le", { ascending:false }).limit(1000),
+    sb.rpc("flamme_personnes")
   ]);
   if (error){ host.innerHTML = `<p class="msg err">Lecture des résultats impossible : ${esc(error.message)}. As-tu exécuté la migration 05 ?</p>`; return; }
   resNoms = {}; (pers || []).forEach(p => resNoms[p.user_id] = p.nom || p.email);
@@ -745,7 +745,7 @@ function detailResultat(tr){
   d.querySelector("[data-suppr]").addEventListener("click", async e => {
     e.stopPropagation();
     if (!confirm(`Effacer définitivement le résultat de ${resNoms[r.user_id] || "cette personne"} du ${new Date(r.passe_le).toLocaleDateString("fr-FR")} ?`)) return;
-    const { error } = await sb.from("resultats").delete().eq("id", r.id);
+    const { error } = await sb.from("flamme_resultats").delete().eq("id", r.id);
     if (error) alert("Effacement refusé : " + error.message);
     afficherResultats($("#res-filtre")?.value || "");
   });
@@ -805,7 +805,7 @@ function calculerSaisie(){
 let SAISIE_PERSONNES = null;
 async function chargerPersonnesSaisie(){
   if (SAISIE_PERSONNES) return;
-  const { data } = await sb.rpc("personnes");
+  const { data } = await sb.rpc("flamme_personnes");
   SAISIE_PERSONNES = (data || []).sort((a, b) => (a.nom || a.email).localeCompare(b.nom || b.email, "fr"));
   calculerSaisie();
 }
@@ -816,7 +816,7 @@ async function enregistrerSaisie(v, r){
   const s01 = Object.fromEntries(M_ORDRE.map(c => [c, v[c] / 100]));
   const codesProfils = state.elements.filter(e => e.couche === "profil").sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0)).map(e => e.code);
   const classement = window.FLAMME_MOTEUR.statistiques(s01, codesProfils).sections.temperaments.map(t => t.code);
-  const { error } = await sb.from("resultats").insert({ user_id: pour, classement, scores: v, codes: [r.code, ...r.voisins], frontiere: r.voisins.length > 0,
+  const { error } = await sb.from("flamme_resultats").insert({ user_id: pour, classement, scores: v, codes: [r.code, ...r.voisins], frontiere: r.voisins.length > 0,
     version_moteur: window.FLAMME_MOTEUR.VERSION.numero, version_autotest: "console " + VERSION.numero, origine: "saisie" });
   const m = $("#saisie-somme");
   if (error){ m.className = "msg err"; m.textContent = "Enregistrement refusé : " + error.message + (/origine/.test(error.message) ? " (la migration 11 est-elle installée ?)" : ""); return; }
