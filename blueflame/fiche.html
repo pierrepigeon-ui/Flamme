@@ -94,7 +94,7 @@ dialog h2{border:0} .field{display:block;margin-bottom:12px} .field span{display
   <div style="display:flex;gap:10px"><button class="btn" type="submit">Se connecter</button><button class="btn ghost" type="button" id="login-fermer">Fermer</button></div>
   <p class="msg" id="login-msg" role="status"></p></form></dialog>
 <script>
-const VERSION = { numero:"1.8", date:"2026-10-10 19:25" };
+const VERSION = { numero:"1.9", date:"2026-10-10 19:32" };
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";
 const M = window.FLAMME_MOTEUR;
@@ -211,6 +211,6 @@ sb.auth.onAuthStateChange(async (_e, session) => {
   } catch (err){ $("#bloque").textContent = err.message; }
 });
 </script>
-<script src="entete.js?v=1.0"></script>
+<script src="entete.js?v=1.1"></script>
 </body>
 </html>

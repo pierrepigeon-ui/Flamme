@@ -98,7 +98,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px} .field{display:block;margi
   <p class="msg" id="login-msg" role="status"></p></form></dialog>
 
 <script>
-const VERSION = { numero:"1.7", date:"2026-10-10 19:25" };
+const VERSION = { numero:"1.8", date:"2026-10-10 19:32" };
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -128,13 +128,11 @@ sb.auth.onAuthStateChange(async (_e, session) => {
     sb.from("flamme_resultats").select("id,passe_le,codes").eq("user_id", user.id).order("passe_le", { ascending:false }).limit(1),
     sb.rpc("prisme_mon_role")   // rôle PRISME, indépendant de Flamme Bleue
   ]);
-  // la tuile PRISME n'apparaît qu'aux personnes qui ont un rôle PRISME
-  const tuilePrisme = rolePrisme ? tuile("../", "La Forge", "Revenir au portail de l'Arpenteur et à ses autres outils") : "";
   $("#espace").classList.remove("hidden");
   $("#bonjour").textContent = `Bonjour${moi?.nom ? ", " + moi.nom : ""}`;
   if (!role){
     $("#espace-sous").textContent = rolePrisme ? "Votre compte donne accès à PRISME." : "Votre compte n'a pas encore accès à Flamme Bleue. L'Arpenteur doit vous l'ouvrir.";
-    $("#tuiles").innerHTML = tuilePrisme; return;
+    $("#tuiles").innerHTML = ""; return;   // le lien « La Forge », en haut à gauche, mène à PRISME
   }
   const dernier = res?.[0];
   $("#espace-sous").textContent = dernier
@@ -147,10 +145,9 @@ sb.auth.onAuthStateChange(async (_e, session) => {
   }
   t += tuile("console.html", role === "proprietaire" ? "Console" : "Le modèle", role === "invite" ? "Parcourir les profils ; changer votre mot de passe" : "Parcourir et éditer le contenu ; votre mot de passe");
   if (role === "proprietaire") t += tuile("rosace.html", "Rosace", "La carte complète du modèle");
-  t += tuilePrisme;
   $("#tuiles").innerHTML = t;
 });
 </script>
-<script src="entete.js?v=1.0"></script>
+<script src="entete.js?v=1.1"></script>
 </body>
 </html>

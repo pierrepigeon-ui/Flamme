@@ -1,5 +1,5 @@
 /* =====================================================================
-   Flamme Bleue — en-tête commun (1.0, 10/10/2026)
+   Flamme Bleue — en-tête commun (1.1, 10/10/2026)
    - une petite flamme bleue devant le nom « Flamme Bleue », qui ramène à l'accueil ;
    - un lien « La Forge », avec sa petite enclume, en haut à droite, comme dans PRISME :
      il n'apparaît que si la personne a aussi accès à PRISME (la Forge a alors autre chose à proposer).
@@ -16,6 +16,7 @@
     .fb-forge:hover{opacity:1;text-decoration:underline}
     .fb-forge img{display:block}
     .fb-forge.cache{display:none}
+    .barre > .fb-forge{margin-right:auto}   /* accueil : calé à gauche */
     @media (prefers-color-scheme: dark){ .fb-forge img{background:#F6F5F1;border-radius:3px;padding:1px} }`;
   document.head.appendChild(css);
 
