@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PRISME — Les totems des tempéraments</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+<style>
+:root{--ink:#1B2430;--muted:#5B6573;--line:#DDE1E7;--paper:#F6F5F1;--panel:#FFFFFF;--or:#C9971E;
+  --serif:"Source Serif 4",Georgia,"Times New Roman",serif;--sans:"IBM Plex Sans","Segoe UI",Arial,sans-serif}
+@media (prefers-color-scheme: dark){:root{--ink:#E6E9EE;--muted:#9AA4B2;--line:#2C3542;--paper:#11161D;--panel:#171D25;--or:#E3B341}}
+*{box-sizing:border-box} html,body{margin:0} body{background:var(--paper);color:var(--ink);font:15px/1.55 var(--sans)}
+a{color:inherit}
+.marque{font:600 19px/1 "Source Serif 4",Georgia,serif;letter-spacing:.08em;color:inherit!important;text-decoration:none}
+.barre{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px 20px;font-size:13px;color:var(--muted)} .barre a{text-decoration:none}
+main{max-width:1240px;margin:0 auto;padding:6px 20px 30px}
+h1{font:600 clamp(28px,4vw,40px)/1.15 var(--serif);margin:6px 0 4px}
+.chapo{font:italic 17px/1.5 var(--serif);color:var(--muted);margin:0 0 14px;max-width:78ch}
+.outils{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 16px;font-size:13.5px;color:var(--muted)}
+.outils button{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:5px 13px;font:500 13px var(--sans);cursor:pointer}
+.outils button[aria-pressed="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.moteur{margin:18px 0 6px;font:600 20px var(--serif)}
+.grille{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.carte{background:var(--panel);border:1px solid var(--line);border-top:5px solid var(--m);border-radius:12px;padding:14px 16px;display:grid;grid-template-columns:92px 1fr;gap:4px 14px;align-items:start}
+.carte svg{width:92px;height:92px;grid-row:1 / 5;border-radius:14px;padding:10px;background:var(--fond)}
+.carte h2{font:600 19px/1.2 var(--serif);margin:0}
+.carte .code{font-size:12px;color:var(--muted)}
+.carte .totem{font-weight:600}
+.carte .raison{font:italic 14.5px/1.45 var(--serif);color:var(--muted);margin:0}
+.carte .icone{font-size:12px;color:var(--muted)}
+.sombre .carte svg{background:#151A22}
+.version{font-size:12px;color:var(--muted);text-align:right;margin-top:24px}
+</style>
+</head>
+<body>
+<div class="barre"><a href="index.html" class="marque" title="Accueil de PRISME">PRISME</a><span></span></div>
+<main>
+  <h1>Les totems des tempéraments</h1>
+  <p class="chapo">Page de contrôle : les vingt totems sur une seule planche, avec leur raison et l'icône d'origine. L'image vient de la bibliothèque (prisme/bibliotheque/), le nom et la raison de la base.</p>
+  <div class="outils"><span>Rendu :</span>
+    <button type="button" data-rendu="couleur" aria-pressed="true">couleurs des moteurs</button>
+    <button type="button" data-rendu="or" aria-pressed="false">or sur fond sombre</button></div>
+  <div id="planche"><p>Chargement…</p></div>
+  <p class="version"><span id="credit"></span><br><span id="version"></span></p>
+</main>
+<script src="totems.js?v=1"></script>
+<script>
+const VERSION = { numero:"1.0", date:"2026-10-11 00:20" };   // à incrémenter à chaque livraison
+const sb = supabase.createClient("https://gugdfpbkscudzkgysteb.supabase.co", "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const maj = s => { s = String(s ?? ""); return s.charAt(0).toUpperCase() + s.slice(1); };
+document.getElementById("version").textContent = `Planche des totems ${VERSION.numero}, version du ${VERSION.date.replace(/(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d)/,"$3/$2/$1 à $4h$5")} · bibliothèque v${BIB_VERSION}`;
+let D = null, rendu = "couleur";
+function dessiner(){
+  const { mot, tem } = D, cat = TOTEMS.catalogue.totems || {};
+  document.body.classList.toggle("sombre", rendu === "or");
+  document.getElementById("planche").innerHTML = mot.map(m => `<h2 class="moteur" style="color:${m.couleur}">${esc(m.nom)}</h2><div class="grille">` +
+    tem.filter(t => t.moteur === m.code).map(t => { const c = cat[t.code] || {};
+      const coul = rendu === "or" ? "#E3B341" : m.couleur, fond = rendu === "or" ? "#151A22" : "color-mix(in srgb, " + m.couleur + " 10%, var(--panel))";
+      return `<div class="carte" style="--m:${m.couleur};--fond:${fond}">${totemSVG(t.code, coul) || "<svg></svg>"}
+        <h2>${esc(maj(t.nom))}</h2><span class="code">${esc(t.code)} · fuit ${esc(mot.find(x => x.code === t.fuit)?.nom || "")}</span>
+        <span class="totem">${esc(maj(t.totem || c.nom || "—"))}${c.statut === "approché" ? " ≈" : ""}</span>
+        <p class="raison">${esc(t.totem_raison || "")}</p>
+        <span class="icone" style="grid-column:2">icône : ${esc(c.icone || "absente")} · ${esc(c.statut || "")}</span></div>`; }).join("") + `</div>`).join("");
+}
+document.querySelectorAll("[data-rendu]").forEach(b => b.addEventListener("click", () => {
+  rendu = b.dataset.rendu; document.querySelectorAll("[data-rendu]").forEach(x => x.setAttribute("aria-pressed", x === b)); dessiner();
+}));
+(async () => {
+  const [m, t] = await Promise.all([sb.from("prisme_player_moteurs").select("*").order("ordre"), sb.from("prisme_player_temperaments").select("*").order("ordre"), chargerTotems()]);
+  if (m.error || t.error){ document.getElementById("planche").innerHTML = `<p>Lecture impossible : ${esc((m.error || t.error).message)}</p>`; return; }
+  D = { mot: m.data, tem: t.data };
+  document.getElementById("credit").innerHTML = TOTEMS_CREDIT;
+  dessiner();
+})();
+</script>
+<script src="entete.js?v=1.2"></script>
+</body>
+</html>

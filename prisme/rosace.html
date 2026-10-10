@@ -46,6 +46,7 @@ aside p{font:16px/1.6 var(--serif);margin:0 0 10px}
 aside .lib{display:block;font:600 12.5px var(--sans);color:var(--muted);margin-top:6px}
 aside ul{margin:4px 0 10px;padding-left:18px;font:15.5px/1.5 var(--serif)}
 aside .lien{cursor:pointer;text-decoration:underline;text-decoration-color:var(--line)}
+aside .p-totem{float:right;width:78px;height:78px;margin:0 0 6px 12px;padding:10px;border-radius:16px;background:var(--paper)}
 aside .vous-badge{display:inline-block;font:600 12px var(--sans);color:#fff;background:#1B2430;border-radius:4px;padding:1px 7px;margin-left:6px;vertical-align:4px}
 .version{font-size:12px;color:var(--muted);text-align:right;max-width:1320px;margin:0 auto;padding:0 20px 20px}
 @media (max-width:980px){ .page{grid-template-columns:1fr} aside{position:static;max-height:none} }
@@ -61,11 +62,12 @@ aside .vous-badge{display:inline-block;font:600 12px var(--sans);color:#fff;back
   </div>
   <aside id="panneau"><p class="niveau">Chargement…</p></aside>
 </div>
-<p class="version" id="version"></p>
+<p class="version"><span id="credit"></span><br><span id="version"></span></p>
 
 <script src="timeline.js?v=1.4"></script>
+<script src="totems.js?v=1"></script>
 <script>
-const VERSION = { numero:"2.0", date:"2026-10-10 23:00" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"2.1", date:"2026-10-11 00:20" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -97,10 +99,10 @@ sb.auth.onAuthStateChange((_e, session) => {
 
 async function demarrer(user){
   const lire = t => sb.from(t).select("*").order("ordre");
-  const r = await Promise.all([lire("prisme_player_moteurs"), lire("prisme_player_temperaments"), lire("prisme_player_styles")]);
+  const r = await Promise.all([lire("prisme_player_moteurs"), lire("prisme_player_temperaments"), lire("prisme_player_styles"), chargerTotems()]);
   const err = r.find(x => x.error);
   if (err){ $("#panneau").innerHTML = `<p>Lecture du modèle impossible : ${esc(err.error.message)}</p>`; return; }
-  [B.moteurs, B.temps, B.styles] = r.map(x => x.data);
+  [B.moteurs, B.temps, B.styles] = r.slice(0, 3).map(x => x.data);
   B.M = Object.fromEntries(B.moteurs.map(m => [m.code, m]));
   B.T = Object.fromEntries(B.temps.map(t => [t.code, t]));
   B.S = Object.fromEntries(B.styles.map(s => [s.code, s]));
@@ -118,11 +120,12 @@ async function demarrer(user){
 }
 
 /* ---- le dessin, généré : centre, moteurs (72°), tempéraments (18°), styles (6°) ---- */
-const R0 = 92, R1 = 215, R2 = 352, R3 = 500;          // rayons : centre, moteurs, tempéraments, styles
+const R0 = 92, R1 = 198, R2 = 376, R3 = 500;          // rayons : centre, moteurs, tempéraments, styles
 function teinte(hex, k){                                 // mélange avec le blanc : k = part de blanc
   const n = parseInt(String(hex).slice(1), 16), c = [n >> 16, (n >> 8) & 255, n & 255].map(v => Math.round(v + (255 - v) * k));
   return "#" + c.map(v => v.toString(16).padStart(2, "0")).join("");
 }
+const fonce = (hex, k) => { const n = parseInt(String(hex).slice(1), 16); return "#" + [n >> 16, (n >> 8) & 255, n & 255].map(v => Math.round(v * (1 - k)).toString(16).padStart(2, "0")).join(""); };
 const pol = (r, a) => [r * Math.sin(a * Math.PI / 180), -r * Math.cos(a * Math.PI / 180)];   // a en degrés, 0 = en haut, sens horaire
 function secteur(r1, r2, a1, a2){
   const [x1, y1] = pol(r2, a1), [x2, y2] = pol(r2, a2), [x3, y3] = pol(r1, a2), [x4, y4] = pol(r1, a1), g = a2 - a1 > 180 ? 1 : 0;
@@ -148,10 +151,11 @@ function dessiner(){
     h += `<g data-code="${m.code}" data-niveau="moteur"><title>${esc(m.nom)}</title><path class="sect" d="${secteur(R0, R1, a1, a2)}" fill="${m.couleur}"/>${courbe("arc-" + m.code, m.nom, a1, a2, (R0 + R1) / 2 + 4, "t-mot")}</g>`;
     const T = B.temps.filter(t => t.moteur === m.code).sort((x, y) => x.ordre - y.ordre);
     T.forEach((t, j) => {
-      const b1 = a1 + j * 18, b2 = b1 + 18, f = B.M[t.fuit], [fx, fy] = pol(R2 - 16, b1 + 9);
+      const b1 = a1 + j * 18, b2 = b1 + 18, f = B.M[t.fuit], [fx, fy] = pol(R2 - 13, b1 + 9), [ix, iy] = pol(R1 + 27, b1 + 9);
       h += `<g data-code="${esc(t.code)}" data-niveau="temperament"><title>${esc(maj(t.nom))} · fuit ${esc(f.nom)}</title>
         <path class="sect" d="${secteur(R1, R2, b1, b2)}" fill="${teinte(m.couleur, .55)}"/>
-        ${radial(maj(sansArticle(t.nom)), b1 + 9, R1 + 4, R2 - 30, "t-tem")}
+        ${TOTEMS.svg[t.code] ? `<g transform="translate(${(ix - 17).toFixed(1)} ${(iy - 17).toFixed(1)})">${totemSVG(t.code, fonce(m.couleur, .35), { titre:"", attrs:'width="34" height="34"' })}</g>` : ""}
+        ${radial(maj(sansArticle(t.nom)), b1 + 9, R1 + (TOTEMS.svg[t.code] ? 50 : 4), R2 - 26, "t-tem")}
         <circle class="fuit" cx="${fx.toFixed(1)}" cy="${fy.toFixed(1)}" r="8" fill="${f.couleur}"/></g>`;
       const S = B.styles.filter(s => s.temperament === t.code).sort((x, y) => x.ordre - y.ordre);
       S.forEach((s, k) => {
@@ -163,6 +167,7 @@ function dessiner(){
   });
   h += `<circle r="${R0 - 2}" fill="#FFFFFF" stroke="#DDE1E7" stroke-width="2"/><text class="t-centre" y="2">PRISME</text><text class="t-centre2" y="24">joueurs</text>`;
   svg.innerHTML = h;
+  if (Object.keys(TOTEMS.svg).length) $("#credit").innerHTML = TOTEMS_CREDIT;
   svg.addEventListener("click", e => { const el = e.target.closest("[data-code]"); if (el) montrer(el.dataset.code); });
 }
 
@@ -207,16 +212,17 @@ function montrer(code){
       <span class="lib">Ses quatre tempéraments</span><ul>${B.temps.filter(t => t.moteur === code).map(t => `<li>${lien(t.code, maj(t.nom))} : fuit ${esc(M[t.fuit].nom.toLowerCase())}</li>`).join("")}</ul>`;
   } else if (N === "temperament"){
     const t = B.T[code], m = M[t.moteur];
-    h = `<p class="niveau">Tempérament : ce que je cherche, ce que je fuis</p><h1>${esc(maj(t.nom))}${badge}</h1>
+    h = `${totemSVG(code, m.couleur, { cls:"p-totem", titre: t.totem ? maj(t.totem) : undefined })}<p class="niveau">Tempérament : ce que je cherche, ce que je fuis</p><h1>${esc(maj(t.nom))}${badge}</h1>
       <p class="fil">${lien(m.code, m.nom)}, fuit ${esc(M[t.fuit].nom.toLowerCase())}</p>
       <p>${esc(t.qui_il_est)}</p>
       <span class="lib">À la table, il peut</span>${puces(t.a_la_table)}
       <span class="lib">Quand il décroche</span><p>${esc(t.quand_decroche)}</p>
+      ${t.totem ? `<span class="lib">Son totem</span><p>${esc(maj(t.totem))}. ${esc(t.totem_raison || "")}</p>` : ""}
       ${t.fb_verbe ? `<span class="lib">Dans Flamme Bleue</span><p>${esc(t.fb_verbe)} (« ${esc(t.fb_devise)} »)</p>` : ""}
       <span class="lib">Ses trois styles</span><ul>${B.styles.filter(s => s.temperament === code).map(s => `<li>${lien(s.code, maj(s.nom))} : avec ${esc(M[s.second].nom.toLowerCase())}</li>`).join("")}</ul>`;
   } else {
     const s = B.S[code], t = B.T[s.temperament], m = M[t.moteur];
-    h = `<p class="niveau">Style : avec quoi je le vis</p><h1>${esc(maj(s.nom))}${badge}</h1>
+    h = `${totemSVG(t.code, m.couleur, { cls:"p-totem", titre: t.totem ? maj(t.totem) : undefined })}<p class="niveau">Style : avec quoi je le vis</p><h1>${esc(maj(s.nom))}${badge}</h1>
       <p class="fil">${lien(t.code, maj(t.nom))}, moteur ${lien(m.code, m.nom)}</p>
       <p>${s.texte ? esc(s.texte) : `Style ${esc(s.code)} : ${esc(t.nom)}, avec ${esc(M[s.second].nom)} en second moteur.`}</p>
       <span class="lib">Second moteur</span><p>${esc(M[s.second].nom)} : ${esc(M[s.second].devise)}</p>

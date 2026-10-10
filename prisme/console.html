@@ -220,7 +220,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 16px}
 
 <script>
 /* ================= configuration ================= */
-const VERSION = { numero:"2.0", date:"2026-10-10 23:00" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"2.1", date:"2026-10-11 00:20" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 
@@ -244,7 +244,7 @@ const OPTIONS = {
 const TABLES = { prisme_player_moteurs:"moteur", prisme_player_temperaments:"tempérament", prisme_player_styles:"style", prisme_player_archetypes:"archétype", prisme_player_profils:"profil",
                  prisme_player_sous_profils:"sous-profil", prisme_player_questions:"question", prisme_chapitres:"chapitre", prisme_paires:"paire", prisme_axes:"axe", prisme_paliers:"palier",
                  prisme_notes:"encadré", prisme_jeux:"jeu", prisme_exemples:"exemple", prisme_textes:"texte", prisme_roles:"rôle" };
-const LIBELLES = { devise:"Devise", a_la_table:"À la table, il peut (un comportement par ligne)", phase_cle:"Phase clé", qui_il_est:"Qui il est", quand_decroche:"Quand il décroche", fb_verbe:"Flamme Bleue : verbe", fb_devise:"Flamme Bleue : devise",
+const LIBELLES = { devise:"Devise", a_la_table:"À la table, il peut (un comportement par ligne)", phase_cle:"Phase clé", qui_il_est:"Qui il est", quand_decroche:"Quand il décroche", fb_verbe:"Flamme Bleue : verbe", fb_devise:"Flamme Bleue : devise", totem:"Totem (l'image est dans prisme/bibliotheque/)", totem_raison:"Raison du totem (une phrase)",
   devise1:"Devise (1re partie)", devise2:"Devise (2e partie)", citation:"Citation",
   couleur:"Couleur (fond clair)", couleur_sombre:"Couleur (fond sombre)", climax_phase:"Phase du climax (si dominant)",
   climax_jalon:"Jalon du climax (vide = transversal)", duree_apogee:"Durée d'apogée", fragilite:"Quand il est rejeté",
@@ -571,7 +571,8 @@ function ouvrirP(code, force){
         ${champ("qui_il_est", r.qui_il_est, { type:"area", rows:3 })}
         ${champ("a_la_table", r.a_la_table, { type:"area", rows:4 })}
         ${champ("quand_decroche", r.quand_decroche, { type:"area" })}
-        <div class="grid2">${champ("fb_verbe", r.fb_verbe)}${champ("fb_devise", r.fb_devise)}</div>`) +
+        <div class="grid2">${champ("fb_verbe", r.fb_verbe)}${champ("fb_devise", r.fb_devise)}</div>
+        <div class="grid2">${champ("totem", r.totem)}${champ("totem_raison", r.totem_raison)}</div>`) +
       `<h3 style="border-top-color:${esc(m.couleur)}">Ses trois styles</h3><p class="aide">Texte vide : les pages affichent un libellé automatique (« Style W.b/u : l'Habitué, avec Triompher en second moteur »).</p>` +
       state.p_styles.filter(x => x.temperament === code).map(x => `<h4>${esc(maj(x.nom))} <span class="badge" style="color:var(--muted)">${esc(x.code)} · second : ${esc(nomMoteur(x.second))}</span></h4>` +
         bloc("prisme_player_styles", x, r => `${champ("nom", r.nom)}${champ("texte", r.texte, { type:"area", label:"Texte du style" })}`, { cls:"ex-bloc" })).join("");

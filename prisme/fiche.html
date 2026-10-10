@@ -34,6 +34,9 @@ main{max-width:860px;margin:0 auto;padding:10px 24px 40px}
 .niveaux .sep{color:var(--line);font-weight:400}
 .entete h1.titre-joueur{font:600 clamp(38px,6.5vw,60px)/1.08 var(--serif);color:var(--arch);margin:6px 0 2px}
 .titre-joueur .qualif{font-style:italic;font-weight:400;font-size:.58em;color:color-mix(in srgb, var(--sous) 75%, var(--ink));white-space:nowrap}
+.entete.avec-totem{display:grid;grid-template-columns:auto 1fr;gap:6px 26px;align-items:center}
+.entete .totem{width:132px;height:132px;display:block;background:color-mix(in srgb, var(--arch) 9%, var(--panel));border-radius:22px;padding:16px}
+@media (max-width:560px){ .entete.avec-totem{grid-template-columns:1fr} .entete .totem{width:96px;height:96px;padding:12px} }
 .entete .sous-titre{font-size:12.5px;letter-spacing:.04em;color:var(--muted);margin:0}
 @media (max-width:520px){ .niveaux .sep{display:none} }
 .entete .date{font-size:13px;color:var(--muted);margin:10px 0 0}
@@ -73,11 +76,12 @@ details.repli > section{border:0;margin:0;padding-top:0}
 <body>
 <div class="barre"><a href="index.html" class="marque" title="Accueil de PRISME">PRISME</a><span id="qui"></span></div>
 <main id="contenu"><p class="vide">Chargement…</p></main>
-<main><p class="version" id="version"></p></main>
+<main><p class="version"><span id="credit"></span><br><span id="version"></span></p></main>
 
 <script src="timeline.js?v=1.4"></script>
+<script src="totems.js?v=1"></script>
 <script>
-const VERSION = { numero:"2.2", date:"2026-10-10 23:55" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"2.3", date:"2026-10-11 00:20" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -118,7 +122,8 @@ async function afficher(user){
                          : 'Vous n\'avez pas encore de profil de joueur. <a href="questionnaire.html">Passer le questionnaire</a>.');
   const c = r.classement, code = r.style || (c ? c[0] + "." + c[1].toLowerCase() + "/" + c[4].toLowerCase() : null);
   const [{ data: st }, { data: mot }] = await Promise.all([
-    sb.from("prisme_player_vue_styles").select("*").eq("code", code).single(),
+    // les totems se chargent en même temps (sans images, la fiche s'affiche quand même)
+    chargerTotems().then(() => ({ data:null })).then(() => sb.from("prisme_player_vue_styles").select("*").eq("code", code).single()),
     sb.from("prisme_player_moteurs").select("*").order("ordre")
   ]);
   if (!st) return vide("Ce résultat date d'une version précédente du modèle et n'a pas de style. <a href=\"questionnaire.html\">Repasser le questionnaire</a>.");
@@ -140,11 +145,14 @@ async function afficher(user){
   }).join("");
 
   $("#contenu").innerHTML = `
-    <div class="entete">
+    <div class="entete${TOTEMS.svg[st.temperament] ? " avec-totem" : ""}">
+      ${totemSVG(st.temperament, dom.couleur, { cls:"totem", titre: tem?.totem ? maj(tem.totem) : undefined })}
+      <div class="entete-texte">
       <p class="surtitre">${autre ? "Profil de joueur" : "Mon profil de joueur"}</p>
       <h1 class="titre-joueur">${esc(maj(st.temperament_nom))} <span class="qualif" style="--sous:${esc(M[st.second]?.couleur || "var(--ink)")}" title="Votre style : ${esc(st.nom)} (${esc(st.code)})">(${esc(qualif)})</span></h1>
       <p class="sous-titre">Tempérament ${esc(st.temperament)}, style ${esc(st.code)}</p>
       <p class="date">Questionnaire du ${new Date(r.passe_le).toLocaleDateString("fr-FR")}.${autre ? "" : ' <a href="questionnaire.html">Le modifier ou le refaire</a>. <a href="rosace.html">Voir ma place sur la rosace</a>.'}</p>
+      </div>
     </div>
 
     <section><h2>Vos moteurs</h2><p class="question">Ce qui vous met en mouvement à la table, du plus fort au plus faible.</p>
@@ -154,6 +162,7 @@ async function afficher(user){
       <p>${esc(tem.qui_il_est)}</p>
       <span class="libelle">À la table, il peut</span>${puces(tem.a_la_table)}
       <p><span class="libelle">Quand il décroche</span>${esc(tem.quand_decroche)}</p>
+      ${tem.totem ? `<p><span class="libelle">Son totem</span>${esc(maj(tem.totem))}. ${esc(tem.totem_raison || "")}</p>` : ""}
       ${tem.fb_verbe ? `<p class="fb">Dans Flamme Bleue : ${esc(tem.fb_verbe)} (« ${esc(tem.fb_devise)} »).</p>` : ""}</section>
 
     <section><h2>Votre style : ${esc(qualif)}</h2><p class="question">Avec quoi je le vis : votre second moteur.</p>
@@ -174,6 +183,7 @@ async function afficher(user){
     <section id="vos-jeux"><h2>${autre ? "Ses jeux" : "Vos jeux"}</h2><p class="question">Les jeux évalués dans PRISME, vus par ${autre ? "ce" : "votre"} style de joueur.</p>
       <div id="vos-jeux-corps"><p class="pj-discret">Calcul en cours…</p></div></section>`;
   afficherVosJeux(code, autre);
+  if (TOTEMS.svg[st.temperament]) $("#credit").innerHTML = TOTEMS_CREDIT;
 }
 async function afficherVosJeux(code, autre){
   const box = $("#vos-jeux-corps"), d = await lireJeuxEvalues(sb);

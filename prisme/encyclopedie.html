@@ -96,6 +96,7 @@ table.jeu td{border-bottom:1px solid var(--line);padding:6px 10px;vertical-align
 .sp{border-top:1px solid var(--line);padding:6px 0;font:14.5px/1.5 var(--serif)} .sp b{font:600 14.5px var(--sans)} .sp .dom{font:12.5px var(--sans);color:var(--muted)}
 .sp span.l{font:500 12px var(--sans);color:var(--muted)}
 .moteur ul,.archetype ul{margin:2px 0 8px;padding-left:18px;font:15px/1.5 var(--serif)}
+.archetype .e-totem{float:right;width:84px;height:84px;margin:0 0 8px 14px;padding:10px;border-radius:16px;background:var(--paper)}
 .archetype .groupe{font:600 12px var(--sans);text-transform:uppercase;letter-spacing:.04em;color:var(--muted);display:block;margin-top:6px}
 .vide{color:var(--muted);font-style:italic}
 .defile{overflow-x:auto;max-width:100%} .formule{max-width:100%;overflow-x:auto}
@@ -128,11 +129,12 @@ mark{background:#FFE58A;color:#1B2430;border-radius:2px}
   <nav id="sommaire" aria-label="Sommaire"><input id="cherche" type="search" placeholder="Chercher dans l'encyclopédie…" aria-label="Chercher"><details id="tocbox" open><summary>Sommaire</summary><p class="plis"><button type="button" id="tout-deplier">Tout déplier</button> · <button type="button" id="tout-replier">Tout replier</button></p><ol id="toc"></ol></details></nav>
   <main id="contenu"><p class="vide">Chargement du modèle…</p></main>
 </div>
-<div style="max-width:1240px;margin:0 auto;padding:0 20px 30px"><p class="version" id="version"></p></div>
+<div style="max-width:1240px;margin:0 auto;padding:0 20px 30px"><p class="version"><span id="credit"></span><br><span id="version"></span></p></div>
 
 <script src="timeline.js?v=1.4"></script>
+<script src="totems.js?v=1"></script>
 <script>
-const VERSION = { numero:"2.0", date:"2026-10-10 23:00" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"2.1", date:"2026-10-11 00:20" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -196,10 +198,12 @@ async function charger(){
     lireTout("prisme_chapitres","ordre"), lireTout("prisme_paires","ordre"), lireTout("prisme_axes","ordre"), lireTout("prisme_paliers","valeur"),
     lireTout("prisme_notes","ordre"), lireTout("prisme_exemples","ordre"), lireTout("prisme_jeux","nom"), lireTout("prisme_textes","ordre"),
     lireTout("prisme_player_moteurs","ordre"), lireTout("prisme_player_temperaments","ordre"), lireTout("prisme_player_styles","ordre")]);
+  await chargerTotems();
   const toc = [], h = [];
   h.push(sectionPresentation(toc));
   h.push(M.paires.length ? sectionJeu(toc) : sectionJeuFermee(toc));
   h.push(sectionJoueur(toc));
+  if (Object.keys(TOTEMS.svg).length) document.getElementById("credit").innerHTML = TOTEMS_CREDIT;
   h.push(sectionTemps(toc));
   h.push(sectionCroisement(toc));
   h.push(sectionGlossaire(toc));
@@ -319,11 +323,12 @@ function sectionJoueur(toc){
     <div class="texte"><p>Un tempérament réunit le moteur dominant et le moteur que l'on fuit (code A/e : W/u, l'Habitué, cherche Rassembler et fuit Décrypter). Chacun se décline en trois styles selon le second moteur (code A.b/e : W.b/u, l'Habitué coriace). Chaque tempérament transpose au jeu le tempérament de Flamme Bleue de même code.</p></div>`;
   M.temperaments.forEach(t => {
     const m = Mo[t.moteur];
-    h += `<section class="archetype" id="${idTem(t.code)}" style="--m:${esc(coul(m))}"><h4>${esc(majE(t.nom))} <small class="vide">${esc(t.code)}</small></h4>
+    h += `<section class="archetype" id="${idTem(t.code)}" style="--m:${esc(coul(m))}">${totemSVG(t.code, coul(m), { cls:"e-totem", titre: t.totem ? majE(t.totem) : undefined })}<h4>${esc(majE(t.nom))} <small class="vide">${esc(t.code)}</small></h4>
       <p class="devise">${esc(m.nom)}, fuit ${esc(Mo[t.fuit].nom.toLowerCase())}${t.fb_verbe ? ` · Flamme Bleue : ${esc(t.fb_verbe)} (« ${esc(t.fb_devise)} »)` : ""}</p>
       <p>${esc(t.qui_il_est)}</p>
       <span class="groupe">À la table, il peut</span>${pucesE(t.a_la_table)}
       <p><span class="groupe">Quand il décroche</span>${esc(t.quand_decroche)}</p>
+      ${t.totem ? `<p><span class="groupe">Son totem</span>${esc(majE(t.totem))}. ${esc(t.totem_raison || "")}</p>` : ""}
       <span class="groupe">Ses trois styles</span>
       ${M.styles.filter(x => x.temperament === t.code).map(x => `<div class="sp"><b>${esc(majE(x.nom))}</b> <span class="dom">${esc(x.code)} · second moteur : ${esc(Mo[x.second]?.nom || "")}</span>${x.texte ? `<br>${esc(x.texte)}` : ""}</div>`).join("")}</section>`;
   });
