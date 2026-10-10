@@ -151,7 +151,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px}
   <p class="msg" id="login-msg" role="status"></p></form></dialog>
 
 <script>
-const VERSION = { numero:"1.2", date:"2026-10-04 17:13" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"1.3", date:"2026-10-10 18:55" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 
@@ -196,7 +196,7 @@ async function aiguiller(session, viaConnexion){
   let sites;
   if (!user) sites = prismePublic() ? ["flamme","prisme"] : ["flamme"];
   else {
-    const [rf, rp] = await Promise.all([role("mon_role"), role("prisme_mon_role")]);
+    const [rf, rp] = await Promise.all([role("flamme_mon_role"), role("prisme_mon_role")]);
     roleFlamme = rf; sites = [];
     if (rf) sites.push("flamme"); if (rp) sites.push("prisme");
     if (!sites.length) sites = ["flamme"];   // compte sans rôle : l'autotest reste ouvert
