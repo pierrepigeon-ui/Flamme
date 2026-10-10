@@ -48,6 +48,7 @@ h2{font:600 19px var(--serif);margin:22px 0 10px}
 .sect table{border-collapse:collapse;width:100%;font-size:13px}
 .sect td{padding:2px 4px;border-bottom:1px solid var(--hover)} .sect td.r{color:var(--muted);width:24px} .sect td.s{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .sect td.n{color:var(--muted)}
+.pol{font-weight:inherit} .sect h3 sup,.note sup{font-size:.7em;margin-left:1px} .note{font-size:13px;color:var(--muted);max-width:900px;margin:14px 0 0;line-height:1.5}
 .pips{display:inline-flex;gap:3px;align-items:center;vertical-align:1px}
 .pip{width:11px;height:11px;border-radius:50%;border:1px solid #8892A0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .pip.sec{width:7px;height:7px} .pip.abs{background:transparent!important;border:1.5px dashed var(--c)} .pip.sep{width:auto;height:auto;border:0;font-size:10px;color:#5B6573}
@@ -82,7 +83,7 @@ dialog{border:1px solid var(--line);border-radius:10px;background:var(--panel);c
   <div style="display:flex;gap:10px"><button class="btn" type="submit">Se connecter</button><button class="btn ghost" type="button" id="login-fermer">Fermer</button></div>
   <p class="msg" id="login-msg" role="status"></p></form></dialog>
 <script>
-const VERSION = { numero:"1.8", date:"2026-10-10 19:32" };
+const VERSION = { numero:"1.9", date:"2026-10-11 00:57" };
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";
 const ACCES = ["proprietaire"];
@@ -112,17 +113,20 @@ function libelle(code){
   return "";
 }
 
+const POL = '<i class="pol">polarisées</i><sup>*</sup>', POLS = '<i class="pol">polarisés</i><sup>*</sup>';
 const SECTIONS = [
   ["valeurs", "Valeurs", "1 couleur — score brut"],
-  ["valeursPolarisees", "Valeurs polarisées", "1 couleur — valeurs absolues : présence au-dessus de 50 %, absence en dessous"],
+  ["valeursPolarisees", "Valeurs " + POL, "1 couleur — présence ou absence la plus marquée"],
   ["motivations", "Motivations", "2 couleurs — données corrigées"],
-  ["motivationsPolarisees", "Motivations polarisées", "2 couleurs — valeurs absolues, données corrigées"],
+  ["motivationsPolarisees", "Motivations " + POL, "2 couleurs — présence ou absence la plus marquée, données corrigées"],
   ["projets", "Projets", "3 couleurs — données corrigées"],
-  ["projetsRedresses", "Projets redressés", "3 couleurs — valeurs absolues, données corrigées"],
-  ["directions", "Directions", "2 couleurs hiérarchisées — données corrigées"],
-  ["temperaments", "Tempéraments", "1 couleur présente, 1 couleur absente"],
-  ["polariteMotivations", "Polarité des motivations", "2 couleurs contre 1 (couleur tierce indiquée)"]
+  ["projetsRedresses", "Projets " + POLS, "3 couleurs — présence ou absence la plus marquée, données corrigées"],
+  ["directions", "Styles", "1 couleur principale, 1 couleur secondaire — données corrigées"],
+  ["temperaments", "Tempéraments", "1 couleur présente, 1 couleur absente"]
 ];
+const NOTE_POLARISE = `<p class="note"><sup>*</sup> <i>Polarisé</i> : chaque score est lu par son écart à 50 %, dans un sens comme dans l'autre.
+  Une couleur très présente (90 %) et une couleur très absente (10 %) pèsent autant ; la seconde s'affiche comme une absence (<b>/w</b>, <b>/wu</b>…).
+  Le classement montre donc ce qui marque le plus le profil, par sa présence ou par son absence.</p>`;
 const BANDES = [["naturel","100 – 75 %"],["accessible","75 – 60 %"],["situationnel","60 – 40 %"],["difficile","40 – 25 %"],["inaccessible","25 – 0 %"]];
 
 async function lireScores(){
@@ -169,7 +173,8 @@ function rendre(src){
     <h2>Classements</h2>
     <div class="sections">${SECTIONS.map(([k, titre, ex]) => `<section class="sect"><h3>${titre}</h3><p class="ex">${ex}</p><table>
       ${st.sections[k].map(x => `<tr><td class="r">${x.rang}</td><td>${pips(x.code)} ${esc(x.code)}${x.tiers ? ` <span class="n">+ ${x.tiers}</span>` : ""}</td><td class="n">${esc(libelle(x.code))}</td><td class="s">${pct(x.score)}</td></tr>`).join("")}
-      </table></section>`).join("")}</div>`;
+      </table></section>`).join("")}</div>
+    ${NOTE_POLARISE}`;
   $("#lien-fiche").href = "fiche.html" + location.search;
   document.title = `Flamme Bleue — détail ${st.profil.codes.join(" / ")}`;
 }
