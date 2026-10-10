@@ -85,7 +85,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px} .field{display:block;margi
 <!-- Textes de présentation : à ajuster librement -->
 <section class="blocs">
   <article class="bloc"><h2>Le joueur</h2><p class="question">Qu'est-ce que je recherche en jouant ?</p>
-    <p>Cinq moteurs pour savoir pourquoi l'on joue, vingt tempéraments pour ce que l'on cherche et ce que l'on fuit, soixante styles pour la façon de le vivre.</p></article>
+    <p>Cinq moteurs pour savoir pourquoi l'on joue, vingt tempéraments pour ce que l'on cherche et ce que l'on fuit, vingt styles pour la façon de le vivre.</p></article>
   <article class="bloc"><h2>Le jeu</h2><p class="question">Qu'est-ce que ce jeu est, objectivement ?</p>
     <p>Seize paires d'axes, du système à l'édition, pour décrire un jeu tel qu'il est, avant de se demander à qui il plaira.</p></article>
   <article class="bloc"><h2>Le temps</h2><p class="question">Comment l'expérience évolue-t-elle ?</p>
@@ -95,7 +95,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px} .field{display:block;margi
 <footer><span>PRISME — l'Arpenteur <a class="contact" href="../?contact&amp;depuis=prisme">Écrire à l'Arpenteur</a></span><span id="version"></span></footer>
 
 <script>
-const VERSION = { numero:"2.0", date:"2026-10-10 23:00" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"3.0", date:"2026-10-11 01:30" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -124,23 +124,27 @@ async function afficherEspace(){
     sb.rpc("prisme_mon_role"),
     sb.from("prisme_roles").select("nom").eq("user_id", user.id).maybeSingle(),
     sb.from("forge_utilisateurs").select("nom").eq("user_id", user.id).maybeSingle(),
-    sb.from("prisme_player_resultats").select("id,passe_le,style,classement").eq("user_id", user.id).order("passe_le", { ascending:false }).limit(1)
+    sb.from("prisme_player_resultats").select("id,passe_le,style,classement,reponses").eq("user_id", user.id).order("passe_le", { ascending:false }).limit(1)
   ]);   // le lien « La Forge » est géré par entete.js
   const nom = moiP?.nom || moiF?.nom;
   const dernier = res?.[0];
   let profil = null;
   if (dernier){
     const c = dernier.classement, code = dernier.style || (c ? c[0] + "." + c[1].toLowerCase() + "/" + c[4].toLowerCase() : null);
-    const { data } = await sb.from("prisme_player_vue_styles").select("nom,temperament_nom,moteur_nom").eq("code", code).maybeSingle();
-    profil = data;
+    if (code){
+      const [{ data: t }, { data: st }] = await Promise.all([
+        sb.from("prisme_player_temperaments").select("nom").eq("code", code[0] + "/" + code[4]).maybeSingle(),
+        sb.from("prisme_player_styles").select("nom").eq("code", code.slice(0, 3)).maybeSingle()]);
+      if (t && st) profil = { tem: t.nom, style: st.nom, provisoire: Object.keys(dernier.reponses || {}).length < 25 };
+    }
   }
   $("#espace").classList.remove("hidden");
   $("#bonjour").textContent = `Bonjour${nom ? ", " + nom : ""}`;
   $("#espace-sous").innerHTML = dernier && profil
-    ? `Votre profil de joueur : <b>${esc(profil.nom.charAt(0).toUpperCase() + profil.nom.slice(1))}</b> (${esc(profil.temperament_nom)}, ${esc(profil.moteur_nom)}), le ${new Date(dernier.passe_le).toLocaleDateString("fr-FR")}.`
+    ? `Votre profil de joueur : <b>${esc(profil.tem.charAt(0).toUpperCase() + profil.tem.slice(1))}</b> (${esc(profil.style)})${profil.provisoire ? ", provisoire" : ""}, le ${new Date(dernier.passe_le).toLocaleDateString("fr-FR")}.`
     : "Vous n'avez pas encore enregistré de profil de joueur : commencez par le questionnaire.";
-  let t = dernier ? tuile("fiche.html", "Mon profil de joueur", "Vos moteurs, votre tempérament, votre style") : "";
-  t += tuile("rosace.html", "La rosace", dernier ? "Votre place parmi les soixante styles" : "Cinq moteurs, vingt tempéraments, soixante styles");
+  let t = dernier ? tuile("fiche.html", "Mon profil de joueur", "Vos moteurs, vos tempéraments, votre style, votre rival") : "";
+  t += tuile("rosace.html", "La rosace", dernier ? "Votre place sur la roue des joueurs" : "Cinq moteurs, vingt tempéraments, vingt styles");
   t += tuile("questionnaire.html", "Questionnaire du joueur", dernier ? "Revoir ou modifier vos réponses" : "Vingt-cinq situations de jeu, dix minutes");
   if (["proprietaire","editeur","evaluateur"].includes(role)) t += tuile("evaluation.html", "Évaluer un jeu", "Remplir ou reprendre une fiche PRISMEgame");
   t += tuile("encyclopedie.html", "L'encyclopédie", "Le modèle complet : le jeu, le joueur, leurs grilles et leurs exemples");

@@ -87,10 +87,10 @@ details.repli > section{border:0;margin:0;padding-top:0}
 <main id="contenu"><p class="vide">Chargement…</p></main>
 <main><p class="version"><span id="credit"></span><br><span id="version"></span></p></main>
 
-<script src="timeline.js?v=1.4"></script>
+<script src="timeline.js?v=1.5"></script>
 <script src="totems.js?v=1"></script>
 <script>
-const VERSION = { numero:"2.4", date:"2026-10-11 00:45" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"3.0", date:"2026-10-11 01:30" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -130,22 +130,23 @@ async function afficher(user){
   if (!r) return vide(id ? "Ce résultat n'existe pas, ou vous n'avez pas le droit de le voir."
                          : 'Vous n\'avez pas encore de profil de joueur. <a href="questionnaire.html">Passer le questionnaire</a>.');
   const c = r.classement, code = r.style || (c ? c[0] + "." + c[1].toLowerCase() + "/" + c[4].toLowerCase() : null);
-  const [{ data: st }, { data: mot }] = await Promise.all([
-    // les totems se chargent en même temps (sans images, la fiche s'affiche quand même)
-    chargerTotems().then(() => ({ data:null })).then(() => sb.from("prisme_player_vue_styles").select("*").eq("code", code).single()),
-    sb.from("prisme_player_moteurs").select("*").order("ordre")
+  const [, { data: mot }, { data: tems }, { data: stys }] = await Promise.all([
+    chargerTotems(),   // sans images, la fiche s'affiche quand même
+    sb.from("prisme_player_moteurs").select("*").order("ordre"),
+    sb.from("prisme_player_temperaments").select("*").order("ordre"),
+    sb.from("prisme_player_styles").select("*").order("ordre")
   ]);
-  if (!st) return vide("Ce résultat date d'une version précédente du modèle et n'a pas de style. <a href=\"questionnaire.html\">Repasser le questionnaire</a>.");
-  const { data: tems } = await sb.from("prisme_player_temperaments").select("*").order("ordre");
   TEMS = Object.fromEntries((tems || []).map(t => [t.code, t]));
-  const tem = TEMS[st.temperament];
-  const M = Object.fromEntries(mot.map(m => [m.code, m])), dom = M[st.moteur]; MOT = M;
-  const facs = facettes(r.scores, st.temperament), rival = tem.fuit + "/" + tem.moteur.toLowerCase(), tr = TEMS[rival];
+  const STY = Object.fromEntries((stys || []).map(x => [x.code, x]));
+  const tem = code && TEMS[temperamentDe(code)], sty = code && STY[styleDe(code)];
+  if (!tem || !sty) return vide("Profil illisible. <a href=\"questionnaire.html\">Repasser le questionnaire</a>.");
+  const M = Object.fromEntries(mot.map(m => [m.code, m])), dom = M[tem.moteur]; MOT = M;
+  const nbRep = Object.keys(r.reponses || {}).length, complet = nbRep >= 25;
+  const facs = facettes(r.scores, tem.code), rival = tem.fuit + "/" + tem.moteur.toLowerCase(), tr = TEMS[rival];
   const autre = r.user_id !== user.id;
   document.documentElement.style.setProperty("--arch", dom.couleur || "#888");
-  document.title = `PRISME — ${maj(st.nom)}`;
+  document.title = `PRISME — ${maj(tem.nom)} (${sty.nom})`;
 
-  const qualif = st.nom.slice(st.temperament_nom.length).trim() || st.nom;   // « attentif » : le style sans répéter le tempérament
   const ordre = r.classement.split("");
   const moteurs = ordre.map((c, i) => {
     const m = M[c], pct = Number(r.scores?.[c] ?? 0);
@@ -157,12 +158,12 @@ async function afficher(user){
   }).join("");
 
   $("#contenu").innerHTML = `
-    <div class="entete${TOTEMS.svg[st.temperament] ? " avec-totem" : ""}">
-      ${totemSVG(st.temperament, dom.couleur, { cls:"totem", titre: tem?.totem ? maj(tem.totem) : undefined })}
+    <div class="entete${TOTEMS.svg[tem.code] ? " avec-totem" : ""}">
+      ${totemSVG(tem.code, dom.couleur, { cls:"totem", titre: tem.totem ? maj(tem.totem) : undefined })}
       <div class="entete-texte">
       <p class="surtitre">${autre ? "Profil de joueur" : "Mon profil de joueur"}</p>
-      <h1 class="titre-joueur">${esc(maj(st.temperament_nom))} <span class="qualif" style="--sous:${esc(M[st.second]?.couleur || "var(--ink)")}" title="Votre style : ${esc(st.nom)} (${esc(st.code)})">(${esc(qualif)})</span></h1>
-      <p class="sous-titre">Tempérament ${esc(st.temperament)}, style ${esc(st.code)}</p>
+      <h1 class="titre-joueur">${esc(maj(tem.nom))} <span class="qualif" style="--sous:${esc(M[sty.second]?.couleur || "var(--ink)")}" title="Votre style : ${esc(sty.nom)} (${esc(sty.code)})">(${esc(sty.nom)})</span></h1>
+      <p class="sous-titre">Tempérament ${esc(tem.code)}, style ${esc(sty.code)}${complet ? "" : ` · profil provisoire : ${nbRep} réponse${nbRep > 1 ? "s" : ""} sur 25`}</p>
       <p class="date">Questionnaire du ${new Date(r.passe_le).toLocaleDateString("fr-FR")}.${autre ? "" : ' <a href="questionnaire.html">Le modifier ou le refaire</a>. <a href="rosace.html">Voir ma place sur la rosace</a>.'}</p>
       </div>
     </div>
@@ -170,14 +171,15 @@ async function afficher(user){
     <section><h2>Vos moteurs</h2><p class="question">Ce qui vous met en mouvement à la table, du plus fort au plus faible.</p>
       <div class="moteurs">${moteurs}</div></section>
 
-    <section id="temperaments"><h2>${autre ? "Ses" : "Vos"} tempéraments</h2><p class="question">Ce que je cherche, ce que je fuis. Le premier est ${autre ? "son" : "votre"} tempérament ; les suivants, des facettes presque aussi marquées.</p>
+    <section id="temperaments"><h2>${autre ? "Ses" : "Vos"} tempéraments</h2><p class="question">Ce que je cherche, ce que je fuis. Le premier est ${autre ? "son" : "votre"} tempérament ; les suivants, des facettes presque aussi marquées.${complet ? "" : " Facettes provisoires : elles se précisent avec les 25 réponses."}</p>
       ${facs.length > 1 ? `<div class="facettes" role="tablist">${facs.map((f, i) => `<button type="button" role="tab" class="facette" data-tem="${esc(f.code)}" aria-selected="${i === 0}">
         ${totemSVG(f.code, M[f.code[0]].couleur, { titre:"" })}<span><b>${esc(maj(TEMS[f.code]?.nom || f.code))}</b><small>${esc(f.code)} · ${Math.round(f.part * 100)} %</small></span></button>`).join("")}</div>` : ""}
-      <div id="tem-corps">${blocTemperament(st.temperament)}</div></section>
+      <div id="tem-corps">${blocTemperament(tem.code)}</div></section>
 
-    <section><h2>Votre style : ${esc(qualif)}</h2><p class="question">Avec quoi je le vis : votre second moteur.</p>
-      <p>${st.texte ? esc(st.texte) : `Style ${esc(st.code)} : ${esc(st.temperament_nom)}, avec ${esc(st.second_nom)} en second moteur.`}</p>
-      <p><span class="libelle">Second moteur</span>${esc(st.second_nom)} : ${esc(M[st.second].devise)}.</p></section>
+    <section><h2>${autre ? "Son" : "Votre"} style : ${esc(sty.nom)}</h2><p class="question">Avec quoi je le vis : ${esc(dom.nom)}, conduit par ${esc(M[sty.second].nom)}.</p>
+      ${sty.devise ? `<p class="devise">${esc(maj(sty.devise))}${sty.titre ? ` · « ${esc(sty.titre)} »` : ""}</p>` : ""}
+      ${sty.texte ? `<p>${esc(sty.texte)}</p>` : ""}
+      ${sty.fb_verbe ? `<p class="fb">Dans Flamme Bleue : ${esc(sty.fb_verbe)} (« ${esc(sty.fb_devise)} »).</p>` : ""}</section>
 
     <details class="repli"><summary>${esc(dom.nom)} <small>votre moteur dominant, en entier</small></summary>
     <section><p class="question">Pourquoi je joue ? Votre tempérament en est une déclinaison.</p>
@@ -204,20 +206,9 @@ async function afficher(user){
     document.querySelectorAll(".facette").forEach(x => x.setAttribute("aria-selected", x === b));
     $("#tem-corps").innerHTML = blocTemperament(b.dataset.tem);
   }));
-  if (TOTEMS.svg[st.temperament]) $("#credit").innerHTML = TOTEMS_CREDIT;
+  if (TOTEMS.svg[tem.code]) $("#credit").innerHTML = TOTEMS_CREDIT;
 }
 let TEMS = {}, MOT = {};
-// les tempéraments significatifs d'un profil : affinité de X/y = (score X − moyenne) × (moyenne − score Y), les deux écarts devant être positifs ;
-// on garde ceux qui atteignent 40 % du premier, quatre au plus ; le tempérament du classement passe toujours en tête
-function facettes(scores, principal){
-  const S = scores || {}, C = "WUBRG".split("").filter(c => S[c] != null);
-  if (C.length < 5) return [{ code:principal, aff:1, part:1 }];
-  const m = C.reduce((t, c) => t + Number(S[c]), 0) / 5, L = [];
-  C.forEach(a => C.forEach(e => { const h = Number(S[a]) - m, b = m - Number(S[e]); if (a !== e && h > 0 && b > 0) L.push({ code:a + "/" + e.toLowerCase(), aff:h * b }); }));
-  L.sort((x, y) => (y.code === principal) - (x.code === principal) || y.aff - x.aff);
-  const max = Math.max(...L.map(x => x.aff), 1e-9);
-  return (L.length ? L : [{ code:principal, aff:1 }]).filter((x, i) => i === 0 || x.aff >= .4 * max).slice(0, 4).map(x => ({ ...x, part: x.aff / max }));
-}
 function blocTemperament(code){
   const t = TEMS[code]; if (!t) return "";
   return `<h3>${esc(maj(t.nom))} <small class="code">${esc(t.code)} · ${esc(MOT[t.moteur].nom)}, fuit ${esc(MOT[t.fuit].nom.toLowerCase())}</small></h3>
@@ -235,7 +226,7 @@ async function afficherVosJeux(code, autre){
   if (!rj) return;
   // quels jeux pour vous deux : la note du rival est la moyenne de ses trois styles ; on classe selon la plus basse des deux notes
   const rival = code[4].toUpperCase() + "/" + code[0].toLowerCase();
-  const R2 = Object.fromEntries(jeuxPourJoueurs(d.fiches, d.paires, d.axes, null, stylesDe(rival, STYLES_TOUS(rival))).map(x => [x.jeu, x]));
+  const R2 = Object.fromEntries(jeuxPourJoueurs(d.fiches, d.paires, d.axes, null, stylesDe(rival)).map(x => [x.jeu, x]));
   const D = L.filter(x => R2[x.jeu]).map(x => ({ jeu:x.jeu, finale:x.finale, a:x.note, b:R2[x.jeu].note, n:Math.min(x.note, R2[x.jeu].note) })).sort((x, y) => y.n - x.n);
   const nom = c => d.jeux.find(j => j.code === c)?.nom || c, f = v => Number(v).toFixed(2).replace(".", ",");
   rj.innerHTML = D.length ? `<p class="pj-discret">Classés selon la note la plus basse des deux : le jeu qui ne laisse personne sur le bord.</p>
@@ -244,8 +235,6 @@ async function afficherVosJeux(code, autre){
       <td class="n">${f(x.a)}</td><td class="n">${f(x.b)}</td><td class="n"><b>${f(x.n)}</b></td></tr>`).join("")}</tbody></table>`
     : `<p class="pj-discret">Aucun jeu n'a encore de fiche complète.</p>`;
 }
-// les trois codes de style d'un tempérament X/y (sans lire la base : le second est l'un des trois autres moteurs)
-const STYLES_TOUS = t => "WUBRG".split("").filter(c => c !== t[0] && c !== t[2].toUpperCase()).map(b => ({ code: t[0] + "." + b.toLowerCase() + "/" + t[2] }));
 
 // frise des jalons 0 à 7+ : une ligne par moteur, dans l'ordre du joueur ; apogée de chacun, gêne du moteur fui
 function frise(mots){

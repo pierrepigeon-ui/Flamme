@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PRISME — Questionnaire du joueur</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+<script src="timeline.js?v=1.5"></script>
 
 <style>
 :root {
@@ -176,6 +177,18 @@ button:focus-visible,
   background: #EAF2FB;
   border-color: var(--bleu-interface);
 }
+.option.selectionnee.plutot {
+  background: #F4F8FD;
+  border-style: dashed;
+}
+.option { flex-direction: column; align-items: stretch; }
+.option-degres { display: flex; gap: 6px; justify-content: flex-end; }
+.option-degres button {
+  font: 600 11.5px/1 inherit; padding: 4px 9px; border-radius: 999px; cursor: pointer;
+  border: 1px solid #D6DCE3; background: #FFFFFF; color: #6B7280;
+}
+.option-degres button[aria-pressed="true"] { background: var(--bleu-interface); border-color: var(--bleu-interface); color: #FFFFFF; }
+.provisoire { font-size: 12px; font-weight: 600; color: #B45309; margin: 0 0 6px; }
 
 .option-badges {
   flex: 0 0 auto;
@@ -395,8 +408,8 @@ button:focus-visible,
 
   <header>
     <h1>PRISME — Questionnaire du joueur</h1>
-    <p><strong class="rouge">Questions 1 à 10 (obligatoires)</strong> : choisissez l'option qui vous ressemble le plus à table, pas celle que vous préférez en théorie.</p>
-    <p><strong>Questions 11 à 25 (facultatives)</strong> : répondez si une des deux options vous parle, sinon passez à la suivante.</p>
+    <p>Pour chacune des <strong>25 situations</strong>, choisissez l'option qui vous ressemble le plus à table, pas celle que vous préférez en théorie. Un clic sur une option : <strong>nettement</strong>. Si vous hésitez, précisez <strong>plutôt</strong>.</p>
+    <p>Votre profil se dessine dès la première réponse ; il reste <strong>provisoire</strong> tant que les 25 ne sont pas répondues.</p>
     <div id="progression"></div>
     <p id="etat-reprise" hidden></p>
 
@@ -443,7 +456,7 @@ button:focus-visible,
 var ordreCouleurs = ["W", "U", "B", "R", "G"];
 
 /* Version de cette page : à incrémenter à chaque livraison */
-var VERSION = { numero: "2.1", date: "2026-10-11 00:50" };
+var VERSION = { numero: "3.0", date: "2026-10-11 01:30" };
 var SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 var SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -499,7 +512,7 @@ function afficherQuestions() {
     entete.className = "question-entete";
 
     var numero = document.createElement("span");
-    numero.className = "question-numero" + (q.obligatoire ? " q-obligatoire" : "");
+    numero.className = "question-numero";
     numero.textContent = q.numero;
 
     var texte = document.createElement("span");
@@ -514,11 +527,13 @@ function afficherQuestions() {
     options.className = "question-options";
 
     [["A", q.codeA, q.texteA], ["B", q.codeB, q.texteB]].forEach(function(opt) {
-      var lettreOption = opt[0], code = opt[1], texteOpt = opt[2];
+      var lettreOption = opt[0], texteOpt = opt[2];
 
-      var bouton = document.createElement("button");
-      bouton.type = "button";
+      // une option = un bloc cliquable (nettement) avec ses deux degrés : « nettement » (A, B) et « plutôt » (a, b)
+      var bouton = document.createElement("div");
       bouton.className = "option";
+      bouton.setAttribute("role", "button");
+      bouton.setAttribute("tabindex", "0");
       bouton.setAttribute("data-numero", q.numero);
       bouton.setAttribute("data-option", lettreOption);
       bouton.setAttribute("aria-pressed", "false");
@@ -528,9 +543,18 @@ function afficherQuestions() {
       spanTexte.textContent = texteOpt;
       bouton.appendChild(spanTexte);
 
-      bouton.addEventListener("click", function() {
-        selectionner(q.numero, lettreOption);
+      var degres = document.createElement("span");
+      degres.className = "option-degres";
+      [["plutôt", lettreOption.toLowerCase()], ["nettement", lettreOption]].forEach(function(d) {
+        var b = document.createElement("button");
+        b.type = "button"; b.textContent = d[0]; b.setAttribute("data-valeur", d[1]); b.setAttribute("aria-pressed", "false");
+        b.addEventListener("click", function(e) { e.stopPropagation(); selectionner(q.numero, d[1]); });
+        degres.appendChild(b);
       });
+      bouton.appendChild(degres);
+
+      bouton.addEventListener("click", function() { selectionner(q.numero, lettreOption); });
+      bouton.addEventListener("keydown", function(e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selectionner(q.numero, lettreOption); } });
 
       options.appendChild(bouton);
     });
@@ -555,18 +579,18 @@ function mettreAJourSelection() {
   document.querySelectorAll(".option").forEach(function(bouton) {
     var numero = parseInt(bouton.getAttribute("data-numero"), 10);
     var option = bouton.getAttribute("data-option");
-    var actif = reponses[numero] === option;
-
+    var r = reponses[numero] || "";
+    var actif = r.toUpperCase() === option;
     bouton.classList.toggle("selectionnee", actif);
+    bouton.classList.toggle("plutot", actif && r !== option);
     bouton.setAttribute("aria-pressed", actif ? "true" : "false");
+    bouton.querySelectorAll(".option-degres button").forEach(function(b) {
+      b.setAttribute("aria-pressed", r === b.getAttribute("data-valeur") ? "true" : "false");
+    });
   });
-
-  var repondues = questions.filter(function(q) {
-    return q.obligatoire && reponses[q.numero];
-  }).length;
-
+  var repondues = Object.keys(reponses).length;
   document.getElementById("progression").textContent =
-    repondues + " / 10 questions obligatoires répondues";
+    repondues + " / " + questions.length + " réponses" + (repondues < questions.length ? " : profil provisoire" : " : profil complet");
 }
 
 function recommencer() {
@@ -602,46 +626,26 @@ function trierSelonRoue(couleursATrier) {
   return (distAversB <= distBversA) ? [a, b] : [b, a];
 }
 
+// Réponses : "A" (nettement A), "a" (plutôt A), "b", "B". « Plutôt » partage les points de la question :
+// deux tiers à l'option choisie, un tiers à l'autre. Chaque moteur garde un maximum de 20 points (tout « nettement »).
 function calculerScores() {
   var scores = { W: 0, U: 0, B: 0, R: 0, G: 0 };
   var ordreReponsesObligatoires = [];
 
   questions.forEach(function(q) {
     var reponse = reponses[q.numero];
-    if (!reponse) {
-      return;
-    }
-
-    var code = (reponse === "A") ? q.codeA : q.codeB;
-    var poids = q.obligatoire ? 2 : 1;
-
-    for (var i = 0; i < code.length; i++) {
-      scores[code.charAt(i)] += poids;
-    }
-
-    if (q.obligatoire) {
-      // Pour le départage : la couleur choisie à cette question,
-      // dans l'ordre des questions 1 à 10.
-      ordreReponsesObligatoires.push(code);
-    }
+    if (!reponse) return;
+    var choixA = reponse.toUpperCase() === "A", net = reponse === reponse.toUpperCase();
+    var poids = q.obligatoire ? 2 : 1, part = net ? 1 : 2 / 3;
+    var pris = choixA ? q.codeA : q.codeB, laisse = choixA ? q.codeB : q.codeA;
+    for (var i = 0; i < pris.length; i++) scores[pris.charAt(i)] += poids * part;
+    for (var j = 0; j < laisse.length; j++) scores[laisse.charAt(j)] += poids * (1 - part);
+    if (q.obligatoire) ordreReponsesObligatoires.push(pris);   // pour le départage, dans l'ordre des questions 1 à 10
   });
 
-  // Chaque couleur apparaît, sur l'ensemble des 25 questions, pour un
-  // total de poids de 20 (4 questions obligatoires à 2 pts + 12 points
-  // facultatifs à 1 pt) : c'est son maximum atteignable individuel.
-  // Le pourcentage de chaque couleur est donc indépendant des autres -
-  // la somme des 5 vaut 250 quand tout est répondu, moins sinon.
-  var MAX_PAR_COULEUR = 20;
-  var pourcentages = {};
-  ordreCouleurs.forEach(function(c) {
-    pourcentages[c] = (scores[c] / MAX_PAR_COULEUR) * 100;
-  });
-
-  return {
-    scores: scores,
-    pourcentages: pourcentages,
-    ordreReponsesObligatoires: ordreReponsesObligatoires
-  };
+  var MAX_PAR_COULEUR = 20, pourcentages = {};
+  ordreCouleurs.forEach(function(c) { pourcentages[c] = (scores[c] / MAX_PAR_COULEUR) * 100; });
+  return { scores: scores, pourcentages: pourcentages, ordreReponsesObligatoires: ordreReponsesObligatoires };
 }
 
 // Classement v2 : score d'abord ; à égalité, le duel direct des questions obligatoires
@@ -654,7 +658,7 @@ function duelGagnant(a, b) {
            ((x.codeA === a && x.codeB === b) || (x.codeA === b && x.codeB === a));
   });
   var r = q && reponses[q.numero];
-  return r ? (r === "A" ? q.codeA : q.codeB) : null;
+  return r ? (r.toUpperCase() === "A" ? q.codeA : q.codeB) : null;
 }
 
 function classerAvecDepartage(scores, ordreReponsesObligatoires) {
@@ -688,20 +692,19 @@ function actualiserResultats() {
   afficherVignettes(calcul.pourcentages, classement);
   afficherHistogramme(calcul.pourcentages);
 
-  var repondues = questions.filter(function(q) {
-    return q.obligatoire && reponses[q.numero];
-  }).length;
-
-  if (repondues < 10) {
-    afficherAttente(repondues);
+  var repondues = Object.keys(reponses).length;
+  if (!repondues) {
+    afficherAttente();
     document.getElementById("enregistrement").hidden = true;
     return;
   }
 
   var codes = construireCodesPrisme(classement);
-  afficherMoteur(codes.moteur);
-  afficherTemperament(codes.temperament);
-  afficherStyle(codes.style);
+  var prov = repondues < questions.length
+    ? '<p class="provisoire">Provisoire : ' + repondues + ' réponse' + (repondues > 1 ? "s" : "") + ' sur ' + questions.length + '</p>' : "";
+  afficherMoteur(codes.moteur, prov);
+  afficherTemperament(codes.temperament, calcul.pourcentages);
+  afficherStyle(codes.style.slice(0, 3));
   afficherEnregistrement(codes, calcul, classement);
 }
 
@@ -744,10 +747,8 @@ function afficherHistogramme(pourcentages) {
   });
 }
 
-function afficherAttente(repondues) {
-  var message =
-    '<p class="fiche-attente">Répondez aux 10 premières questions (obligatoires) pour découvrir votre profil de joueur.<br>' +
-    'Encore ' + (10 - repondues) + ' question' + ((10 - repondues) > 1 ? "s" : "") + '.</p>';
+function afficherAttente() {
+  var message = '<p class="fiche-attente">Votre profil de joueur se dessine dès la première réponse.</p>';
 
   document.getElementById("contenu-moteur").innerHTML = message;
   document.getElementById("contenu-temperament").innerHTML = "";
@@ -758,33 +759,35 @@ function echapper(t) { return String(t == null ? "" : t).replace(/[&<>"']/g, fun
 function majuscule(t) { t = String(t || ""); return t.charAt(0).toUpperCase() + t.slice(1); }
 function liste(t) { return String(t || "").split("\n").filter(Boolean).map(function(l) { return "<li>" + echapper(l) + "</li>"; }).join(""); }
 
-function afficherMoteur(code) {
+function afficherMoteur(code, prov) {
   var m = moteurs[code], zone = document.getElementById("contenu-moteur");
   if (!m) { zone.innerHTML = '<p class="fiche-attente">Moteur non trouvé.</p>'; return; }
-  zone.innerHTML =
+  zone.innerHTML = (prov || "") +
     '<div class="fiche-nom" style="color:' + m.couleur + '">' + echapper(m.nom) + '</div>' +
     '<div class="fiche-devise">' + echapper(m.devise || "") + (m.citation ? ' · « ' + echapper(m.citation) + ' »' : "") + '</div>' +
     '<p class="fiche-texte">' + echapper(m.texte) + '</p>';
 }
 
-function afficherTemperament(code) {
+function afficherTemperament(code, scores) {
   var t = temperaments[code], zone = document.getElementById("contenu-temperament");
   if (!t) { zone.innerHTML = '<p class="fiche-attente">Tempérament non trouvé.</p>'; return; }
+  var f = facettes(scores, code).slice(1).filter(function(x) { return temperaments[x.code]; });
   zone.innerHTML =
     '<div class="fiche-nom">' + echapper(majuscule(t.nom)) + '</div>' +
     '<div class="fiche-devise">' + echapper(nomsMoteurs[t.moteur]) + ', fuit ' + echapper(nomsMoteurs[t.fuit]) + '</div>' +
     '<p class="fiche-texte">' + echapper(t.qui_il_est) + '</p>' +
-    '<p class="fiche-texte"><strong>Quand il décroche.</strong> ' + echapper(t.quand_decroche) + '</p>';
+    '<p class="fiche-texte"><strong>Quand il décroche.</strong> ' + echapper(t.quand_decroche) + '</p>' +
+    (f.length ? '<p class="fiche-texte"><strong>Vos facettes :</strong> ' + f.map(function(x) { return echapper(temperaments[x.code].nom); }).join(", ") + '.</p>' : "");
 }
 
-function afficherStyle(code) {
+function afficherStyle(code) {   // code A.b
   var x = styles[code], zone = document.getElementById("contenu-style");
   if (!x) { zone.innerHTML = '<p class="fiche-attente">Style non trouvé.</p>'; return; }
-  var t = temperaments[x.temperament];
   zone.innerHTML =
-    '<div class="fiche-nom">' + echapper(majuscule(x.nom)) + '</div>' +
-    '<p class="fiche-texte">' + (x.texte ? echapper(x.texte)
-      : 'Style ' + echapper(x.code) + ' : ' + echapper(t ? t.nom : x.temperament) + ', avec ' + echapper(nomsMoteurs[x.second]) + ' en second moteur.') + '</p>';
+    '<div class="fiche-nom">' + echapper(x.nom) + '</div>' +
+    '<div class="fiche-devise">' + echapper(nomsMoteurs[x.moteur]) + ', conduit par ' + echapper(nomsMoteurs[x.second]) + '</div>' +
+    (x.devise ? '<p class="fiche-texte">' + echapper(majuscule(x.devise)) + (x.titre ? ' · « ' + echapper(x.titre) + ' »' : "") + '</p>' : "") +
+    (x.texte ? '<p class="fiche-texte">' + echapper(x.texte) + '</p>' : "");
 }
 
 /* ===================== Démarrage ===================== */

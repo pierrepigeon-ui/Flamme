@@ -56,18 +56,18 @@ aside .vous-badge{display:inline-block;font:600 12px var(--sans);color:#fff;back
 <div class="barre"><a href="index.html" class="marque" title="Accueil de PRISME">PRISME</a><span id="qui"></span></div>
 <div class="page">
   <div>
-    <div class="carte"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-510 -510 1020 1020" id="rosace" role="img" aria-label="Rosace PRISMEplayer : 5 moteurs, 20 tempéraments, 60 styles"></svg></div>
-    <div class="outils"><span>Cliquez sur un secteur pour le découvrir. Le point coloré d'un tempérament indique le moteur qu'il fuit ; la couleur d'un style, son second moteur.</span>
+    <div class="carte"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-510 -510 1020 1020" id="rosace" role="img" aria-label="Rosace PRISMEplayer : 5 moteurs, 20 tempéraments, 20 styles"></svg></div>
+    <div class="outils"><span>Cliquez sur un secteur pour le découvrir. Le point coloré d'un tempérament indique le moteur qu'il fuit ; la couleur d'un style, le moteur qui conduit le premier.</span>
       <button type="button" id="bascule" class="bascule" aria-pressed="true" hidden>Surbrillance de mon profil : activée</button></div>
   </div>
   <aside id="panneau"><p class="niveau">Chargement…</p></aside>
 </div>
 <p class="version"><span id="credit"></span><br><span id="version"></span></p>
 
-<script src="timeline.js?v=1.4"></script>
+<script src="timeline.js?v=1.5"></script>
 <script src="totems.js?v=1"></script>
 <script>
-const VERSION = { numero:"2.4", date:"2026-10-11 00:45" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"3.0", date:"2026-10-11 01:30" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -110,16 +110,17 @@ async function demarrer(user){
     const { data } = await sb.from("prisme_player_resultats").select("style,classement,passe_le").eq("user_id", user.id).order("passe_le", { ascending:false }).limit(1);
     const d = data?.[0];
     if (d){ const c = d.classement; vous = { ...d, style: d.style || (c ? c[0] + "." + c[1].toLowerCase() + "/" + c[4].toLowerCase() : null) }; }
-    if (vous && !B.S[vous.style]) vous = null;
+    if (vous && !PROFILS.includes(vous.style)) vous = null;   // vous.style : le code complet A.b/e
   }
   dessiner();
   if (vous){
     $("#bascule").hidden = false;
-    surligner(); montrer(vous.style);
+    surligner(); montrer(temperamentDe(vous.style));
   } else montrerAccueil(!!user);
 }
 
-/* ---- le dessin, généré : centre, moteurs (72°), tempéraments (18°), styles (6°) ---- */
+/* ---- le dessin, généré : centre, moteurs (72°), tempéraments (18°), styles (18°) ----
+   Dans chaque moteur, une même case (même angle) porte une même couleur : au milieu le tempérament qui la fuit, au bord le style qu'elle conduit. */
 const R0 = 92, R1 = 198, R2 = 376, R3 = 500;          // rayons : centre, moteurs, tempéraments, styles
 function teinte(hex, k){                                 // mélange avec le blanc : k = part de blanc
   const n = parseInt(String(hex).slice(1), 16), c = [n >> 16, (n >> 8) & 255, n & 255].map(v => Math.round(v + (255 - v) * k));
@@ -157,12 +158,12 @@ function dessiner(){
         ${TOTEMS.svg[t.code] ? `<g transform="translate(${(ix - 17).toFixed(1)} ${(iy - 17).toFixed(1)})">${totemSVG(t.code, fonce(m.couleur, .35), { titre:"", attrs:'width="34" height="34"' })}</g>` : ""}
         ${radial(maj(sansArticle(t.nom)), b1 + 9, R1 + (TOTEMS.svg[t.code] ? 50 : 4), R2 - 26, "t-tem")}
         <circle class="fuit" cx="${fx.toFixed(1)}" cy="${fy.toFixed(1)}" r="8" fill="${f.couleur}"/></g>`;
-      const S = B.styles.filter(s => s.temperament === t.code).sort((x, y) => x.ordre - y.ordre);
-      S.forEach((s, k) => {
-        const c1 = b1 + k * 6, c2 = c1 + 6, q = s.nom.slice(t.nom.length).trim() || s.nom;
-        h += `<g data-code="${esc(s.code)}" data-niveau="style"><title>${esc(maj(s.nom))} (${esc(s.code)})</title>
-          <path class="sect" d="${secteur(R2, R3, c1, c2)}" fill="${teinte(B.M[s.second].couleur, .7)}"/>${radial(q, c1 + 3, R2, R3, "t-sty")}</g>`;
-      });
+      const st = B.S[t.moteur + "." + t.fuit.toLowerCase()];   // même case : le style conduit par ce moteur-là
+      if (st){
+        const sc = B.M[st.second];
+        h += `<g data-code="${esc(st.code)}" data-niveau="style"><title>Style ${esc(st.nom)} (${esc(st.code)}) : ${esc(m.nom)} conduit par ${esc(sc.nom)}</title>
+          <path class="sect" d="${secteur(R2, R3, b1, b2)}" fill="${teinte(sc.couleur, .62)}"/>${radial(st.nom, b1 + 9, R2, R3, "t-sty")}</g>`;
+      }
     });
   });
   h += `<circle r="${R0 - 2}" fill="#FFFFFF" stroke="#DDE1E7" stroke-width="2"/><text class="t-centre" y="2">PRISME</text><text class="t-centre2" y="24">joueurs</text>`;
@@ -173,7 +174,7 @@ function dessiner(){
 
 const niveauDe = code => code.includes(".") ? "style" : code.includes("/") ? "temperament" : "moteur";
 const groupe = code => $(`#rosace g[data-code="${CSS.escape(code)}"]`);
-const chaine = code => [code, code[0] + "/" + code[4], code[0]];     // le style, son tempérament, son moteur
+const chaine = code => [styleDe(code), temperamentDe(code), code[0]];     // son style, son tempérament, son moteur
 let surbrillance = true;
 function surligner(){
   const svg = $("#rosace");
@@ -181,7 +182,7 @@ function surligner(){
   svg.classList.remove("chemin");
   if (!vous || !surbrillance) return;
   chaine(vous.style).forEach(code => groupe(code)?.classList.add("surligne"));
-  groupe(vous.style)?.classList.add("vous");
+  [styleDe(vous.style), temperamentDe(vous.style)].forEach(c => groupe(c)?.classList.add("vous"));
   svg.classList.add("chemin");
 }
 $("#bascule").addEventListener("click", () => {
@@ -220,16 +221,17 @@ function montrer(code){
       ${t.totem ? `<span class="lib">Son totem</span><p>${esc(maj(t.totem))}. ${esc(t.totem_raison || "")}</p>` : ""}
       ${B.T[t.fuit + "/" + t.moteur.toLowerCase()] ? `<span class="lib">Son rival</span><p>${lien(t.fuit + "/" + t.moteur.toLowerCase(), maj(B.T[t.fuit + "/" + t.moteur.toLowerCase()].nom))} : ce qui le fait décrocher nourrit l'autre, et inversement.</p>` : ""}
       ${t.fb_verbe ? `<span class="lib">Dans Flamme Bleue</span><p>${esc(t.fb_verbe)} (« ${esc(t.fb_devise)} »)</p>` : ""}
-      <span class="lib">Ses trois styles</span><ul>${B.styles.filter(s => s.temperament === code).map(s => `<li>${lien(s.code, maj(s.nom))} : avec ${esc(M[s.second].nom.toLowerCase())}</li>`).join("")}</ul>`;
+      <span class="lib">Ses styles possibles</span><ul>${B.styles.filter(s => s.moteur === t.moteur && s.second !== t.fuit).map(s => `<li>${lien(s.code, s.nom)} : ${esc(m.nom)} conduit par ${esc(M[s.second].nom.toLowerCase())}</li>`).join("")}</ul>
+      ${estVous ? '<p><a href="fiche.html">Voir ma fiche de joueur complète</a></p>' : ""}`;
   } else {
-    const s = B.S[code], t = B.T[s.temperament], m = M[t.moteur];
-    h = `${totemSVG(t.code, m.couleur, { cls:"p-totem", titre: t.totem ? maj(t.totem) : undefined })}<p class="niveau">Style : avec quoi je le vis</p><h1>${esc(maj(s.nom))}${badge}</h1>
-      <p class="fil">${lien(t.code, maj(t.nom))}, moteur ${lien(m.code, m.nom)}</p>
-      <p>${s.texte ? esc(s.texte) : `Style ${esc(s.code)} : ${esc(t.nom)}, avec ${esc(M[s.second].nom)} en second moteur.`}</p>
-      <span class="lib">Second moteur</span><p>${esc(M[s.second].nom)} : ${esc(M[s.second].devise)}</p>
-      <span class="lib">Son moment</span><p>${moment(m)}</p>
-      <span class="lib">Ce qui le fait décrocher</span><p>${esc(t.quand_decroche)}</p>
-      ${estVous && code === vous.style ? '<p><a href="fiche.html">Voir ma fiche de joueur complète</a></p>' : ""}`;
+    const s = B.S[code], m = M[s.moteur], sc = M[s.second];
+    h = `<p class="niveau">Style : avec quoi je le vis</p><h1>${esc(s.nom)}${badge}</h1>
+      <p class="fil">${lien(m.code, m.nom)}, conduit par ${lien(sc.code, sc.nom.toLowerCase())}</p>
+      ${s.devise ? `<p>${esc(maj(s.devise))}${s.titre ? ` · « ${esc(s.titre)} »` : ""}</p>` : ""}
+      ${s.texte ? `<p>${esc(s.texte)}</p>` : ""}
+      ${s.fb_verbe ? `<span class="lib">Dans Flamme Bleue</span><p>${esc(s.fb_verbe)} (« ${esc(s.fb_devise)} »)</p>` : ""}
+      <span class="lib">Ses tempéraments possibles</span><ul>${B.temps.filter(t => t.moteur === s.moteur && t.fuit !== s.second).map(t => `<li>${lien(t.code, maj(t.nom))} (${esc(s.nom)}) : fuit ${esc(M[t.fuit].nom.toLowerCase())}</li>`).join("")}</ul>
+      ${estVous ? '<p><a href="fiche.html">Voir ma fiche de joueur complète</a></p>' : ""}`;
   }
   $("#panneau").innerHTML = h + `<div id="jeux-joueur"><span class="lib">Ses jeux</span><p class="pj-discret">Calcul en cours…</p></div>`;
   afficherJeux(code, N);
@@ -241,12 +243,12 @@ async function afficherJeux(code, N){
   const box = document.getElementById("jeux-joueur"); J ??= await lireJeuxEvalues(sb);
   if (choisi !== code || !box?.isConnected) return;
   if (J.refus){ box.innerHTML = `<span class="lib">Ses jeux</span><p class="pj-discret">Les jeux évalués sont réservés aux membres de PRISME.</p>`; return; }
-  const L = jeuxPourJoueurs(J.fiches, J.paires, J.axes, null, stylesDe(code, B.styles));
-  box.innerHTML = `<span class="lib">Ses jeux</span>` + tableJeuxHTML(L, J, N === "style" ? "lui" : N === "temperament" ? "ses trois styles" : "ses douze styles", N !== "style");
+  const L = jeuxPourJoueurs(J.fiches, J.paires, J.axes, null, stylesDe(code));
+  box.innerHTML = `<span class="lib">Ses jeux</span>` + tableJeuxHTML(L, J, N === "moteur" ? "ses douze profils" : "ses trois profils", true);
 }
 function montrerAccueil(connecte){
-  $("#panneau").innerHTML = `<p class="niveau">La rosace des joueurs</p><h1>Cinq moteurs, vingt tempéraments, soixante styles</h1>
-    <p>Au centre, le moteur : pourquoi l'on joue. Au milieu, le tempérament : ce que l'on cherche et ce que l'on fuit. Au bord, le style : le second moteur, avec lequel on le vit.</p>
+  $("#panneau").innerHTML = `<p class="niveau">La rosace des joueurs</p><h1>Cinq moteurs, vingt tempéraments, vingt styles</h1>
+    <p>Au centre, le moteur : pourquoi l'on joue. Au milieu, le tempérament : ce que l'on cherche et ce que l'on fuit (le point coloré). Au bord, le style : le moteur qui conduit le premier (la couleur du secteur). Dans une même case, la même couleur : fuie au milieu, alliée au bord.</p>
     <p>Cliquez sur un secteur pour le découvrir. Chaque tempérament a son totem : <a href="totems.html">les voir tous</a>.</p>
     <p>${connecte ? '<a href="questionnaire.html">Passez le questionnaire</a> pour voir votre place sur la rosace.'
                   : `<a href="${versForge()}">Connectez-vous</a> et passez le <a href="questionnaire.html">questionnaire du joueur</a> pour voir votre place sur la rosace.`}</p>`;

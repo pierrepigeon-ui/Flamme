@@ -221,7 +221,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 16px}
 
 <script>
 /* ================= configuration ================= */
-const VERSION = { numero:"2.3", date:"2026-10-11 01:05" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"3.0", date:"2026-10-11 01:30" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 
@@ -242,7 +242,7 @@ const OPTIONS = {
   echelle:  { "0-5":"0 à 5", ecart:"écart −− à ++", crans5:"5 crans −− à ++", calcule:"calculée" },
   type:     { statut:"statut", solo:"volet solo", absorption:"absorption", consigne:"consigne de rédaction", historique:"historique", reserve:"en réserve", regle:"règle", note:"note" }
 };
-const TABLES = { prisme_player_moteurs:"moteur", prisme_player_temperaments:"tempérament", prisme_player_styles:"style", prisme_player_archetypes:"archétype", prisme_player_profils:"profil",
+const TABLES = { prisme_player_moteurs:"moteur", prisme_player_temperaments:"tempérament", prisme_player_styles:"style", prisme_player_styles_60:"profil (archive)", prisme_player_archetypes:"archétype", prisme_player_profils:"profil",
                  prisme_player_sous_profils:"sous-profil", prisme_player_questions:"question", prisme_chapitres:"chapitre", prisme_paires:"paire", prisme_axes:"axe", prisme_paliers:"palier",
                  prisme_notes:"encadré", prisme_jeux:"jeu", prisme_exemples:"exemple", prisme_textes:"texte", prisme_roles:"rôle" };
 const LIBELLES = { devise:"Devise", a_la_table:"À la table, il peut (un comportement par ligne)", phase_cle:"Phase clé", qui_il_est:"Qui il est", quand_decroche:"Quand il décroche", fb_verbe:"Flamme Bleue : verbe", fb_devise:"Flamme Bleue : devise", totem:"Totem (l'image est dans prisme/bibliotheque/)", totem_raison:"Raison du totem (une phrase)",
@@ -530,9 +530,9 @@ function afficherListeP(){
     `<div class="chap-title" style="--chap:var(--muted)">Les fondations</div>` +
     it("moteurs", "Les cinq moteurs", state.p_moteurs.map(m => m.nom).join(", "), "var(--muted)") +
     it("questions", "Le questionnaire", state.p_questions.length + " questions", "var(--muted)") +
-    state.p_moteurs.map(m => `<div class="chap-title" style="--chap:${m.couleur}">${esc(m.nom)} : ses tempéraments</div>` +
-      state.p_temperaments.filter(t => t.moteur === m.code).map(t => it(t.code, maj(t.nom), "fuit " + nomMoteur(t.fuit).toLowerCase() + " · " +
-        state.p_styles.filter(x => x.temperament === t.code).map(x => x.nom.slice(t.nom.length).trim()).join(", "), m.couleur)).join("")).join("");
+    state.p_moteurs.map(m => `<div class="chap-title" style="--chap:${m.couleur}">${esc(m.nom)}</div>` +
+      state.p_temperaments.filter(t => t.moteur === m.code).map(t => it(t.code, maj(t.nom), "tempérament · fuit " + nomMoteur(t.fuit).toLowerCase() + (t.totem ? " · " + t.totem : ""), m.couleur)).join("") +
+      it("styles-" + m.code, "Ses quatre styles", state.p_styles.filter(x => x.moteur === m.code).map(x => x.nom).join(", "), m.couleur)).join("");
 }
 $("#p-list").addEventListener("click", e => { const it = e.target.closest(".item"); if (it) ouvrirP(it.dataset.pcode); });
 $("#p-list").addEventListener("keydown", e => { if (e.key === "Enter"){ const it = e.target.closest(".item"); if (it) ouvrirP(it.dataset.pcode); } });
@@ -562,6 +562,16 @@ function ouvrirP(code, force){
           ${champ("texte", r.texte, { type:"area", label:"Situation" })}
           <div class="grid2">${champ("texte_a", r.texte_a, { type:"area", label:"Réponse A : " + r.code_a.split("").map(nomMoteur).join(" + ") })}
             ${champ("texte_b", r.texte_b, { type:"area", label:"Réponse B : " + r.code_b.split("").map(nomMoteur).join(" + ") })}</div>`)).join("");
+  } else if (code.startsWith("styles-")){
+    const m = state.p_moteurs.find(x => x.code === code.slice(7)); if (!m) return;
+    coul = m.couleur;
+    h = `<div class="meta"><span>Styles</span><span>${esc(m.nom)}, conduit par le second moteur</span></div><h2>Les quatre styles de ${esc(m.nom)}</h2>
+      <p class="aide">Un style = le moteur dominant conduit par le second (code A.b). Contenu provisoire : nom, devise et titre de Flamme Bleue, à réécrire pour PRISME.</p>` +
+      state.p_styles.filter(x => x.moteur === m.code).map(x => `<h3 style="border-top-color:${esc(m.couleur)}">${esc(x.nom)} <span class="badge" style="color:var(--muted)">${esc(x.code)} · conduit par ${esc(nomMoteur(x.second))}</span></h3>` +
+        bloc("prisme_player_styles", x, r => `<div class="grid2">${champ("nom", r.nom)}${champ("devise", r.devise)}</div>
+          ${champ("titre", r.titre, { label:"Titre (une phrase)" })}
+          ${champ("texte", r.texte, { type:"area", label:"Texte du style" })}
+          <div class="grid2">${champ("fb_verbe", r.fb_verbe)}${champ("fb_devise", r.fb_devise)}</div>`)).join("");
   } else {
     const t = state.p_temperaments.find(x => x.code === code); if (!t) return;
     const m = state.p_moteurs.find(x => x.code === t.moteur);
@@ -574,9 +584,7 @@ function ouvrirP(code, force){
         ${champ("quand_decroche", r.quand_decroche, { type:"area" })}
         <div class="grid2">${champ("fb_verbe", r.fb_verbe)}${champ("fb_devise", r.fb_devise)}</div>
         <div class="grid2">${champ("totem", r.totem)}${champ("totem_raison", r.totem_raison)}</div>`) +
-      `<h3 style="border-top-color:${esc(m.couleur)}">Ses trois styles</h3><p class="aide">Texte vide : les pages affichent un libellé automatique (« Style W.b/u : l'Habitué, avec Triompher en second moteur »).</p>` +
-      state.p_styles.filter(x => x.temperament === code).map(x => `<h4>${esc(maj(x.nom))} <span class="badge" style="color:var(--muted)">${esc(x.code)} · second : ${esc(nomMoteur(x.second))}</span></h4>` +
-        bloc("prisme_player_styles", x, r => `${champ("nom", r.nom)}${champ("texte", r.texte, { type:"area", label:"Texte du style" })}`, { cls:"ex-bloc" })).join("");
+      "";
   }
   $("#p-band").style.background = coul;
   $("#p-editor-host").innerHTML = `<div class="editor" style="--chap:${coul}">${peutEcrire() ? "" : '<p class="readonly-note">Lecture seule : ton rôle ne permet pas de modifier le modèle.</p>'}${h}</div>`;
@@ -723,16 +731,20 @@ async function afficherResultats(){
   const host = $("#resultats-pane");
   host.innerHTML = '<p class="aide">Chargement…</p>';
   try {
-    const [res, vue, mot] = await Promise.all([
+    const [res, tems, stys, mot] = await Promise.all([
       lireTout("prisme_player_resultats", q => q.order("passe_le", { ascending:false })),
-      lireTout("prisme_player_vue_styles"), lireTout("prisme_player_moteurs", q => q.order("ordre"))
+      lireTout("prisme_player_temperaments"), lireTout("prisme_player_styles"), lireTout("prisme_player_moteurs", q => q.order("ordre"))
     ]);
+    // nom d'un profil A.b/e : « tempérament (style) »
+    const T = Object.fromEntries(tems.map(t => [t.code, t])), S = Object.fromEntries(stys.map(x => [x.code, x]));
+    const vue = Object.fromEntries(PROFILS_C().map(c => { const t = T[c[0] + "/" + c[4]], x = S[c.slice(0, 3)];
+      return [c, { nom: t && x ? `${t.nom} (${x.nom})` : c, temperament_nom: t?.nom, style_nom: x?.nom, moteur: c[0], moteur_nom: mot.find(m => m.code === c[0])?.nom }]; }));
     const personnes = {};
     if (state.role === "proprietaire"){
       const { data } = await sb.rpc("prisme_personnes");
       (data || []).forEach(p => personnes[p.user_id] = { nom: p.nom, email: p.email });
     }
-    resCache = { res, vue: Object.fromEntries(vue.map(v => [v.code, v])), mot, personnes };
+    resCache = { res, vue, mot, personnes };
   } catch (e){ host.innerHTML = `<p class="msg err">Lecture des résultats impossible : ${esc(e.message)}</p>`; return; }
   const { res, personnes } = resCache;
   const nomDe = id => personnes[id]?.nom || personnes[id]?.email || state.noms[id] || "compte " + id.slice(0, 8);
@@ -753,6 +765,7 @@ async function afficherResultats(){
   rendre();
 }
 // le style d'un résultat : enregistré (v2) ou recalculé depuis le classement (résultats plus anciens)
+const PROFILS_C = () => { const O = "WUBRG", L = []; for (const a of O) for (const e of O) if (e !== a) for (const b of O) if (b !== a && b !== e) L.push(`${a}.${b.toLowerCase()}/${e.toLowerCase()}`); return L; };
 const styleDe = r => r.style || (r.classement ? r.classement[0] + "." + r.classement[1].toLowerCase() + "/" + r.classement[4].toLowerCase() : "");
 function resultatsFiltres(){
   const qui = $("#res-personne").value, dernier = $("#res-dernier").checked, vus = new Set();
@@ -775,7 +788,7 @@ function rendreResultats(nomDe){
     ${lignes.map(r => { const v = vue[styleDe(r)] || {}; return `<tr>
       <td>${new Date(r.passe_le).toLocaleString("fr-FR")}</td>
       <td>${esc(nomDe(r.user_id))}</td>
-      <td><b>${esc(maj(v.nom || styleDe(r)))}</b><br><span class="sous">${esc(v.temperament_nom || "")}, ${esc(v.moteur_nom || "")}</span></td>
+      <td><b>${esc(maj(v.nom || styleDe(r)))}</b><br><span class="sous">${esc(styleDe(r))} · ${esc(v.moteur_nom || "")}${Object.keys(r.reponses || {}).length < 25 ? " · provisoire" : ""}</span></td>
       <td>${mini(r)}</td>
       <td><div class="row-btn"><a class="btn ghost small" href="fiche.html?resultat=${esc(r.id)}" target="_blank">Fiche</a>
         ${state.role === "proprietaire" ? `<button class="btn ghost small res-suppr" type="button" data-id="${esc(r.id)}">Effacer</button>` : ""}</div></td></tr>`; }).join("")}
@@ -792,7 +805,7 @@ function exporterResultats(nomDe){
   const { vue, mot } = resCache;
   const lignes = resultatsFiltres().map(r => { const v = vue[styleDe(r)] || {}; return Object.assign({
     date: new Date(r.passe_le).toLocaleString("fr-FR"), personne: nomDe(r.user_id),
-    classement: r.classement, code_style: styleDe(r), style: v.nom, temperament: v.temperament_nom, moteur: v.moteur_nom },
+    classement: r.classement, code_profil: styleDe(r), temperament: v.temperament_nom, style: v.style_nom, moteur: v.moteur_nom, reponses: Object.keys(r.reponses || {}).length },
     Object.fromEntries(mot.map(m => [m.nom, String(r.scores?.[m.code] ?? "").replace(".", ",")])),
     { version_questionnaire: r.version_questionnaire }); });
   if (!lignes.length) return;
@@ -803,7 +816,7 @@ function exporterResultats(nomDe){
 }
 
 /* ================= sauvegarde (propriétaire) ================= */
-const TABLES_SAUVEGARDE = ["prisme_player_moteurs","prisme_player_temperaments","prisme_player_styles","prisme_player_archetypes","prisme_player_profils","prisme_player_sous_profils",
+const TABLES_SAUVEGARDE = ["prisme_player_moteurs","prisme_player_temperaments","prisme_player_styles","prisme_player_styles_60","prisme_player_archetypes","prisme_player_profils","prisme_player_sous_profils",
                            "prisme_player_questions","prisme_player_resultats","prisme_chapitres","prisme_paires","prisme_axes","prisme_paliers","prisme_notes","prisme_jeux",
                            "prisme_exemples","prisme_textes","prisme_roles","prisme_evaluations","prisme_evaluation_valeurs"];
 // anciennes fiches archivées par le script 09 (lecture réservée au propriétaire) : sauvegardées si elles existent

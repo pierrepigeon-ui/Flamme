@@ -1,6 +1,6 @@
 /* PRISME — timeline du jeu : jalons, durées, flow, α β γ, demi-vie.
    Module partagé par l'encyclopédie et l'outil d'évaluation. Méthode arrêtée le 08/10/2026 (jeu d'essai : Heat). */
-const TIMELINE_VERSION = { numero:"1.4", date:"2026-10-10 22:30" };   // à incrémenter à chaque livraison
+const TIMELINE_VERSION = { numero:"1.5", date:"2026-10-11 01:30" };   // à incrémenter à chaque livraison
 
 const JALONS = [
   { n:0, nom:"identifié", quoi:"Le jeu est connu de loin : critique, vitrine, recommandation." },
@@ -219,19 +219,39 @@ function spectreMoteurs(paires, n){
     return [m, { trait: def.trait(n), reussite: sw ? sv / sw : null }];
   }));
 }
-// pl : { moteurs, temperaments, styles } (tables PRISMEplayer v2)
-// lignes : une par style ; moteurs : regroupement moteur › tempérament › styles, avec la moyenne de chaque niveau
+// ---- les profils : un tempérament A/e et un style A.b ; le code complet A.b/e réunit les deux (60 profils) ----
+const PROFILS = (() => { const O = "WUBRG", L = []; for (const a of O) for (const e of O) if (e !== a) for (const b of O) if (b !== a && b !== e) L.push(`${a}.${b.toLowerCase()}/${e.toLowerCase()}`); return L; })();
+const temperamentDe = code => code[0] + "/" + code[4];   // R.u/b → R/b
+const styleDe = code => code.slice(0, 3);                  // R.u/b → R.u
+// les profils (codes complets) couverts par un code : profil R.u/b, tempérament R/b, style R.u, moteur R
+const stylesDe = code => PROFILS.filter(c => code.length === 5 ? c === code : code.includes("/") ? c[0] === code[0] && c[4] === code[2]
+  : code.includes(".") ? c.slice(0, 3) === code : c[0] === code);
+// les tempéraments significatifs d'un profil : affinité de X/y = (score X − moyenne des 5) × (moyenne − score Y), les deux écarts positifs ;
+// on garde ceux qui atteignent un tiers du premier, quatre au plus ; le tempérament du classement passe toujours en tête
+function facettes(scores, principal){
+  const S = scores || {}, C = "WUBRG".split("").filter(c => S[c] != null);
+  if (C.length < 5) return [{ code:principal, aff:1, part:1 }];
+  const m = C.reduce((t, c) => t + Number(S[c]), 0) / 5, L = [];
+  C.forEach(a => C.forEach(e => { const h = Number(S[a]) - m, b = m - Number(S[e]); if (a !== e && h > 0 && b > 0) L.push({ code:a + "/" + e.toLowerCase(), aff:h * b }); }));
+  L.sort((x, y) => (y.code === principal) - (x.code === principal) || y.aff - x.aff);
+  const max = Math.max(...L.map(x => x.aff), 1e-9);
+  return (L.length ? L : [{ code:principal, aff:1 }]).filter((x, i) => i === 0 || x.aff >= max / 3 - 1e-9).slice(0, 4).map(x => ({ ...x, part: x.aff / max }));
+}
+
+// pl : { moteurs, temperaments, styles } (tables PRISMEplayer : 20 tempéraments A/e, 20 styles A.b)
+// lignes : une par profil (60) ; st : { code, nom, second } (nom = « tempérament (style) ») ; moteurs : regroupement moteur › tempérament › profils
 function spectrometre(n, paires, pl){
   const base = flowJeu(n), noteBase = noteProfil(paires, n, null);
-  const T = Object.fromEntries(pl.temperaments.map(t => [t.code, t])), M = Object.fromEntries(pl.moteurs.map(m => [m.code, m]));
-  const lignes = pl.styles.map(st => {
-    const pr = prDeStyle(st.code), t = T[st.temperament], c = flowJeu(n, pr), note = noteProfil(paires, n, pr), gene = geneRejet(n, pr);
+  const T = Object.fromEntries(pl.temperaments.map(t => [t.code, t])), S = Object.fromEntries(pl.styles.map(x => [x.code, x])), M = Object.fromEntries(pl.moteurs.map(m => [m.code, m]));
+  const lignes = PROFILS.map(code => {
+    const pr = prDeStyle(code), t = T[temperamentDe(code)], sty = S[styleDe(code)], c = flowJeu(n, pr), note = noteProfil(paires, n, pr), gene = geneRejet(n, pr);
+    const st = { code, second: pr.second, nom: `${t?.nom || temperamentDe(code)} (${sty?.nom || styleDe(code)})`, style: sty };
     return { st, temperament:t, moteur:M[pr.dom], pr, c, note, gene,
       decroche: c.beta != null ? c.beta : gene > 0 ? MOTEURS_JEU[pr.rejet].rejet : null };
   }).sort((a, b) => (b.note ?? -1) - (a.note ?? -1));
   const resume = L => ({ note: L.reduce((s, l) => s + (l.note ?? 0), 0) / L.length, alpha: L.reduce((s, l) => s + l.c.y[l.c.alpha], 0) / L.length, lignes:L });
   const moteurs = pl.moteurs.map(m => ({ m, ...resume(lignes.filter(l => l.pr.dom === m.code)),
-      temperaments: pl.temperaments.filter(t => t.moteur === m.code).map(t => ({ t, ...resume(lignes.filter(l => l.temperament.code === t.code)) })).sort((x, y) => y.note - x.note) }))
+      temperaments: pl.temperaments.filter(t => t.moteur === m.code).map(t => ({ t, ...resume(lignes.filter(l => l.temperament?.code === t.code)) })).sort((x, y) => y.note - x.note) }))
     .sort((x, y) => y.note - x.note);
   return { base, noteBase, lignes, moteurs, spectre: spectreMoteurs(paires, n) };
 }
@@ -297,9 +317,8 @@ function entreesFiche(s, paires, axes, contenu){
   return { n, manque:[...manque], absents:[...absents], etats,
     paires: paires.map(p => ({ chap:p.chapitre, code:p.code, note:etats[p.code].note })) };
 }
-// le meilleur des jeux pour des styles (codes W.b/u) : fiches = [{ jeu, statut, saisie, contenu_parties }]
-// pour un tempérament ou un moteur, passer la liste de ses styles (stylesDe)
-const stylesDe = (code, styles) => styles.map(s => s.code).filter(c => code.includes(".") ? c === code : code.includes("/") ? c[0] === code[0] && c[4] === code[2] : c[0] === code);
+// le meilleur des jeux pour des profils (codes complets W.b/u) : fiches = [{ jeu, statut, saisie, contenu_parties }]
+// pour un tempérament, un style ou un moteur, passer la liste de ses profils : stylesDe(code)
 function jeuxPourJoueurs(fiches, paires, axes, pl, codes){
   const prs = codes.map(prDeStyle);
   const parJeu = {};
