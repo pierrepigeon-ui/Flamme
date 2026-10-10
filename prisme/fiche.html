@@ -24,7 +24,7 @@ main{max-width:860px;margin:0 auto;padding:10px 24px 40px}
 .entete .surtitre{font-size:13px;color:var(--muted);margin:0}
 .entete h1{font:600 clamp(36px,6vw,54px)/1.05 var(--serif);margin:4px 0 6px}
 .entete .filiation{font:italic 19px/1.4 var(--serif);color:var(--muted);margin:0}
-/* les trois niveaux, du plus partagé (archétype, 1 joueur sur 10) au plus singulier (sous-profil, 1 sur 60) */
+/* les trois niveaux, du plus partagé (moteur, 1 joueur sur 5) au plus singulier (style, 1 sur 60) */
 .entete h1.niveaux{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;font:600 clamp(26px,4.4vw,40px)/1.15 var(--serif);margin:8px 0 4px}
 .niveaux .niv{display:inline-flex;flex-direction:column}
 .niveaux small{font:500 12px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
@@ -48,8 +48,8 @@ section p{margin:0 0 10px;font:16.5px/1.65 var(--serif)}
 .moteur .plein{display:block;height:100%;border-radius:7px}
 .moteur .pct{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted);font-size:14px}
 .moteur .role{grid-column:2 / 4;font-size:12.5px;color:var(--muted);margin:-6px 0 2px}
-.trois{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
-.trois div p{font-size:15.5px}
+section ul{margin:2px 0 12px;padding-left:20px;font:16px/1.55 var(--serif)}
+.fb{font-size:14px;color:var(--muted)}
 /* timeline */
 .timeline svg{width:100%;height:auto;display:block}
 .timeline .note{font-size:13px;color:var(--muted);margin:8px 0 0}
@@ -65,14 +65,16 @@ section p{margin:0 0 10px;font:16.5px/1.65 var(--serif)}
 <main id="contenu"><p class="vide">Chargement…</p></main>
 <main><p class="version" id="version"></p></main>
 
-<script src="timeline.js?v=1.3"></script>
+<script src="timeline.js?v=1.4"></script>
 <script>
-const VERSION = { numero:"1.6", date:"2026-10-10 21:07" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"2.0", date:"2026-10-10 23:00" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const maj = s => { s = String(s ?? ""); return s.charAt(0).toUpperCase() + s.slice(1); };
+const puces = t => `<ul>${String(t ?? "").split("\n").filter(Boolean).map(l => `<li>${esc(l)}</li>`).join("")}</ul>`;
 $("#version").textContent = `Fiche du joueur ${VERSION.numero}, version du ${VERSION.date.replace(/(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d)/,"$3/$2/$1 à $4h$5")} · timeline ${TIMELINE_VERSION.numero}`;
 
 
@@ -104,22 +106,22 @@ async function afficher(user){
   const r = res?.[0];
   if (!r) return vide(id ? "Ce résultat n'existe pas, ou vous n'avez pas le droit de le voir."
                          : 'Vous n\'avez pas encore de profil de joueur. <a href="questionnaire.html">Passer le questionnaire</a>.');
-  const [{ data: sp }, { data: mot }] = await Promise.all([
-    sb.from("prisme_player_vue_sous_profils").select("*").eq("code", r.sous_profil).single(),
+  const c = r.classement, code = r.style || (c ? c[0] + "." + c[1].toLowerCase() + "/" + c[4].toLowerCase() : null);
+  const [{ data: st }, { data: mot }] = await Promise.all([
+    sb.from("prisme_player_vue_styles").select("*").eq("code", code).single(),
     sb.from("prisme_player_moteurs").select("*").order("ordre")
   ]);
-  const { data: arch } = await sb.from("prisme_player_archetypes").select("*").eq("code", sp.archetype).single();
-  const M = Object.fromEntries(mot.map(m => [m.code, m]));
-  // pas de lettre à l'écran : « (W · Intégrer) » devient « (rassembler) »
-  const sansLettres = t => String(t || "").replace(/\(([WUBRG]) · [^)]*\)/g, (_, l) => "(" + (M[l]?.nom || l).toLowerCase() + ")");
+  if (!st) return vide("Ce résultat date d'une version précédente du modèle et n'a pas de style. <a href=\"questionnaire.html\">Repasser le questionnaire</a>.");
+  const { data: tem } = await sb.from("prisme_player_temperaments").select("*").eq("code", st.temperament).single();
+  const M = Object.fromEntries(mot.map(m => [m.code, m])), dom = M[st.moteur];
   const autre = r.user_id !== user.id;
-  document.documentElement.style.setProperty("--arch", arch.couleur || "#888");
-  document.title = `PRISME — ${sp.nom}`;
+  document.documentElement.style.setProperty("--arch", dom.couleur || "#888");
+  document.title = `PRISME — ${maj(st.nom)}`;
 
   const ordre = r.classement.split("");
   const moteurs = ordre.map((c, i) => {
     const m = M[c], pct = Number(r.scores?.[c] ?? 0);
-    const role = i === 0 ? "votre moteur dominant" : (i === 4 ? "votre moteur le plus faible : celui qui fait décrocher" : (i < 3 ? "dans votre trio de tête" : ""));
+    const role = i === 0 ? "votre moteur dominant" : i === 1 ? "votre second moteur : il donne votre style" : i === 4 ? "le moteur que vous fuyez : il fait décrocher" : "";
     return `<div class="moteur"><span class="nom">${esc(m.nom)}</span>
       <span class="piste"><span class="plein" style="width:${Math.min(100, pct)}%;background:${m.couleur}"></span></span>
       <span class="pct">${pct.toFixed(1).replace(".", ",")} %</span>
@@ -130,51 +132,49 @@ async function afficher(user){
     <div class="entete">
       <p class="surtitre">${autre ? "Profil de joueur" : "Mon profil de joueur"}</p>
       <h1 class="niveaux">
-        <span class="niv arch"><small>archétype</small>${esc(arch.nom)}</span><span class="sep" aria-hidden="true">›</span>
-        <span class="niv prof"><small>profil</small>${esc(sp.profil_nom)}</span><span class="sep" aria-hidden="true">›</span>
-        <span class="niv sous" style="--sous:${esc(M[sp.dominante]?.couleur || "var(--ink)")}"><small>sous-profil</small>${esc(sp.nom)}</span></h1>
+        <span class="niv arch"><small>moteur</small>${esc(dom.nom)}</span><span class="sep" aria-hidden="true">›</span>
+        <span class="niv prof"><small>tempérament</small>${esc(maj(st.temperament_nom))}</span><span class="sep" aria-hidden="true">›</span>
+        <span class="niv sous" style="--sous:${esc(M[st.second]?.couleur || "var(--ink)")}"><small>style</small>${esc(maj(st.nom))}</span></h1>
       <p class="date">Questionnaire du ${new Date(r.passe_le).toLocaleDateString("fr-FR")}.${autre ? "" : ' <a href="questionnaire.html">Le modifier ou le refaire</a>. <a href="rosace.html">Voir ma place sur la rosace</a>.'}</p>
     </div>
 
     <section><h2>Vos moteurs</h2><p class="question">Ce qui vous met en mouvement à la table, du plus fort au plus faible.</p>
       <div class="moteurs">${moteurs}</div></section>
 
-    <section><h2>${esc(arch.nom)}</h2><p class="question">Pourquoi je joue ? Votre archétype.</p>
-      <p class="devise">${esc(arch.devise)}</p>
-      <p>${esc(sansLettres(arch.texte))}</p>
-      ${arch.percu ? `<p><span class="libelle">Peut être perçu comme</span>${esc(arch.percu)}</p>` : ""}</section>
+    <section><h2>${esc(dom.nom)}</h2><p class="question">Pourquoi je joue ? Votre moteur.</p>
+      <p class="devise">${esc(dom.devise)}${dom.citation ? ` · « ${esc(dom.citation)} »` : ""}</p>
+      <p>${esc(dom.texte)}</p>
+      ${dom.a_la_table ? `<span class="libelle">À la table, il peut</span>${puces(dom.a_la_table)}` : ""}</section>
 
-    <section><h2>${esc(sp.profil_nom)}</h2><p class="question">Qu'est-ce qui me fait décrocher ? Votre profil.</p>
-      <p>${esc(sp.decrochage)}</p></section>
+    <section><h2>${esc(maj(tem.nom))}</h2><p class="question">Ce que je cherche, ce que je fuis : votre tempérament (${esc(dom.nom)}, fuit ${esc(M[tem.fuit].nom)}).</p>
+      <p>${esc(tem.qui_il_est)}</p>
+      <span class="libelle">À la table, il peut</span>${puces(tem.a_la_table)}
+      <p><span class="libelle">Quand il décroche</span>${esc(tem.quand_decroche)}</p>
+      ${tem.fb_verbe ? `<p class="fb">Dans Flamme Bleue : ${esc(tem.fb_verbe)} (« ${esc(tem.fb_devise)} »).</p>` : ""}</section>
 
-    <section><h2>${esc(sp.nom)}</h2><p class="question">Qu'est-ce qui me nourrit particulièrement ? Votre sous-profil.</p>
-      <div class="trois">
-        <div><span class="libelle">Adore</span><p>${esc(sp.adore)}</p></div>
-        <div><span class="libelle">Déteste</span><p>${esc(sp.deteste)}</p></div>
-        <div><span class="libelle">On lui reproche</span><p>${esc(sp.reproche)}</p></div>
-      </div></section>
+    <section><h2>${esc(maj(st.nom))}</h2><p class="question">Avec quoi je le vis : votre style.</p>
+      <p>${st.texte ? esc(st.texte) : `Style ${esc(st.code)} : ${esc(st.temperament_nom)}, avec ${esc(st.second_nom)} en second moteur.`}</p>
+      <p><span class="libelle">Second moteur</span>${esc(st.second_nom)} : ${esc(M[st.second].devise)}.</p></section>
 
     <section class="timeline"><h2>Votre moment</h2><p class="question">Où culmine votre intérêt au fil des parties ?</p>
-      ${frise(sp, M[sp.dominante])}
+      ${frise(st, dom)}
       <p class="note">Hypothèse de travail du modèle, pas encore validée sur des cas réels.</p></section>
 
-    <section id="vos-jeux"><h2>${autre ? "Ses jeux" : "Vos jeux"}</h2><p class="question">Les jeux évalués dans PRISME, vus par ${autre ? "ce" : "votre"} profil de joueur.</p>
+    <section id="vos-jeux"><h2>${autre ? "Ses jeux" : "Vos jeux"}</h2><p class="question">Les jeux évalués dans PRISME, vus par ${autre ? "ce" : "votre"} style de joueur.</p>
       <div id="vos-jeux-corps"><p class="pj-discret">Calcul en cours…</p></div></section>`;
-  afficherVosJeux(r.sous_profil, autre);
+  afficherVosJeux(code, autre);
 }
 async function afficherVosJeux(code, autre){
   const box = $("#vos-jeux-corps"), d = await lireJeuxEvalues(sb);
   if (d.refus){ box.innerHTML = `<p class="pj-discret">Les jeux évalués sont réservés aux membres de PRISME pour l'instant.</p>`; return; }
-  const lire = t => sb.from(t).select("*").order("ordre");
-  const [mo, ar, pr, sp] = await Promise.all(["prisme_player_moteurs","prisme_player_archetypes","prisme_player_profils","prisme_player_sous_profils"].map(lire));
-  const L = jeuxPourJoueurs(d.fiches, d.paires, d.axes, { moteurs:mo.data, archetypes:ar.data, profils:pr.data, sousprofils:sp.data }, [code]);
+  const L = jeuxPourJoueurs(d.fiches, d.paires, d.axes, null, [code]);
   box.innerHTML = tableJeuxHTML(L, d, autre ? "ce joueur" : "vous", false);
 }
 
 // frise des jalons 0 à 7+, avec la zone d'apogée du moteur dominant
 function frise(sp, m){
   const W = 760, x = j => 30 + j * 90, y = 70;
-  const phases = [["Accès",1,2],["Rôdage",4,5],["Aguerrissement",5,6],["Exploitation",6,7]];
+  const phases = [["Accès",1,2],["Expérimentations",3,4],["Aguerrissement",5,6],["Habitude",6,7]];
   const demi = { "courte":0.5, "moyenne":0.9, "longue (étendue)":1.6 }[sp.duree_apogee] ?? 0.9;
   let zone;
   if (sp.climax_jalon == null){   // transversal : prolonge l'apogée des autres
@@ -193,6 +193,6 @@ function frise(sp, m){
     ${zone}<line x1="${x(0)}" y1="${y}" x2="${x(7.6)}" y2="${y}" stroke="currentColor" stroke-width="1.5" opacity=".6"/>${graduations}${noms}</svg>`;
 }
 </script>
-<script src="entete.js?v=1.1"></script>
+<script src="entete.js?v=1.2"></script>
 </body>
 </html>

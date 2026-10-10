@@ -220,7 +220,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 16px}
 
 <script>
 /* ================= configuration ================= */
-const VERSION = { numero:"1.15", date:"2026-10-10 21:16" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"2.0", date:"2026-10-10 23:00" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 
@@ -241,12 +241,13 @@ const OPTIONS = {
   echelle:  { "0-5":"0 à 5", ecart:"écart −− à ++", crans5:"5 crans −− à ++", calcule:"calculée" },
   type:     { statut:"statut", solo:"volet solo", absorption:"absorption", consigne:"consigne de rédaction", historique:"historique", reserve:"en réserve", regle:"règle", note:"note" }
 };
-const TABLES = { prisme_player_moteurs:"moteur", prisme_player_archetypes:"archétype", prisme_player_profils:"profil",
+const TABLES = { prisme_player_moteurs:"moteur", prisme_player_temperaments:"tempérament", prisme_player_styles:"style", prisme_player_archetypes:"archétype", prisme_player_profils:"profil",
                  prisme_player_sous_profils:"sous-profil", prisme_player_questions:"question", prisme_chapitres:"chapitre", prisme_paires:"paire", prisme_axes:"axe", prisme_paliers:"palier",
                  prisme_notes:"encadré", prisme_jeux:"jeu", prisme_exemples:"exemple", prisme_textes:"texte", prisme_roles:"rôle" };
-const LIBELLES = { devise1:"Devise (1re partie)", devise2:"Devise (2e partie)", citation:"Citation",
+const LIBELLES = { devise:"Devise", a_la_table:"À la table, il peut (un comportement par ligne)", phase_cle:"Phase clé", qui_il_est:"Qui il est", quand_decroche:"Quand il décroche", fb_verbe:"Flamme Bleue : verbe", fb_devise:"Flamme Bleue : devise",
+  devise1:"Devise (1re partie)", devise2:"Devise (2e partie)", citation:"Citation",
   couleur:"Couleur (fond clair)", couleur_sombre:"Couleur (fond sombre)", climax_phase:"Phase du climax (si dominant)",
-  climax_jalon:"Jalon du climax (vide = transversal)", duree_apogee:"Durée d'apogée", fragilite:"Fragilité (si rejeté)",
+  climax_jalon:"Jalon du climax (vide = transversal)", duree_apogee:"Durée d'apogée", fragilite:"Quand il est rejeté",
   percu:"Peut être perçu comme", adore:"Adore", deteste:"Déteste", reproche:"On lui reproche",
   texte_a:"Réponse A", texte_b:"Réponse B", nom:"Nom", statut:"Statut", relation:"Relation entre les axes", mecanisme:"Calcul", na_si_axe1_nul:"Axe 2 sans objet si l'axe 1 vaut 0", seuil_axe1:"Seuil de l'axe 1 (en dessous, l'axe 2 ne compte que s'il vaut 1 ou moins)",
   ancien_nom:"Ancien nom", definition:"Définition", nature:"Nature", nature_detail:"Nature (précision)", echelle:"Échelle",
@@ -268,10 +269,10 @@ sb.auth.onAuthStateChange((_evt, session) => {
 
 async function chargerPlayer(){
   const lire = t => sb.from(t).select("*").order("ordre");
-  const r = await Promise.all([lire("prisme_player_moteurs"), lire("prisme_player_archetypes"), lire("prisme_player_profils"),
-    lire("prisme_player_sous_profils"), sb.from("prisme_player_questions").select("*").order("numero")]);
+  const r = await Promise.all([lire("prisme_player_moteurs"), lire("prisme_player_temperaments"), lire("prisme_player_styles"),
+    sb.from("prisme_player_questions").select("*").order("numero")]);
   const err = r.find(x => x.error); if (err) throw err.error;
-  [state.p_moteurs, state.p_archetypes, state.p_profils, state.p_sous_profils, state.p_questions] = r.map(x => x.data);
+  [state.p_moteurs, state.p_temperaments, state.p_styles, state.p_questions] = r.map(x => x.data);
 }
 async function chargerModele(){
   const lire = t => sb.from(t).select("*");
@@ -435,8 +436,7 @@ document.addEventListener("click", async e => {
   if (b.table === "prisme_paires") afficherListe();
   if (b.table.startsWith("prisme_player")) afficherListeP();
 });
-const LISTE = { prisme_player_moteurs:"p_moteurs", prisme_player_archetypes:"p_archetypes", prisme_player_profils:"p_profils",
-                prisme_player_sous_profils:"p_sous_profils", prisme_player_questions:"p_questions", prisme_paires:"paires", prisme_axes:"axes", prisme_paliers:"paliers", prisme_notes:"notes", prisme_jeux:"jeux", prisme_exemples:"exemples", prisme_textes:"textes" };
+const LISTE = { prisme_player_moteurs:"p_moteurs", prisme_player_temperaments:"p_temperaments", prisme_player_styles:"p_styles", prisme_player_questions:"p_questions", prisme_paires:"paires", prisme_axes:"axes", prisme_paliers:"paliers", prisme_notes:"notes", prisme_jeux:"jeux", prisme_exemples:"exemples", prisme_textes:"textes" };
 function majLocal(table, row){ const L = state[LISTE[table]]; const i = L.findIndex(x => x.code === row.code); if (i >= 0) L[i] = row; else L.push(row); }
 function retirerLocal(table, code){ const L = state[LISTE[table]]; const i = L.findIndex(x => x.code === code); if (i >= 0) L.splice(i, 1); }
 function rafraichir(){
@@ -521,6 +521,7 @@ function ouvrir(code, force){
 
 /* ================= PRISMEplayer ================= */
 const nomMoteur = c => state.p_moteurs.find(m => m.code === c)?.nom || c;
+const maj = t => { t = String(t ?? ""); return t.charAt(0).toUpperCase() + t.slice(1); };
 function afficherListeP(){
   const it = (code, titre, sous, coul) => `<div class="item" role="option" tabindex="0" data-pcode="${esc(code)}" style="--chap:${coul}" aria-selected="${state.currentP === code}">
     <span class="code">${esc(code.length > 4 ? "" : code)}</span><span><span class="nom">${esc(titre)}</span><br><span class="sous">${esc(sous)}</span></span></div>`;
@@ -528,8 +529,9 @@ function afficherListeP(){
     `<div class="chap-title" style="--chap:var(--muted)">Les fondations</div>` +
     it("moteurs", "Les cinq moteurs", state.p_moteurs.map(m => m.nom).join(", "), "var(--muted)") +
     it("questions", "Le questionnaire", state.p_questions.length + " questions", "var(--muted)") +
-    `<div class="chap-title" style="--chap:var(--muted)">Les dix archétypes</div>` +
-    state.p_archetypes.map(a => it(a.code, a.nom, state.p_profils.filter(p => p.archetype === a.code).map(p => p.nom).join(", "), a.couleur)).join("");
+    state.p_moteurs.map(m => `<div class="chap-title" style="--chap:${m.couleur}">${esc(m.nom)} : ses tempéraments</div>` +
+      state.p_temperaments.filter(t => t.moteur === m.code).map(t => it(t.code, maj(t.nom), "fuit " + nomMoteur(t.fuit).toLowerCase() + " · " +
+        state.p_styles.filter(x => x.temperament === t.code).map(x => x.nom.slice(t.nom.length).trim()).join(", "), m.couleur)).join("")).join("");
 }
 $("#p-list").addEventListener("click", e => { const it = e.target.closest(".item"); if (it) ouvrirP(it.dataset.pcode); });
 $("#p-list").addEventListener("keydown", e => { if (e.key === "Enter"){ const it = e.target.closest(".item"); if (it) ouvrirP(it.dataset.pcode); } });
@@ -541,14 +543,16 @@ function ouvrirP(code, force){
   $("#p-edit-pane").classList.remove("closed");
   let h, coul = "var(--line)";
   if (code === "moteurs"){
-    h = `<h2>Les cinq moteurs</h2><p class="aide">Le climax dépend de la couleur dominante d'un sous-profil, la fragilité de la couleur rejetée par un profil : les modifier ici change les 60 sous-profils et les 20 profils concernés.</p>` +
+    h = `<h2>Les cinq moteurs</h2><p class="aide">Le climax vaut pour tout joueur dont c'est le moteur dominant. Les effets chiffrés des moteurs sur les jeux (spectromètre) vivent dans timeline.js, pas ici.</p>` +
       state.p_moteurs.map(m => `<h3 style="border-top-color:${esc(m.couleur)}">${esc(m.nom)} <span class="badge" style="color:var(--muted)">${esc(m.valeur)}</span></h3>` +
         bloc("prisme_player_moteurs", m, r => `
-          <div class="grid2">${champ("nom", r.nom)}${champ("valeur", r.valeur, { label:"Valeur d'origine" })}</div>
-          <div class="grid3">${champ("devise1", r.devise1)}${champ("devise2", r.devise2)}${champ("citation", r.citation)}</div>
-          ${champ("texte", r.texte, { type:"area" })}
-          <div class="grid3">${champ("climax_phase", r.climax_phase)}${champ("climax_jalon", r.climax_jalon, { type:"number" })}${champ("duree_apogee", r.duree_apogee)}</div>
+          <div class="grid2">${champ("nom", r.nom)}${champ("valeur", r.valeur, { label:"Valeur d'origine (Flamme Bleue)" })}</div>
+          <div class="grid2">${champ("devise", r.devise)}${champ("citation", r.citation)}</div>
+          ${champ("texte", r.texte, { type:"area", label:"Qui il est" })}
+          ${champ("a_la_table", r.a_la_table, { type:"area", rows:4 })}
           ${champ("fragilite", r.fragilite, { type:"area" })}
+          ${champ("phase_cle", r.phase_cle, { type:"area" })}
+          <div class="grid3">${champ("climax_phase", r.climax_phase)}${champ("climax_jalon", r.climax_jalon, { type:"number" })}${champ("duree_apogee", r.duree_apogee)}</div>
           <div class="grid2">${champ("couleur", r.couleur)}${champ("couleur_sombre", r.couleur_sombre)}</div>`)).join("");
   } else if (code === "questions"){
     h = `<h2>Le questionnaire</h2><p class="aide">Les moteurs associés à chaque réponse et le caractère obligatoire ne se modifient pas ici : ils font l'équilibre du questionnaire (chaque moteur pèse 20 points au total).</p>` +
@@ -558,19 +562,19 @@ function ouvrirP(code, force){
           <div class="grid2">${champ("texte_a", r.texte_a, { type:"area", label:"Réponse A : " + r.code_a.split("").map(nomMoteur).join(" + ") })}
             ${champ("texte_b", r.texte_b, { type:"area", label:"Réponse B : " + r.code_b.split("").map(nomMoteur).join(" + ") })}</div>`)).join("");
   } else {
-    const a = state.p_archetypes.find(x => x.code === code); if (!a) return;
-    coul = a.couleur;
-    const profs = state.p_profils.filter(p => p.archetype === code);
-    h = `<div class="meta"><span>Archétype</span><span>${a.code.split("").map(nomMoteur).join(", ")}</span></div><h2>${esc(a.nom)}</h2>` +
-      bloc("prisme_player_archetypes", a, r => `
-        <div class="grid2">${champ("nom", r.nom)}${champ("devise", r.devise, { label:"Devise" })}</div>
-        ${champ("texte", r.texte, { type:"area" })}${champ("percu", r.percu, { type:"area" })}${champ("couleur", r.couleur, { label:"Couleur dans la rosace" })}`) +
-      profs.map(p => `<h3 style="border-top-color:${esc(a.couleur)}">Profil ${esc(p.nom)} <span class="badge" style="color:var(--muted)">rejette ${esc(nomMoteur(p.rejetee))}</span></h3>` +
-        bloc("prisme_player_profils", p, r => champ("nom", r.nom)) +
-        `<p class="aide">Décrochage (vient du moteur rejeté, à modifier dans « Les cinq moteurs ») : ${esc(state.p_moteurs.find(m => m.code === p.rejetee)?.fragilite)}</p>` +
-        state.p_sous_profils.filter(sp => sp.profil === p.code).map(sp => `<h4>${esc(sp.nom)} : dominante ${esc(nomMoteur(sp.dominante))}</h4>` +
-          bloc("prisme_player_sous_profils", sp, r => `${champ("nom", r.nom)}
-            <div class="grid3">${champ("adore", r.adore, { type:"area" })}${champ("deteste", r.deteste, { type:"area" })}${champ("reproche", r.reproche, { type:"area" })}</div>`, { cls:"ex-bloc" })).join("")).join("");
+    const t = state.p_temperaments.find(x => x.code === code); if (!t) return;
+    const m = state.p_moteurs.find(x => x.code === t.moteur);
+    coul = m.couleur;
+    h = `<div class="meta"><span>Tempérament ${esc(t.code)}</span><span>${esc(m.nom)}, fuit ${esc(nomMoteur(t.fuit))}</span></div><h2>${esc(maj(t.nom))}</h2>` +
+      bloc("prisme_player_temperaments", t, r => `
+        ${champ("nom", r.nom, { label:"Nom (avec l'article, en minuscule : « l'Habitué »)" })}
+        ${champ("qui_il_est", r.qui_il_est, { type:"area", rows:3 })}
+        ${champ("a_la_table", r.a_la_table, { type:"area", rows:4 })}
+        ${champ("quand_decroche", r.quand_decroche, { type:"area" })}
+        <div class="grid2">${champ("fb_verbe", r.fb_verbe)}${champ("fb_devise", r.fb_devise)}</div>`) +
+      `<h3 style="border-top-color:${esc(m.couleur)}">Ses trois styles</h3><p class="aide">Texte vide : les pages affichent un libellé automatique (« Style W.b/u : l'Habitué, avec Triompher en second moteur »).</p>` +
+      state.p_styles.filter(x => x.temperament === code).map(x => `<h4>${esc(maj(x.nom))} <span class="badge" style="color:var(--muted)">${esc(x.code)} · second : ${esc(nomMoteur(x.second))}</span></h4>` +
+        bloc("prisme_player_styles", x, r => `${champ("nom", r.nom)}${champ("texte", r.texte, { type:"area", label:"Texte du style" })}`, { cls:"ex-bloc" })).join("");
   }
   $("#p-band").style.background = coul;
   $("#p-editor-host").innerHTML = `<div class="editor" style="--chap:${coul}">${peutEcrire() ? "" : '<p class="readonly-note">Lecture seule : ton rôle ne permet pas de modifier le modèle.</p>'}${h}</div>`;
@@ -717,17 +721,16 @@ async function afficherResultats(){
   const host = $("#resultats-pane");
   host.innerHTML = '<p class="aide">Chargement…</p>';
   try {
-    const [res, vue, mot, arch] = await Promise.all([
+    const [res, vue, mot] = await Promise.all([
       lireTout("prisme_player_resultats", q => q.order("passe_le", { ascending:false })),
-      lireTout("prisme_player_vue_sous_profils"), lireTout("prisme_player_moteurs", q => q.order("ordre")),
-      lireTout("prisme_player_archetypes", q => q.order("ordre"))
+      lireTout("prisme_player_vue_styles"), lireTout("prisme_player_moteurs", q => q.order("ordre"))
     ]);
     const personnes = {};
     if (state.role === "proprietaire"){
       const { data } = await sb.rpc("prisme_personnes");
       (data || []).forEach(p => personnes[p.user_id] = { nom: p.nom, email: p.email });
     }
-    resCache = { res, vue: Object.fromEntries(vue.map(v => [v.code, v])), mot, arch, personnes };
+    resCache = { res, vue: Object.fromEntries(vue.map(v => [v.code, v])), mot, personnes };
   } catch (e){ host.innerHTML = `<p class="msg err">Lecture des résultats impossible : ${esc(e.message)}</p>`; return; }
   const { res, personnes } = resCache;
   const nomDe = id => personnes[id]?.nom || personnes[id]?.email || state.noms[id] || "compte " + id.slice(0, 8);
@@ -747,28 +750,30 @@ async function afficherResultats(){
   $("#res-csv").addEventListener("click", () => exporterResultats(nomDe));
   rendre();
 }
+// le style d'un résultat : enregistré (v2) ou recalculé depuis le classement (résultats plus anciens)
+const styleDe = r => r.style || (r.classement ? r.classement[0] + "." + r.classement[1].toLowerCase() + "/" + r.classement[4].toLowerCase() : "");
 function resultatsFiltres(){
   const qui = $("#res-personne").value, dernier = $("#res-dernier").checked, vus = new Set();
   return resCache.res.filter(r => (!qui || r.user_id === qui) && (!dernier || (!vus.has(r.user_id) && vus.add(r.user_id))));
 }
 function rendreResultats(nomDe){
-  const { vue, mot, arch } = resCache, lignes = resultatsFiltres();
+  const { vue, mot } = resCache, lignes = resultatsFiltres();
   const nbPers = new Set(lignes.map(r => r.user_id)).size;
-  const parArch = {}; lignes.forEach(r => { const a = vue[r.sous_profil]?.archetype; parArch[a] = (parArch[a] || 0) + 1; });
-  const max = Math.max(1, ...Object.values(parArch));
-  const repartition = arch.map(a => `<div class="rep-ligne"><span>${esc(a.nom)}</span>
-    <span class="barre" style="width:${(parArch[a.code] || 0) / max * 100}%;min-width:${parArch[a.code] ? 4 : 0}px;background:${a.couleur}"></span>
-    <span class="n">${parArch[a.code] || 0}</span></div>`).join("");
+  const parMot = {}; lignes.forEach(r => { const a = vue[styleDe(r)]?.moteur; parMot[a] = (parMot[a] || 0) + 1; });
+  const max = Math.max(1, ...Object.values(parMot));
+  const repartition = mot.map(a => `<div class="rep-ligne"><span>${esc(a.nom)}</span>
+    <span class="barre" style="width:${(parMot[a.code] || 0) / max * 100}%;min-width:${parMot[a.code] ? 4 : 0}px;background:${a.couleur}"></span>
+    <span class="n">${parMot[a.code] || 0}</span></div>`).join("");
   const mini = r => `<div class="mini" title="${mot.map(m => m.nom + " " + Number(r.scores?.[m.code] ?? 0).toFixed(1) + " %").join(", ")}">${mot.map(m =>
       `<span style="height:${Math.max(2, Number(r.scores?.[m.code] ?? 0) * .28)}px;background:${m.couleur}"></span>`).join("")}</div>`;
   $("#res-corps").innerHTML = lignes.length ? `
-    <p class="aide">${lignes.length} passation${lignes.length > 1 ? "s" : ""}, ${nbPers} personne${nbPers > 1 ? "s" : ""}. Répartition par archétype :</p>
+    <p class="aide">${lignes.length} passation${lignes.length > 1 ? "s" : ""}, ${nbPers} personne${nbPers > 1 ? "s" : ""}. Répartition par moteur dominant :</p>
     <div class="repartition">${repartition}</div>
     <table class="j"><thead><tr><th>Date</th><th>Personne</th><th>Profil de joueur</th><th>Moteurs</th><th></th></tr></thead><tbody>
-    ${lignes.map(r => { const v = vue[r.sous_profil] || {}; return `<tr>
+    ${lignes.map(r => { const v = vue[styleDe(r)] || {}; return `<tr>
       <td>${new Date(r.passe_le).toLocaleString("fr-FR")}</td>
       <td>${esc(nomDe(r.user_id))}</td>
-      <td><b>${esc(v.nom || r.sous_profil)}</b><br><span class="sous">${esc(v.profil_nom || "")}, ${esc(v.archetype_nom || "")}</span></td>
+      <td><b>${esc(maj(v.nom || styleDe(r)))}</b><br><span class="sous">${esc(v.temperament_nom || "")}, ${esc(v.moteur_nom || "")}</span></td>
       <td>${mini(r)}</td>
       <td><div class="row-btn"><a class="btn ghost small" href="fiche.html?resultat=${esc(r.id)}" target="_blank">Fiche</a>
         ${state.role === "proprietaire" ? `<button class="btn ghost small res-suppr" type="button" data-id="${esc(r.id)}">Effacer</button>` : ""}</div></td></tr>`; }).join("")}
@@ -783,9 +788,9 @@ function rendreResultats(nomDe){
 }
 function exporterResultats(nomDe){
   const { vue, mot } = resCache;
-  const lignes = resultatsFiltres().map(r => { const v = vue[r.sous_profil] || {}; return Object.assign({
+  const lignes = resultatsFiltres().map(r => { const v = vue[styleDe(r)] || {}; return Object.assign({
     date: new Date(r.passe_le).toLocaleString("fr-FR"), personne: nomDe(r.user_id),
-    sous_profil: v.nom, profil: v.profil_nom, archetype: v.archetype_nom },
+    classement: r.classement, code_style: styleDe(r), style: v.nom, temperament: v.temperament_nom, moteur: v.moteur_nom },
     Object.fromEntries(mot.map(m => [m.nom, String(r.scores?.[m.code] ?? "").replace(".", ",")])),
     { version_questionnaire: r.version_questionnaire }); });
   if (!lignes.length) return;
@@ -796,7 +801,7 @@ function exporterResultats(nomDe){
 }
 
 /* ================= sauvegarde (propriétaire) ================= */
-const TABLES_SAUVEGARDE = ["prisme_player_moteurs","prisme_player_archetypes","prisme_player_profils","prisme_player_sous_profils",
+const TABLES_SAUVEGARDE = ["prisme_player_moteurs","prisme_player_temperaments","prisme_player_styles","prisme_player_archetypes","prisme_player_profils","prisme_player_sous_profils",
                            "prisme_player_questions","prisme_player_resultats","prisme_chapitres","prisme_paires","prisme_axes","prisme_paliers","prisme_notes","prisme_jeux",
                            "prisme_exemples","prisme_textes","prisme_roles","prisme_evaluations","prisme_evaluation_valeurs"];
 // anciennes fiches archivées par le script 09 (lecture réservée au propriétaire) : sauvegardées si elles existent
@@ -861,6 +866,6 @@ $("#form-mdp").addEventListener("submit", async e => {
 });
 window.addEventListener("beforeunload", e => { if (blocsModifies()){ e.preventDefault(); e.returnValue = ""; } });
 </script>
-<script src="entete.js?v=1.1"></script>
+<script src="entete.js?v=1.2"></script>
 </body>
 </html>

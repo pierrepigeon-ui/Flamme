@@ -109,6 +109,7 @@ table.tl-table tr.alpha td{background:color-mix(in srgb, var(--accent) 9%, trans
 @media (max-width:700px){.sp-haut{grid-template-columns:1fr}}
 .sp-arc{border-top:1px solid var(--line);padding:6px 0} .sp-arc summary{cursor:pointer;display:flex;gap:10px;align-items:baseline} .sp-arc summary .n{margin-left:auto;font-variant-numeric:tabular-nums}
 .sp-arc summary .aide{font-size:13px;margin:0}
+.tl-table tr.grp td{background:var(--paper);font-size:13.5px;padding-top:8px}
 button.lien,a.lien{border:0;background:none;padding:0;font:inherit;color:inherit;text-decoration:underline;text-decoration-color:var(--line);cursor:pointer}
 table.sp-extremes{margin:0 0 10px} table.tl-table tr.choisi td{background:color-mix(in srgb, var(--accent) 9%, transparent)} table.tl-table small{color:var(--muted)}
 .sp-courbe{border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:10px 0;background:var(--paper)} .sp-courbe h3{font:600 17px var(--serif);margin:0 0 4px}
@@ -202,9 +203,9 @@ table.recap .aller{cursor:pointer;text-decoration:underline;text-decoration-colo
 <dialog id="dlg-recap"><div id="recap"></div><p style="text-align:right;margin:12px 0 0"><button class="btn" id="fermer-recap" type="button">Fermer</button></p></dialog>
 <div class="wrap"><p class="version" id="version"></p></div>
 
-<script src="timeline.js?v=1.3"></script>
+<script src="timeline.js?v=1.4"></script>
 <script>
-const VERSION = { numero:"3.12", date:"2026-10-10 21:07" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"3.13", date:"2026-10-10 23:00" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -261,8 +262,8 @@ async function demarrer(){
     [M.chapitres, M.paires, M.axes, M.paliers, M.exemples, M.jeux, M.notes] = await Promise.all([lire("prisme_chapitres","ordre"), lire("prisme_paires","ordre"),
       lire("prisme_axes","ordre"), lire("prisme_paliers","valeur"), lire("prisme_exemples","ordre"), lire("prisme_jeux","nom"), lire("prisme_notes","ordre")]);
     const { data: n } = await sb.rpc("prisme_noms"); (n || []).forEach(x => noms[x.user_id] = x.nom);
-    try { [PL.moteurs, PL.archetypes, PL.profils, PL.sousprofils] = await Promise.all([lire("prisme_player_moteurs","ordre"), lire("prisme_player_archetypes","ordre"),
-      lire("prisme_player_profils","ordre"), lire("prisme_player_sous_profils","ordre")]); } catch (e){ PL.erreur = e.message; }
+    try { [PL.moteurs, PL.temperaments, PL.styles] = await Promise.all([lire("prisme_player_moteurs","ordre"), lire("prisme_player_temperaments","ordre"),
+      lire("prisme_player_styles","ordre")]); } catch (e){ PL.erreur = e.message; }
   } catch (e){ $("#msg-accueil").className = "msg err"; $("#msg-accueil").textContent = "Lecture du modèle impossible : " + e.message; return; }
   M.paires.sort((a, b) => M.chapitres.find(c => c.code === a.chapitre).ordre - M.chapitres.find(c => c.code === b.chapitre).ordre || a.ordre - b.ordre);
   remplirJeux(); await chargerFiches(); afficherFiches();
@@ -275,7 +276,7 @@ async function demarrer(){
 async function chargerFiches(){
   [toutes, valeurs] = await Promise.all([lireTout("prisme_evaluations", q => q.order("modifie_le", { ascending:false })), lireTout("prisme_evaluation_valeurs")]);
 }
-const PL = { moteurs:[], archetypes:[], profils:[], sousprofils:[] };   // PRISMEplayer, pour le spectromètre
+const PL = { moteurs:[], temperaments:[], styles:[] };   // PRISMEplayer v2, pour le spectromètre
 const nomJeu = c => M.jeux.find(j => j.code === c)?.nom || c;
 const nomDe = id => id === user.id ? "moi" : (noms[id] || "un évaluateur");
 const saisieDe = id => { const s = {}; valeurs.filter(v => v.evaluation === id).forEach(v => s[v.axe] = { valeur: v.valeur == null ? null : Number(v.valeur), sans_objet: v.sans_objet, commentaire: v.commentaire }); return s; };
@@ -486,8 +487,8 @@ function construireGrille(){
       Elle se met à jour à chaque saisie. <a href="encyclopedie.html#temps" target="_blank" rel="noopener">La méthode dans l'encyclopédie</a>.</p>
     <div id="tl-corps"></div></section>
     <section class="timeline" id="spectro"><h2>Spectromètre</h2>
-    <p class="aide">Le jeu vu par chacun des 60 sous-profils de PRISMEplayer. Chacun porte trois moteurs (3 pour le dominant, 1,5 pour les deux autres) et en rejette un :
-      les paires qu'aiment ses moteurs pèsent plus, dans la note comme dans la courbe ; ce qu'il rejette devient friction à partir de son moment.
+    <p class="aide">Le jeu vu par chacun des 60 styles de PRISMEplayer. Chacun range les cinq moteurs (3 pour le dominant, 1,5 pour le second, 0,5 pour les deux suivants) et en fuit un :
+      les paires qu'aiment ses moteurs pèsent plus, dans la note comme dans la courbe ; ce qu'il fuit devient friction à partir de son moment.
       <a href="encyclopedie.html#croisement" target="_blank" rel="noopener">La méthode dans l'encyclopédie</a>.</p>
     <div id="sp-corps"></div></section>`;
   $("#aller").insertAdjacentHTML("beforeend", '<option value="timeline">Timeline</option><option value="spectro">Spectromètre</option>');
@@ -612,30 +613,32 @@ function majTimeline(){
     <p class="aide">Plafond d'aléa ${fmt(c.plafond, 2)} (jalons 5 et 6) · usure ${fmt(c.usure, 2)} (jalon 7) · lassitude au jalon 7 : ×${fmt(c.det[7].L, 2)}.</p>`;
   return { c, sp: majSpectro(n) };
 }
-let spChoisi = null;   // sous-profil dont la courbe est affichée
+let spChoisi = null;   // style dont la courbe est affichée
 function majSpectro(n){
   const box = document.getElementById("sp-corps"); if (!box) return null;
-  if (!PL.sousprofils.length){ box.innerHTML = `<p class="tl-attente">Modèle PRISMEplayer illisible${PL.erreur ? " : " + esc(PL.erreur) : ""}.</p>`; return null; }
+  if (!PL.styles.length){ box.innerHTML = `<p class="tl-attente">Modèle PRISMEplayer illisible${PL.erreur ? " : " + esc(PL.erreur) : ""}.</p>`; return null; }
   const paires = Object.values(calculer(saisie).parChap).flat().map(x => ({ chap:x.p.chapitre, code:x.p.code, note:x.note }));
   const r = spectrometre(n, paires, PL), Mo = Object.fromEntries(PL.moteurs.map(m => [m.code, m]));
+  const maj = t => { t = String(t ?? ""); return t.charAt(0).toUpperCase() + t.slice(1); };
   const coul = m => (matchMedia("(prefers-color-scheme: dark)").matches ? m.couleur_sombre : m.couleur) || m.couleur || "var(--accent)";
-  const ligne = l => `<tr class="${spChoisi === l.sp.code ? "choisi" : ""}"><td><button type="button" class="lien" data-sp="${esc(l.sp.code)}">${esc(l.sp.nom)}</button><br><small>${esc(l.profil.nom)} · dominant ${esc(Mo[l.pr.dom]?.nom || "")} · rejette ${esc(Mo[l.pr.rejet]?.nom || "")}</small></td>
+  const ligne = l => `<tr class="${spChoisi === l.st.code ? "choisi" : ""}"><td><button type="button" class="lien" data-sp="${esc(l.st.code)}">${esc(maj(l.st.nom))}</button><br><small>${esc(l.st.code)} · second ${esc(Mo[l.pr.second]?.nom || "")} · fuit ${esc(Mo[l.pr.rejet]?.nom || "")}</small></td>
     <td class="n"><b>${fmt(l.note, 2)}</b></td><td class="n">${fmt(l.c.y[l.c.alpha], 2)} <small>j${l.c.alpha}</small></td><td class="n">${l.c.demivie == null ? "∞" : arrondiDemiVie(l.c.demivie)}</td>
     <td>${l.c.beta != null ? `chute au jalon ${l.c.beta}` : l.gene > 0 ? `gêné dès le jalon ${MOTEURS_JEU[l.pr.rejet].rejet} (${JALONS[MOTEURS_JEU[l.pr.rejet].rejet].nom})` : "—"}</td></tr>`;
-  const det = spChoisi && r.lignes.find(l => l.sp.code === spChoisi);
+  const det = spChoisi && r.lignes.find(l => l.st.code === spChoisi);
   const ouverts = new Set([...box.querySelectorAll("details[open]")].map(d => d.id));
   box.innerHTML = `<div class="sp-haut"><figure>${rosaceSVG(r.spectre, PL.moteurs.map(m => ({ code:m.code, nom:m.nom, couleur:coul(m) })))}
       <figcaption>Pointillés : ce que le jeu <b>offre</b> à chaque moteur (le trait, axes 1). Surface : ce qu'il <b>réussit</b> pour lui (les paires qu'il aime).</figcaption></figure>
-    <div><p class="aide" style="margin-top:0">Note pour tous : <b>${fmt(r.noteBase, 2)}</b>. Du sous-profil le mieux servi au moins bien servi : <b>${fmt(r.lignes[0].note, 2)}</b> (${esc(r.lignes[0].sp.nom)}) à <b>${fmt(r.lignes.at(-1).note, 2)}</b> (${esc(r.lignes.at(-1).sp.nom)}).</p>
+    <div><p class="aide" style="margin-top:0">Note pour tous : <b>${fmt(r.noteBase, 2)}</b>. Du style le mieux servi au moins bien servi : <b>${fmt(r.lignes[0].note, 2)}</b> (${esc(r.lignes[0].st.nom)}) à <b>${fmt(r.lignes.at(-1).note, 2)}</b> (${esc(r.lignes.at(-1).st.nom)}).</p>
     ${[["Les mieux servis", r.lignes.slice(0, 5)], ["Les moins bien servis", r.lignes.slice(-5).reverse()]].map(([t, L]) => `<table class="tl-table sp-extremes"><thead><tr><th>${t}</th><th>Note</th><th>α</th></tr></thead><tbody>
-      ${L.map(l => `<tr class="${spChoisi === l.sp.code ? "choisi" : ""}"><td><button type="button" class="lien" data-sp="${esc(l.sp.code)}">${esc(l.sp.nom)}</button> <small>${esc(l.archetype.nom)}</small></td><td class="n"><b>${fmt(l.note, 2)}</b></td><td class="n">${fmt(l.c.y[l.c.alpha], 2)}</td></tr>`).join("")}</tbody></table>`).join("")}
-    <p class="aide">Ci-dessous, les dix archétypes du mieux au moins bien servi ; dépliez-en un pour ses six sous-profils.</p></div></div>
-    ${det ? `<div class="sp-courbe"><h3>${esc(det.sp.nom)} <small>(${esc(det.archetype.nom)}, ${esc(det.profil.nom)})</small> <button type="button" class="lien" data-sp="">fermer</button></h3>
-      <p class="aide">Adore ${esc(det.sp.adore)} ; déteste ${esc(det.sp.deteste)}.</p>
+      ${L.map(l => `<tr class="${spChoisi === l.st.code ? "choisi" : ""}"><td><button type="button" class="lien" data-sp="${esc(l.st.code)}">${esc(maj(l.st.nom))}</button> <small>${esc(l.st.code)}</small></td><td class="n"><b>${fmt(l.note, 2)}</b></td><td class="n">${fmt(l.c.y[l.c.alpha], 2)}</td></tr>`).join("")}</tbody></table>`).join("")}
+    <p class="aide">Ci-dessous, les cinq moteurs dominants du mieux au moins bien servi ; dépliez-en un pour ses quatre tempéraments et leurs douze styles.</p></div></div>
+    ${det ? `<div class="sp-courbe"><h3>${esc(maj(det.st.nom))} <small>(${esc(det.st.code)} : ${esc(det.temperament.nom)}, moteur ${esc(det.moteur.nom)})</small> <button type="button" class="lien" data-sp="">fermer</button></h3>
+      <p class="aide">Second moteur : ${esc(Mo[det.pr.second].nom)} ; moteur fui : ${esc(Mo[det.pr.rejet].nom)}.</p>
       <div class="tl-bandeau">${esc(syntheseTimeline(det.c))}</div>
-      <figure class="courbe-box">${courbeSVG(det.c, det.sp.nom, r.base)}<figcaption>Trait noir : la courbe vue par ce sous-profil. Pointillé gris : le flow pour tous (${r.base.y.map((v, j) => `${j} ${fmt(v, 1)}`).join(" · ")}).</figcaption></figure></div>` : ""}
-    ${r.archetypes.map(a => `<details class="sp-arc" id="ar-${esc(a.a.code)}"${(det && det.archetype.code === a.a.code) || ouverts.has("ar-" + a.a.code) ? " open" : ""}><summary><b>${esc(a.a.nom)}</b> <span class="aide">${esc(a.a.devise || "")}</span> <span class="n">${fmt(a.note, 2)}</span></summary>
-      <div class="defile"><table class="tl-table"><thead><tr><th>Sous-profil</th><th>Note</th><th>α</th><th>Demi-vie</th><th>Décrochage</th></tr></thead><tbody>${a.lignes.map(ligne).join("")}</tbody></table></div></details>`).join("")}`;
+      <figure class="courbe-box">${courbeSVG(det.c, det.st.nom, r.base)}<figcaption>Trait noir : la courbe vue par ce style. Pointillé gris : le flow pour tous (${r.base.y.map((v, j) => `${j} ${fmt(v, 1)}`).join(" · ")}).</figcaption></figure></div>` : ""}
+    ${r.moteurs.map(g => `<details class="sp-arc" id="mo-${esc(g.m.code)}"${(det && det.moteur.code === g.m.code) || ouverts.has("mo-" + g.m.code) ? " open" : ""}><summary><b style="color:${esc(coul(g.m))}">${esc(g.m.nom)}</b> <span class="aide">${esc(g.m.devise || "")}</span> <span class="n">${fmt(g.note, 2)}</span></summary>
+      <div class="defile"><table class="tl-table"><thead><tr><th>Style</th><th>Note</th><th>α</th><th>Demi-vie</th><th>Décrochage</th></tr></thead><tbody>${g.temperaments.map(t =>
+        `<tr class="grp"><td colspan="5"><b>${esc(maj(t.t.nom))}</b> (${esc(t.t.code)}, fuit ${esc(Mo[t.t.fuit].nom.toLowerCase())}) · ${fmt(t.note, 2)}</td></tr>` + t.lignes.map(ligne).join("")).join("")}</tbody></table></div></details>`).join("")}`;
   return r;
 }
 document.addEventListener("click", e => {
@@ -764,7 +767,7 @@ $("#btn-recap").addEventListener("click", () => {
     <p class="aide">${manque.length ? `Il manque ${manque.length} paire${manque.length > 1 ? "s" : ""} : ${manque.map(l => esc(l.p.nom)).join(", ")}.` : `Les ${M.paires.length} paires sont remplies.`}
       Note finale : <b>${c.finale == null ? "—" : fmt(c.finale, 2)}</b> (${M.chapitres.map(ch => `${esc(ch.nom)} ${c.chap[ch.code] == null ? "—" : fmt(c.chap[ch.code], 2)}`).join(", ")}).</p>
     ${(() => { const t = majTimeline(); return `<p class="aide">Timeline : ${t.c ? esc(syntheseTimeline(t.c)) : "incomplète"}.</p>` +
-      (t.sp ? `<p class="aide">Spectromètre : ${t.sp.archetypes.map(a => `${esc(a.a.nom)} ${fmt(a.note, 2)}`).join(" · ")}.</p>` : ""); })()}
+      (t.sp ? `<p class="aide">Spectromètre (note vue par chaque moteur dominant) : ${t.sp.moteurs.map(g => `${esc(g.m.nom)} ${fmt(g.note, 2)}`).join(" · ")}.</p>` : ""); })()}
     <table class="recap"><thead><tr><th>Paire</th><th>Saisie</th><th>Note retenue</th><th>Justification</th></tr></thead><tbody>
     ${L.map(l => `<tr class="${l.n.complete ? "" : "manque"}"><td><span class="aller" data-aller="${esc(l.p.code)}">${esc(l.p.nom)}</span></td><td>${l.notes}</td>
       <td>${l.n.so ? "sans objet" : l.n.note == null ? (l.n.na1 || l.n.seuil ? "axe 2 sans objet" : "—") : fmt(l.n.note, 2)}</td><td>${esc(l.justif)}</td></tr>`).join("")}</tbody></table>`;
@@ -783,7 +786,7 @@ $("#btn-export").addEventListener("click", () => {
   md += `**Note finale : ${c.finale == null ? "—" : fmt(c.finale, 2)}** (${M.chapitres.map(ch => `${ch.nom} ${c.chap[ch.code] == null ? "—" : fmt(c.chap[ch.code], 2)}`).join(", ")})\n`;
   const tl = majTimeline();
   if (tl.c) md += `\n**Timeline** : ${syntheseTimeline(tl.c)}.\n\nFlow par jalon : ${tl.c.y.map((v, j) => `${j} ${fmt(v, 2)}`).join(" · ")}\n`;
-  if (tl.sp) md += `\n**Spectromètre** (note vue par chaque archétype) : ${tl.sp.archetypes.map(a => `${a.a.nom} ${fmt(a.note, 2)}`).join(" · ")}. Le mieux servi : ${tl.sp.lignes[0].sp.nom} (${fmt(tl.sp.lignes[0].note, 2)}) ; le moins bien : ${tl.sp.lignes.at(-1).sp.nom} (${fmt(tl.sp.lignes.at(-1).note, 2)}).\n`;
+  if (tl.sp) md += `\n**Spectromètre** (note vue par chaque moteur dominant) : ${tl.sp.moteurs.map(g => `${g.m.nom} ${fmt(g.note, 2)}`).join(" · ")}. Le style le mieux servi : ${tl.sp.lignes[0].st.nom} (${fmt(tl.sp.lignes[0].note, 2)}) ; le moins bien : ${tl.sp.lignes.at(-1).st.nom} (${fmt(tl.sp.lignes.at(-1).note, 2)}).\n`;
   M.chapitres.forEach(ch => {
     md += `\n## ${ch.nom}\n`;
     L.filter(l => l.p.chapitre === ch.code).forEach(l => {
@@ -797,6 +800,6 @@ $("#btn-export").addEventListener("click", () => {
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 2000);
 });
 </script>
-<script src="entete.js?v=1.1"></script>
+<script src="entete.js?v=1.2"></script>
 </body>
 </html>

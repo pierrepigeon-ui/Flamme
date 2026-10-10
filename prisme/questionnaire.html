@@ -416,18 +416,18 @@ button:focus-visible,
       </section>
 
       <section class="cartouche">
-        <h2 class="cartouche-titre">Archétype</h2>
-        <div id="contenu-archetype"></div>
+        <h2 class="cartouche-titre">Moteur</h2>
+        <div id="contenu-moteur"></div>
       </section>
 
       <section class="cartouche">
-        <h2 class="cartouche-titre">Profil</h2>
-        <div id="contenu-profil"></div>
+        <h2 class="cartouche-titre">Tempérament</h2>
+        <div id="contenu-temperament"></div>
       </section>
 
       <section class="cartouche">
-        <h2 class="cartouche-titre">Sous-profil</h2>
-        <div id="contenu-sousprofil"></div>
+        <h2 class="cartouche-titre">Style</h2>
+        <div id="contenu-style"></div>
         <div id="enregistrement" hidden></div>
       </section>
     </aside>
@@ -443,14 +443,14 @@ button:focus-visible,
 var ordreCouleurs = ["W", "U", "B", "R", "G"];
 
 /* Version de cette page : à incrémenter à chaque livraison */
-var VERSION = { numero: "1.5", date: "2026-10-10 21:07" };
+var VERSION = { numero: "2.0", date: "2026-10-10 22:45" };
 var SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 var SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 /* Remplis depuis la base au démarrage (tables prisme_player_*) */
 var couleurs = {}, texteCouleurs = {}, nomsMoteurs = {};
-var questions = [], archetypes = {}, profils = {}, sousprofils = {};
+var questions = [], moteurs = {}, temperaments = {}, styles = {};
 var utilisateur = null;
 /* ---- connexion : tout passe par la Forge (portail commun, à la racine du site) ---- */
 const versForge = () => "../?retour=" + encodeURIComponent(location.href);
@@ -644,48 +644,39 @@ function calculerScores() {
   };
 }
 
-function classerAvecDepartage(scores, ordreReponsesObligatoires) {
-  return ordreCouleurs.slice().sort(function(a, b) {
-    if (scores[b] !== scores[a]) {
-      return scores[b] - scores[a];
-    }
-    // Égalité : la couleur répondue le plus tôt dans les questions
-    // 1 à 10 (obligatoires) est classée devant.
-    var ia = ordreReponsesObligatoires.indexOf(a);
-    var ib = ordreReponsesObligatoires.indexOf(b);
-    if (ia === -1) ia = 999;
-    if (ib === -1) ib = 999;
-    return ia - ib;
+// Classement v2 : score d'abord ; à égalité, le duel direct des questions obligatoires
+// (chaque paire de moteurs s'y affronte une fois). À trois ou plus, on compte les duels
+// gagnés à l'intérieur du groupe à égalité ; s'il reste deux ex aequo, leur duel direct
+// tranche ; en dernier recours, la couleur choisie le plus tôt dans les questions 1 à 10.
+function duelGagnant(a, b) {
+  var q = questions.find(function(x) {
+    return x.obligatoire && x.codeA.length === 1 && x.codeB.length === 1 &&
+           ((x.codeA === a && x.codeB === b) || (x.codeA === b && x.codeB === a));
   });
+  var r = q && reponses[q.numero];
+  return r ? (r === "A" ? q.codeA : q.codeB) : null;
 }
 
-function codeArchetypeDepuisEnsemble(lettres) {
-  var ens = lettres.slice().sort().join("");
-  for (var code in archetypes) {
-    if (code.split("").sort().join("") === ens) {
-      return code;
-    }
-  }
-  return null;
+function classerAvecDepartage(scores, ordreReponsesObligatoires) {
+  var tot = function(c) { var i = ordreReponsesObligatoires.indexOf(c); return i === -1 ? 999 : i; };
+  var parScore = {};
+  ordreCouleurs.forEach(function(c) { (parScore[scores[c]] = parScore[scores[c]] || []).push(c); });
+  return Object.keys(parScore).map(Number).sort(function(x, y) { return y - x; }).reduce(function(acc, sc) {
+    var G = parScore[sc], gains = {};
+    G.forEach(function(c) { gains[c] = G.filter(function(d) { return d !== c && duelGagnant(c, d) === c; }).length; });
+    return acc.concat(G.slice().sort(function(a, b) {
+      if (gains[b] !== gains[a]) return gains[b] - gains[a];
+      var d = duelGagnant(a, b);
+      if (d) return d === a ? -1 : 1;
+      return tot(a) - tot(b);
+    }));
+  }, []);
 }
 
+// Codes v2 : tempérament A/e (dominant, fui) et style A.b/e (+ le second)
 function construireCodesPrisme(classement) {
-  var top3 = [classement[0], classement[1], classement[2]];
-  var codeArch = codeArchetypeDepuisEnsemble(top3);
-  var rejetee = classement[4];
-
-  var codeProfil = codeArch + "/" + rejetee.toLowerCase();
-
-  var dominante = classement[0];
-  var autresDeux = codeArch.split("").filter(function(l) { return l !== dominante; });
-  var paire = trierSelonRoue(autresDeux);
-  var codeSousProfil = dominante + "." + paire.join("").toLowerCase() + "/" + rejetee.toLowerCase();
-
-  return {
-    archetype: codeArch,
-    profil: codeProfil,
-    sousprofil: codeSousProfil
-  };
+  var d = classement[0], b = classement[1], e = classement[4];
+  return { moteur: d, temperament: d + "/" + e.toLowerCase(), style: d + "." + b.toLowerCase() + "/" + e.toLowerCase() };
 }
 
 /* ===================== Affichage des résultats ===================== */
@@ -708,9 +699,9 @@ function actualiserResultats() {
   }
 
   var codes = construireCodesPrisme(classement);
-  afficherArchetype(codes.archetype);
-  afficherProfilPrisme(codes.profil);
-  afficherSousProfil(codes.sousprofil);
+  afficherMoteur(codes.moteur);
+  afficherTemperament(codes.temperament);
+  afficherStyle(codes.style);
   afficherEnregistrement(codes, calcul, classement);
 }
 
@@ -758,70 +749,42 @@ function afficherAttente(repondues) {
     '<p class="fiche-attente">Répondez aux 10 premières questions (obligatoires) pour découvrir votre profil de joueur.<br>' +
     'Encore ' + (10 - repondues) + ' question' + ((10 - repondues) > 1 ? "s" : "") + '.</p>';
 
-  document.getElementById("contenu-archetype").innerHTML = message;
-  document.getElementById("contenu-profil").innerHTML = "";
-  document.getElementById("contenu-sousprofil").innerHTML = "";
+  document.getElementById("contenu-moteur").innerHTML = message;
+  document.getElementById("contenu-temperament").innerHTML = "";
+  document.getElementById("contenu-style").innerHTML = "";
 }
 
-function afficherArchetype(code) {
-  var zone = document.getElementById("contenu-archetype");
+function echapper(t) { return String(t == null ? "" : t).replace(/[&<>"']/g, function(k) { return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[k]; }); }
+function majuscule(t) { t = String(t || ""); return t.charAt(0).toUpperCase() + t.slice(1); }
+function liste(t) { return String(t || "").split("\n").filter(Boolean).map(function(l) { return "<li>" + echapper(l) + "</li>"; }).join(""); }
 
-  if (typeof archetypes === "undefined") {
-    zone.innerHTML = '<p class="fiche-attente">Fichier prisme.js introuvable. Placez-le dans le même dossier que ce fichier.</p>';
-    return;
-  }
-
-  var fiche = archetypes[code];
-  if (!fiche) {
-    zone.innerHTML = '<p class="fiche-attente">Archétype non trouvé.</p>';
-    return;
-  }
-
+function afficherMoteur(code) {
+  var m = moteurs[code], zone = document.getElementById("contenu-moteur");
+  if (!m) { zone.innerHTML = '<p class="fiche-attente">Moteur non trouvé.</p>'; return; }
   zone.innerHTML =
-    '<div class="fiche-nom">' + fiche.nom + '</div>' +
-    '<div class="fiche-devise">' + (fiche.devise || "") + '</div>' +
-    '<p class="fiche-texte">' + sansLettres(fiche.texte) + '</p>';
+    '<div class="fiche-nom" style="color:' + m.couleur + '">' + echapper(m.nom) + '</div>' +
+    '<div class="fiche-devise">' + echapper(m.devise || "") + (m.citation ? ' · « ' + echapper(m.citation) + ' »' : "") + '</div>' +
+    '<p class="fiche-texte">' + echapper(m.texte) + '</p>';
 }
 
-function afficherProfilPrisme(code) {
-  var zone = document.getElementById("contenu-profil");
-
-  if (typeof profils === "undefined") {
-    zone.innerHTML = '<p class="fiche-attente">Fichier prisme.js introuvable.</p>';
-    return;
-  }
-
-  var fiche = profils[code];
-  if (!fiche) {
-    zone.innerHTML = '<p class="fiche-attente">Profil non trouvé.</p>';
-    return;
-  }
-
+function afficherTemperament(code) {
+  var t = temperaments[code], zone = document.getElementById("contenu-temperament");
+  if (!t) { zone.innerHTML = '<p class="fiche-attente">Tempérament non trouvé.</p>'; return; }
   zone.innerHTML =
-    '<div class="fiche-nom">' + fiche.nom + '</div>' +
-    '<p class="fiche-texte">' + (fiche.decrochage || "") + '</p>';
+    '<div class="fiche-nom">' + echapper(majuscule(t.nom)) + '</div>' +
+    '<div class="fiche-devise">' + echapper(nomsMoteurs[t.moteur]) + ', fuit ' + echapper(nomsMoteurs[t.fuit]) + '</div>' +
+    '<p class="fiche-texte">' + echapper(t.qui_il_est) + '</p>' +
+    '<p class="fiche-texte"><strong>Quand il décroche.</strong> ' + echapper(t.quand_decroche) + '</p>';
 }
 
-function afficherSousProfil(code) {
-  var zone = document.getElementById("contenu-sousprofil");
-
-  if (typeof sousprofils === "undefined") {
-    zone.innerHTML = '<p class="fiche-attente">Fichier prisme.js introuvable.</p>';
-    return;
-  }
-
-  var fiche = sousprofils[code];
-  if (!fiche) {
-    zone.innerHTML = '<p class="fiche-attente">Sous-profil non trouvé.</p>';
-    return;
-  }
-
+function afficherStyle(code) {
+  var x = styles[code], zone = document.getElementById("contenu-style");
+  if (!x) { zone.innerHTML = '<p class="fiche-attente">Style non trouvé.</p>'; return; }
+  var t = temperaments[x.temperament];
   zone.innerHTML =
-    '<div class="fiche-nom">' + fiche.nom + '</div>' +
-    '<p class="fiche-texte">' +
-      '<strong>Adore :</strong> ' + (fiche.adore || "") + '<br><br>' +
-      '<strong>Déteste :</strong> ' + (fiche.deteste || "") +
-    '</p>';
+    '<div class="fiche-nom">' + echapper(majuscule(x.nom)) + '</div>' +
+    '<p class="fiche-texte">' + (x.texte ? echapper(x.texte)
+      : 'Style ' + echapper(x.code) + ' : ' + echapper(t ? t.nom : x.temperament) + ', avec ' + echapper(nomsMoteurs[x.second]) + ' en second moteur.') + '</p>';
 }
 
 /* ===================== Démarrage ===================== */
@@ -837,24 +800,21 @@ function sansLettres(t) {
 async function chargerModele() {
   var r = await Promise.all([
     sb.from("prisme_player_moteurs").select("*").order("ordre"),
-    sb.from("prisme_player_archetypes").select("*").order("ordre"),
-    sb.from("prisme_player_profils").select("*").order("ordre"),
-    sb.from("prisme_player_sous_profils").select("*").order("ordre"),
+    sb.from("prisme_player_temperaments").select("*").order("ordre"),
+    sb.from("prisme_player_styles").select("*").order("ordre"),
     sb.from("prisme_player_questions").select("*").order("numero")
   ]);
   var erreur = r.find(function(x) { return x.error; });
   if (erreur) throw erreur.error;
-  var moteurs = {};
   r[0].data.forEach(function(m) {
     moteurs[m.code] = m;
     couleurs[m.code] = m.couleur;          // palette PRISME, sur fond clair
     texteCouleurs[m.code] = "#FFFFFF";
     nomsMoteurs[m.code] = m.nom;
   });
-  r[1].data.forEach(function(a) { archetypes[a.code] = a; });
-  r[2].data.forEach(function(p) { profils[p.code] = { nom: p.nom, decrochage: moteurs[p.rejetee].fragilite }; });
-  r[3].data.forEach(function(x) { sousprofils[x.code] = x; });
-  questions = r[4].data.map(function(q) {
+  r[1].data.forEach(function(t) { temperaments[t.code] = t; });
+  r[2].data.forEach(function(x) { styles[x.code] = x; });
+  questions = r[3].data.map(function(q) {
     return { numero: q.numero, texte: q.texte, codeA: q.code_a, texteA: q.texte_a,
              codeB: q.code_b, texteB: q.texte_b, obligatoire: q.obligatoire };
   });
@@ -884,7 +844,7 @@ function afficherEnregistrement(codes, calcul, classement) {
   var arrondis = {};
   Object.keys(calcul.pourcentages).forEach(function(c) { arrondis[c] = Math.round(calcul.pourcentages[c] * 10) / 10; });
   var envoi = { reponses: reponses, scores: arrondis, classement: classement.join(""),
-                sous_profil: codes.sousprofil, version_questionnaire: VERSION.numero };
+                style: codes.style, version_questionnaire: VERSION.numero };
   var cle = cleStable(envoi);
   if (cle === dernierEnvoi) {      // rien de nouveau depuis le dernier enregistrement
     if (!document.getElementById("etat-enregistrement"))
@@ -917,14 +877,14 @@ async function enregistrer(envoi, cle) {
 // À l'ouverture : une personne connectée retrouve sa dernière passation
 async function reprendreDernierResultat() {
   if (!utilisateur) return null;
-  var r = await sb.from("prisme_player_resultats").select("id,passe_le,reponses,scores,classement,sous_profil,version_questionnaire")
+  var r = await sb.from("prisme_player_resultats").select("id,passe_le,reponses,scores,classement,style,version_questionnaire")
                   .eq("user_id", utilisateur.id).order("passe_le", { ascending: false }).limit(1);
   var dernier = r.data && r.data[0];
   if (!dernier) return null;
   reponses = dernier.reponses || {};
   resultatId = dernier.id;
   dernierEnvoi = cleStable({ reponses: reponses, scores: dernier.scores, classement: dernier.classement,
-                             sous_profil: dernier.sous_profil, version_questionnaire: dernier.version_questionnaire });
+                             style: dernier.style, version_questionnaire: dernier.version_questionnaire });
   return dernier;
 }
 
@@ -961,6 +921,6 @@ Promise.all([chargerModele(), connexionConnue]).then(async function() {
 });
 
 </script>
-<script src="entete.js?v=1.1"></script>
+<script src="entete.js?v=1.2"></script>
 </body>
 </html>

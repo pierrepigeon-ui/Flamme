@@ -20,12 +20,11 @@ button,input{font:inherit;color:inherit} :focus-visible{outline:2px solid #3B6FE
 .btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
 .btn.petit{padding:6px 12px;font-size:13px}
 
-/* la roue des dix archétypes, centre jaune : la rosace en miniature */
+/* la roue des cinq moteurs : la rosace en miniature */
 .hero{max-width:860px;margin:6px auto 0;padding:20px 24px 10px;text-align:center}
 .roue{width:118px;height:118px;border-radius:50%;margin:0 auto 14px;position:relative;
-  background:conic-gradient(#C33030 0 36deg,#C38930 36deg 72deg,#A6C330 72deg 108deg,#4EC330 108deg 144deg,#30C36B 144deg 180deg,
-    #30C3C3 180deg 216deg,#306BC3 216deg 252deg,#4E30C3 252deg 288deg,#A630C3 288deg 324deg,#C33089 324deg 360deg)}
-.roue::after{content:"";position:absolute;inset:30%;border-radius:50%;background:#FFD54A;box-shadow:0 0 0 3px var(--paper)}
+  background:conic-gradient(from -36deg,#80796A 0 72deg,#0E8A9C 72deg 144deg,#3D2645 144deg 216deg,#E85D2E 216deg 288deg,#7A9A3C 288deg 360deg)}
+.roue::after{content:"";position:absolute;inset:32%;border-radius:50%;background:#FFFFFF;box-shadow:0 0 0 3px var(--paper)}
 @media (prefers-reduced-motion:no-preference){ .roue{animation:tour 1.6s cubic-bezier(.2,.7,.2,1) 1} @keyframes tour{from{transform:rotate(-72deg)}to{transform:none}} }
 .hero h1{font:600 clamp(42px,7vw,66px)/1 var(--serif);margin:0;letter-spacing:.08em}
 .hero .acrostiche{font:italic clamp(17px,2.3vw,21px)/1.45 var(--serif);color:var(--muted);margin:10px auto 2px;max-width:34ch}
@@ -86,7 +85,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px} .field{display:block;margi
 <!-- Textes de présentation : à ajuster librement -->
 <section class="blocs">
   <article class="bloc"><h2>Le joueur</h2><p class="question">Qu'est-ce que je recherche en jouant ?</p>
-    <p>Dix archétypes pour savoir pourquoi l'on joue, vingt profils pour ce qui fait décrocher, soixante sous-profils pour ce qui nourrit le plus.</p></article>
+    <p>Cinq moteurs pour savoir pourquoi l'on joue, vingt tempéraments pour ce que l'on cherche et ce que l'on fuit, soixante styles pour la façon de le vivre.</p></article>
   <article class="bloc"><h2>Le jeu</h2><p class="question">Qu'est-ce que ce jeu est, objectivement ?</p>
     <p>Seize paires d'axes, du système à l'édition, pour décrire un jeu tel qu'il est, avant de se demander à qui il plaira.</p></article>
   <article class="bloc"><h2>Le temps</h2><p class="question">Comment l'expérience évolue-t-elle ?</p>
@@ -96,7 +95,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px} .field{display:block;margi
 <footer><span>PRISME — l'Arpenteur <a class="contact" href="../?contact&amp;depuis=prisme">Écrire à l'Arpenteur</a></span><span id="version"></span></footer>
 
 <script>
-const VERSION = { numero:"1.11", date:"2026-10-10 21:07" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"2.0", date:"2026-10-10 23:00" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -125,22 +124,23 @@ async function afficherEspace(){
     sb.rpc("prisme_mon_role"),
     sb.from("prisme_roles").select("nom").eq("user_id", user.id).maybeSingle(),
     sb.from("forge_utilisateurs").select("nom").eq("user_id", user.id).maybeSingle(),
-    sb.from("prisme_player_resultats").select("id,passe_le,sous_profil").eq("user_id", user.id).order("passe_le", { ascending:false }).limit(1)
+    sb.from("prisme_player_resultats").select("id,passe_le,style,classement").eq("user_id", user.id).order("passe_le", { ascending:false }).limit(1)
   ]);   // le lien « La Forge » est géré par entete.js
   const nom = moiP?.nom || moiF?.nom;
   const dernier = res?.[0];
   let profil = null;
   if (dernier){
-    const { data } = await sb.from("prisme_player_vue_sous_profils").select("nom,profil_nom,archetype_nom").eq("code", dernier.sous_profil).maybeSingle();
+    const c = dernier.classement, code = dernier.style || (c ? c[0] + "." + c[1].toLowerCase() + "/" + c[4].toLowerCase() : null);
+    const { data } = await sb.from("prisme_player_vue_styles").select("nom,temperament_nom,moteur_nom").eq("code", code).maybeSingle();
     profil = data;
   }
   $("#espace").classList.remove("hidden");
   $("#bonjour").textContent = `Bonjour${nom ? ", " + nom : ""}`;
   $("#espace-sous").innerHTML = dernier && profil
-    ? `Votre profil de joueur : <b>${esc(profil.nom)}</b> (${esc(profil.profil_nom)}, ${esc(profil.archetype_nom)}), le ${new Date(dernier.passe_le).toLocaleDateString("fr-FR")}.`
+    ? `Votre profil de joueur : <b>${esc(profil.nom.charAt(0).toUpperCase() + profil.nom.slice(1))}</b> (${esc(profil.temperament_nom)}, ${esc(profil.moteur_nom)}), le ${new Date(dernier.passe_le).toLocaleDateString("fr-FR")}.`
     : "Vous n'avez pas encore enregistré de profil de joueur : commencez par le questionnaire.";
-  let t = dernier ? tuile("fiche.html", "Mon profil de joueur", "Vos moteurs, votre archétype, votre moment") : "";
-  t += tuile("rosace.html", "La rosace", dernier ? "Votre place parmi les soixante sous-profils" : "Les dix archétypes, vingt profils, soixante sous-profils");
+  let t = dernier ? tuile("fiche.html", "Mon profil de joueur", "Vos moteurs, votre tempérament, votre style") : "";
+  t += tuile("rosace.html", "La rosace", dernier ? "Votre place parmi les soixante styles" : "Cinq moteurs, vingt tempéraments, soixante styles");
   t += tuile("questionnaire.html", "Questionnaire du joueur", dernier ? "Revoir ou modifier vos réponses" : "Vingt-cinq situations de jeu, dix minutes");
   if (["proprietaire","editeur","evaluateur"].includes(role)) t += tuile("evaluation.html", "Évaluer un jeu", "Remplir ou reprendre une fiche PRISMEgame");
   t += tuile("encyclopedie.html", "L'encyclopédie", "Le modèle complet : le jeu, le joueur, leurs grilles et leurs exemples");
@@ -149,6 +149,6 @@ async function afficherEspace(){
   $("#tuiles").innerHTML = t;
 }
 </script>
-<script src="entete.js?v=1.1"></script>
+<script src="entete.js?v=1.2"></script>
 </body>
 </html>

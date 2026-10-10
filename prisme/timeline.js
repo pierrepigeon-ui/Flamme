@@ -1,6 +1,6 @@
 /* PRISME — timeline du jeu : jalons, durées, flow, α β γ, demi-vie.
    Module partagé par l'encyclopédie et l'outil d'évaluation. Méthode arrêtée le 08/10/2026 (jeu d'essai : Heat). */
-const TIMELINE_VERSION = { numero:"1.3", date:"2026-10-08 18:47" };   // à incrémenter à chaque livraison
+const TIMELINE_VERSION = { numero:"1.4", date:"2026-10-10 22:30" };   // à incrémenter à chaque livraison
 
 const JALONS = [
   { n:0, nom:"identifié", quoi:"Le jeu est connu de loin : critique, vitrine, recommandation." },
@@ -38,16 +38,16 @@ const TIMELINE_AXES = ["POID1","PROF1","VAR1","ALEA1","ALEA2","EXIG1","RYT1","RY
 const TIMELINE_PAIRES = ["POID","PROF","VAR","EXIG","SCAL","MAT","THEM"];
 const CLASSES_DEMIVIE = [[10, "éphémère"], [100, "durable"], [1000, "classique"], [Infinity, "inusable"]];
 
-/* ---- les moteurs de PRISMEplayer vus par le jeu (revue du 08/10/2026) ----
+/* ---- les moteurs de PRISMEplayer vus par le jeu (revue du 08/10/2026, v2 du 10/10/2026) ----
    nourrit : paires dont la réussite compte davantage (2 = ++, 1 = +) ; trait : à quel point le jeu est tourné vers ce moteur (axes 1, 0 à 5) ;
    rejet : jalon à partir duquel le trait devient friction pour qui rejette ce moteur ; elan : paires et jalons où le moteur pèse encore plus. */
 const MOTEURS_JEU = {
-  U:{ nourrit:{ EXIG:2, PROF:2, POID:1, TRAN:1, ALEA:1 }, rejet:3, elan:{ paires:["EXIG","PROF"], de:3, a:6 },
+  U:{ nourrit:{ EXIG:2, PROF:2, POID:1, TRAN:1, ALEA:1 }, rejet:3, elan:{ paires:["EXIG","PROF"], de:3, a:4 },
       trait:n => moyT(n.EXIG1, n.PROF1, n.POID1), traitTxt:"moy(EXIG1, PROF1, POID1)" },
-  B:{ nourrit:{ LIEN:2, ALEA:2, PROF:1, INT:1, SCAL:1 }, rejet:5, elan:{ paires:["LIEN","PROF"], de:4, a:6 },
+  B:{ nourrit:{ LIEN:2, ALEA:2, PROF:1, INT:1 }, rejet:5, elan:{ paires:["LIEN","PROF"], de:4, a:6 },
       trait:n => moyT(n.LIEN1 == null ? null : n.LIEN1 >= 2 ? n.LIEN1 : Math.max(n.LIEN1, n.EXIG1 ?? 0), n.ALEA1 == null ? null : 5 - n.ALEA1),
       traitTxt:"moy(adversité, 5 − ALEA1) ; adversité = LIEN1, ou max(LIEN1, EXIG1) si LIEN1 ≤ 1 (l'adversaire peut être le jeu)" },
-  R:{ nourrit:{ RYT:2, ALEA:2, INT:1, LIEN:1, THEM:1, MAT:1, ART:1 }, rejet:2, elan:{ paires:["MAT","ART","THEM"], de:1, a:3 },
+  R:{ nourrit:{ RYT:2, ALEA:2, INT:1, THEM:1, MAT:1, ART:1 }, rejet:2, elan:{ paires:["MAT","ART","THEM"], de:1, a:3 },
       trait:n => moyT(n.RYT1, n.ALEA1, n.INT1), traitTxt:"moy(RYT1, ALEA1, INT1)" },
   W:{ nourrit:{ LIEN:2, NEG:2, SCAL:2, INT:1, TRAN:1 }, rejet:2, elan:{ paires:["LIEN","SCAL"], de:5, a:7 },
       trait:n => moyT(n.NEG1, n.INT1, n.LIEN1 == null ? null : 5 - n.LIEN1), traitTxt:"moy(NEG1, INT1, 5 − LIEN1)" },
@@ -55,8 +55,20 @@ const MOTEURS_JEU = {
       trait:n => moyT(n.NEG1, n.VAR1), traitTxt:"moy(NEG1, VAR1)" }
 };
 function moyT(...a){ a = a.filter(v => v != null && !Number.isNaN(v)); return a.length ? a.reduce((s, v) => s + v, 0) / a.length : null; }
-// un sous-profil : { dom:"U", autres:["W","B"], rejet:"G" } → poids 1 pour le dominant, 0,5 pour les autres (3 / 1,5 / 1,5)
-const poidsProfil = pr => pr ? { [pr.dom]:1, [pr.autres[0]]:.5, [pr.autres[1]]:.5 } : {};
+// un style (v2) : { dom:"U", second:"B", autres:["W","R"], rejet:"G" } → poids 1 pour le dominant, 0,5 pour le second,
+// 1/6 pour chacun des deux suivants (3 / 1,5 / 0,5 / 0,5) ; le moteur fui ne nourrit pas, il gêne (geneRejet)
+const poidsProfil = pr => pr ? { [pr.dom]:1, [pr.second]:.5, [pr.autres[0]]:1 / 6, [pr.autres[1]]:1 / 6 } : {};
+// d'un code de style à sa lecture : "W.b/u" → { dom:"W", second:"B", autres:["R","G"], rejet:"U" }
+function prDeStyle(code){
+  const dom = code[0], second = code[2].toUpperCase(), rejet = code[4].toUpperCase();
+  return { dom, second, rejet, autres: [..."WUBRG"].filter(c => c !== dom && c !== second && c !== rejet) };
+}
+// Décrypter culmine à la fin de la compréhension (jalon 4) : ensuite sa stimulation baisse, sauf si le jeu reste très réflexif
+// facteur = 1 − 0,2 × kU × (1 − r), r = (moy(EXIG1, PROF1) − 2,5) / 2 borné à [0, 1] (aucune baisse dès que la moyenne atteint 4,5)
+function declinDecrypter(n, kU){
+  if (!kU) return 1; const m = moyT(n.EXIG1, n.PROF1); const r = m == null ? 0 : Math.min(1, Math.max(0, (m - 2.5) / 2));
+  return 1 - .2 * kU * (1 - r);
+}
 const geneRejet = (n, pr) => { if (!pr) return 0; const t = MOTEURS_JEU[pr.rejet].trait(n); return t == null ? 0 : Math.max(0, t - 2) / 3; };   // 0 à 1
 function poidsPaire(code, pr, j){
   let w = 1; const k = poidsProfil(pr);
@@ -72,7 +84,7 @@ function flowJeu(n, pr){
   const moy = (...a) => { a = a.filter(ok); return a.length ? a.reduce((s, v) => s + v, 0) / a.length : null; };
   const quad = (...a) => { a = a.filter(ok); return a.length ? Math.sqrt(a.reduce((s, v) => s + v * v, 0) / a.length) : 0; };
   const inv = v => ok(v) ? 5 - v : null, fois = (v, k) => ok(v) ? v * k : null;
-  const k = poidsProfil(pr), kR = k.R || 0, kG = k.G || 0, kW = k.W || 0;
+  const k = poidsProfil(pr), kR = k.R || 0, kG = k.G || 0, kW = k.W || 0, kU = k.U || 0;
   const penteL = .1 - .03 * kG;                                   // Rayonner prolonge l'apogée
   const lassitude = N => 1 + penteL * Math.log2(1 + N);
   const exces = Math.max(0, (n.EXIG1 ?? 0) - 2);
@@ -97,7 +109,7 @@ function flowJeu(n, pr){
     const F = { 1:[n.POID1, M, inv(n.ART2b)], 2:[n.POID1, inv(n.TRAN2), M, inv(n.ART2b)], 3:[inv(n.TRAN2), inv(n.ART2b), A, M, n.POID1], 4:[A, M, inv(n.ART2b)],
       5:f5, 6:[...f5, inv(n.VAR)], 7:[A, M, M2, inv(n.SCAL), inv(n.VAR)] }[j];
     let sw = 0, sv = 0; S.forEach(([c, v]) => { if (!ok(v)) return; const w = pr ? poidsPaire(c, pr, j) : 1; sw += w; sv += w * v; });
-    const s = (sw ? sv / sw : 0) * (j === 5 || j === 6 ? plafond : j === 7 ? usure : 1);
+    const s = (sw ? sv / sw : 0) * (j === 5 || j === 6 ? plafond : j === 7 ? usure : 1) * (j >= 5 ? declinDecrypter(n, kU) : 1);
     let f = quad(...F); const nf = F.filter(ok).length || 1;
     if (gene > 0 && j >= deRejet) f = Math.sqrt(f * f + gene * gene / nf);            // ce que le joueur rejette devient friction
     return { s, f, brut: 2 * R_REGIME[j] * (s - f), L };
@@ -192,8 +204,8 @@ svg.courbe .pt{fill:var(--panel);stroke:var(--ink);stroke-width:2} svg.courbe .p
   const st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
 })();
 
-/* ---------------- le spectromètre : le jeu vu par chacun des 60 sous-profils ---------------- */
-// note finale vue par un sous-profil : dans chaque chapitre, moyenne des paires pondérée par ses moteurs ; puis moyenne des chapitres ; puis pénalité de rejet
+/* ---------------- le spectromètre : le jeu vu par chacun des 60 styles ---------------- */
+// note finale vue par un style : dans chaque chapitre, moyenne des paires pondérée par ses moteurs ; puis moyenne des chapitres ; puis pénalité de rejet
 function noteProfil(paires, n, pr){
   const parChap = {};
   paires.forEach(p => { if (p.note == null) return; const w = poidsPaire(p.code, pr, null); (parChap[p.chap] ??= { sw:0, sv:0 }); parChap[p.chap].sw += w; parChap[p.chap].sv += w * p.note; });
@@ -207,21 +219,21 @@ function spectreMoteurs(paires, n){
     return [m, { trait: def.trait(n), reussite: sw ? sv / sw : null }];
   }));
 }
-// pl : { moteurs, archetypes, profils, sousprofils } (tables PRISMEplayer)
+// pl : { moteurs, temperaments, styles } (tables PRISMEplayer v2)
+// lignes : une par style ; moteurs : regroupement moteur › tempérament › styles, avec la moyenne de chaque niveau
 function spectrometre(n, paires, pl){
   const base = flowJeu(n), noteBase = noteProfil(paires, n, null);
-  const P = Object.fromEntries(pl.profils.map(p => [p.code, p])), A = Object.fromEntries(pl.archetypes.map(a => [a.code, a]));
-  const lignes = pl.sousprofils.map(s => {
-    const p = P[s.profil], arc = p.archetype, pr = { dom:s.dominante, autres:[...arc].filter(c => c !== s.dominante), rejet:p.rejetee };
-    const c = flowJeu(n, pr), note = noteProfil(paires, n, pr);
-    const gene = geneRejet(n, pr);
-    return { sp:s, profil:p, archetype:A[arc], pr, c, note, gene,
+  const T = Object.fromEntries(pl.temperaments.map(t => [t.code, t])), M = Object.fromEntries(pl.moteurs.map(m => [m.code, m]));
+  const lignes = pl.styles.map(st => {
+    const pr = prDeStyle(st.code), t = T[st.temperament], c = flowJeu(n, pr), note = noteProfil(paires, n, pr), gene = geneRejet(n, pr);
+    return { st, temperament:t, moteur:M[pr.dom], pr, c, note, gene,
       decroche: c.beta != null ? c.beta : gene > 0 ? MOTEURS_JEU[pr.rejet].rejet : null };
   }).sort((a, b) => (b.note ?? -1) - (a.note ?? -1));
-  const archetypes = pl.archetypes.map(a => { const L = lignes.filter(l => l.archetype.code === a.code);
-    return { a, note: L.reduce((s, l) => s + (l.note ?? 0), 0) / L.length, alpha: L.reduce((s, l) => s + l.c.y[l.c.alpha], 0) / L.length, lignes:L }; })
+  const resume = L => ({ note: L.reduce((s, l) => s + (l.note ?? 0), 0) / L.length, alpha: L.reduce((s, l) => s + l.c.y[l.c.alpha], 0) / L.length, lignes:L });
+  const moteurs = pl.moteurs.map(m => ({ m, ...resume(lignes.filter(l => l.pr.dom === m.code)),
+      temperaments: pl.temperaments.filter(t => t.moteur === m.code).map(t => ({ t, ...resume(lignes.filter(l => l.temperament.code === t.code)) })).sort((x, y) => y.note - x.note) }))
     .sort((x, y) => y.note - x.note);
-  return { base, noteBase, lignes, archetypes, spectre: spectreMoteurs(paires, n) };
+  return { base, noteBase, lignes, moteurs, spectre: spectreMoteurs(paires, n) };
 }
 
 /* Rosace : 5 moteurs, l'offre (trait) en contour, la réussite en surface. couleurs : { code: couleur } */
@@ -285,11 +297,11 @@ function entreesFiche(s, paires, axes, contenu){
   return { n, manque:[...manque], absents:[...absents], etats,
     paires: paires.map(p => ({ chap:p.chapitre, code:p.code, note:etats[p.code].note })) };
 }
-// le meilleur des jeux pour un sous-profil, un profil ou un archétype : fiches = [{ jeu, statut, saisie, contenu_parties }]
+// le meilleur des jeux pour des styles (codes W.b/u) : fiches = [{ jeu, statut, saisie, contenu_parties }]
+// pour un tempérament ou un moteur, passer la liste de ses styles (stylesDe)
+const stylesDe = (code, styles) => styles.map(s => s.code).filter(c => code.includes(".") ? c === code : code.includes("/") ? c[0] === code[0] && c[4] === code[2] : c[0] === code);
 function jeuxPourJoueurs(fiches, paires, axes, pl, codes){
-  const P = Object.fromEntries(pl.profils.map(p => [p.code, p]));
-  const prs = pl.sousprofils.filter(s => codes.includes(s.code)).map(s => { const p = P[s.profil];
-    return { dom:s.dominante, autres:[...p.archetype].filter(c => c !== s.dominante), rejet:p.rejetee }; });
+  const prs = codes.map(prDeStyle);
   const parJeu = {};
   fiches.forEach(f => {
     const e = entreesFiche(f.saisie, paires, axes, f.contenu_parties);
