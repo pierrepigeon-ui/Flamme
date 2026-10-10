@@ -134,7 +134,7 @@ mark{background:#FFE58A;color:#1B2430;border-radius:2px}
 <script src="timeline.js?v=1.4"></script>
 <script src="totems.js?v=1"></script>
 <script>
-const VERSION = { numero:"2.2", date:"2026-10-11 00:50" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"2.3", date:"2026-10-11 01:05" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -320,7 +320,7 @@ function sectionJoueur(toc){
       ${m.fragilite ? `<p><span class="lib">Quand il est rejeté</span>${esc(m.fragilite)}</p>` : ""}
       <p><span class="lib">Son moment</span>${m.phase_cle ? esc(majE(m.phase_cle)) : m.climax_phase ? esc(m.climax_phase) : "transversal : prolonge l'apogée des autres"}</p></div>`).join("")}</div>
     <h3 class="section" id="temperaments">Tempéraments et styles</h3>
-    <div class="texte"><p>Un tempérament réunit le moteur dominant et le moteur que l'on fuit (code A/e : W/u, l'Habitué, cherche Rassembler et fuit Décrypter). Chacun se décline en trois styles selon le second moteur (code A.b/e : W.b/u, l'Habitué coriace). Chaque tempérament transpose au jeu le tempérament de Flamme Bleue de même code.</p></div>`;
+    <div class="texte"><p>Un tempérament réunit le moteur dominant et le moteur que l'on fuit (code A/e : W/u, l'Habitué, cherche Rassembler et fuit Décrypter). Chacun se décline en trois styles selon le second moteur (code A.b/e : W.b/u, l'Habitué coriace). Chaque tempérament transpose au jeu le tempérament de Flamme Bleue de même code, et porte un totem (<a href="totems.html">la planche des vingt totems</a>).</p></div>`;
   M.temperaments.forEach(t => {
     const m = Mo[t.moteur];
     h += `<section class="archetype" id="${idTem(t.code)}" style="--m:${esc(coul(m))}">${totemSVG(t.code, coul(m), { cls:"e-totem", titre: t.totem ? majE(t.totem) : undefined })}<h4>${esc(majE(t.nom))} <small class="vide">${esc(t.code)}</small></h4>

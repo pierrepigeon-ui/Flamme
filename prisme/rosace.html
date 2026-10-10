@@ -67,7 +67,7 @@ aside .vous-badge{display:inline-block;font:600 12px var(--sans);color:#fff;back
 <script src="timeline.js?v=1.4"></script>
 <script src="totems.js?v=1"></script>
 <script>
-const VERSION = { numero:"2.2", date:"2026-10-11 00:50" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"2.3", date:"2026-10-11 01:05" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -246,7 +246,7 @@ async function afficherJeux(code, N){
 function montrerAccueil(connecte){
   $("#panneau").innerHTML = `<p class="niveau">La rosace des joueurs</p><h1>Cinq moteurs, vingt tempéraments, soixante styles</h1>
     <p>Au centre, le moteur : pourquoi l'on joue. Au milieu, le tempérament : ce que l'on cherche et ce que l'on fuit. Au bord, le style : le second moteur, avec lequel on le vit.</p>
-    <p>Cliquez sur un secteur pour le découvrir.</p>
+    <p>Cliquez sur un secteur pour le découvrir. Chaque tempérament a son totem : <a href="totems.html">les voir tous</a>.</p>
     <p>${connecte ? '<a href="questionnaire.html">Passez le questionnaire</a> pour voir votre place sur la rosace.'
                   : `<a href="${versForge()}">Connectez-vous</a> et passez le <a href="questionnaire.html">questionnaire du joueur</a> pour voir votre place sur la rosace.`}</p>`;
 }
