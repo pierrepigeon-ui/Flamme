@@ -99,7 +99,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px} .field{display:block;margi
 <footer><span>PRISME — l'Arpenteur <a class="contact" href="../?contact&amp;depuis=prisme">Écrire à l'Arpenteur</a></span><span id="version"></span></footer>
 
 <script>
-const VERSION = { numero:"1.8", date:"2026-10-08 17:00" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"1.9", date:"2026-10-10 19:05" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -128,9 +128,9 @@ async function afficherEspace(){
   const [{ data: role }, { data: moiP }, { data: moiF }, { data: res }, { data: roleFlamme }] = await Promise.all([
     sb.rpc("prisme_mon_role"),
     sb.from("prisme_roles").select("nom").eq("user_id", user.id).maybeSingle(),
-    sb.from("roles_utilisateurs").select("nom").eq("user_id", user.id).maybeSingle(),
+    sb.from("forge_utilisateurs").select("nom").eq("user_id", user.id).maybeSingle(),
     sb.from("prisme_player_resultats").select("id,passe_le,sous_profil").eq("user_id", user.id).order("passe_le", { ascending:false }).limit(1),
-    sb.rpc("mon_role")   // accès à Flamme Bleue : seulement lu, pour savoir si la Forge a autre chose à proposer
+    sb.rpc("flamme_mon_role")   // accès à Flamme Bleue : seulement lu, pour savoir si la Forge a autre chose à proposer
   ]);
   $("#lien-forge").classList.toggle("hidden", !roleFlamme);
   const nom = moiP?.nom || moiF?.nom;
