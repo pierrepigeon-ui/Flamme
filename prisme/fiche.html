@@ -24,12 +24,12 @@ main{max-width:860px;margin:0 auto;padding:10px 24px 40px}
 .entete .surtitre{font-size:13px;color:var(--muted);margin:0}
 .entete h1{font:600 clamp(36px,6vw,54px)/1.05 var(--serif);margin:4px 0 6px}
 .entete .filiation{font:italic 19px/1.4 var(--serif);color:var(--muted);margin:0}
-/* les trois niveaux, du plus partagé (moteur, 1 joueur sur 5) au plus singulier (style, 1 sur 60) */
+/* deux niveaux : le tempérament (1 joueur sur 20) puis le style (1 sur 60) ; le moteur dominant se lit dans l'histogramme */
 .entete h1.niveaux{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;font:600 clamp(26px,4.4vw,40px)/1.15 var(--serif);margin:8px 0 4px}
 .niveaux .niv{display:inline-flex;flex-direction:column}
 .niveaux small{font:500 12px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .niveaux .arch{font-size:clamp(38px,6.5vw,60px);line-height:1.05;color:var(--arch)}
-.niveaux .prof{color:color-mix(in srgb, var(--arch) 55%, var(--ink))}
+.niveaux .prof{font-size:clamp(38px,6.5vw,60px);line-height:1.05;color:var(--arch)}
 .niveaux .sous{font-size:.85em;color:color-mix(in srgb, var(--sous) 80%, var(--ink))}
 .niveaux .sep{color:var(--line);font-weight:400}
 @media (max-width:520px){ .niveaux .sep{display:none} }
@@ -53,6 +53,13 @@ section ul{margin:2px 0 12px;padding-left:20px;font:16px/1.55 var(--serif)}
 /* timeline */
 .timeline svg{width:100%;height:auto;display:block}
 .timeline .note{font-size:13px;color:var(--muted);margin:8px 0 0}
+details.repli{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-top:16px}
+details.repli > summary{cursor:pointer;padding:14px 26px;font:600 17px var(--serif);list-style:none;display:flex;align-items:baseline;gap:10px}
+details.repli > summary::-webkit-details-marker{display:none}
+details.repli > summary::before{content:"▸";color:var(--muted);font-size:14px;transition:transform .15s}
+details.repli[open] > summary::before{transform:rotate(90deg)}
+details.repli > summary small{font:13px var(--sans);color:var(--muted);font-weight:400}
+details.repli > section{border:0;margin:0;padding-top:0}
 #vos-jeux table.pj-jeux{font-size:15px}
 .version{font-size:12px;color:var(--muted);text-align:right;margin-top:24px}
 .vide{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:30px 26px;font:italic 18px/1.5 var(--serif);color:var(--muted)}
@@ -67,7 +74,7 @@ section ul{margin:2px 0 12px;padding-left:20px;font:16px/1.55 var(--serif)}
 
 <script src="timeline.js?v=1.4"></script>
 <script>
-const VERSION = { numero:"2.0", date:"2026-10-10 23:00" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"2.1", date:"2026-10-10 23:40" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -121,7 +128,7 @@ async function afficher(user){
   const ordre = r.classement.split("");
   const moteurs = ordre.map((c, i) => {
     const m = M[c], pct = Number(r.scores?.[c] ?? 0);
-    const role = i === 0 ? "votre moteur dominant" : i === 1 ? "votre second moteur : il donne votre style" : i === 4 ? "le moteur que vous fuyez : il fait décrocher" : "";
+    const role = i === 0 ? "votre moteur dominant" : i === 1 ? "votre second moteur : il donne votre style" : i === 4 ? "le moteur que vous fuyez : il donne votre tempérament" : "";
     return `<div class="moteur"><span class="nom">${esc(m.nom)}</span>
       <span class="piste"><span class="plein" style="width:${Math.min(100, pct)}%;background:${m.couleur}"></span></span>
       <span class="pct">${pct.toFixed(1).replace(".", ",")} %</span>
@@ -132,19 +139,13 @@ async function afficher(user){
     <div class="entete">
       <p class="surtitre">${autre ? "Profil de joueur" : "Mon profil de joueur"}</p>
       <h1 class="niveaux">
-        <span class="niv arch"><small>moteur</small>${esc(dom.nom)}</span><span class="sep" aria-hidden="true">›</span>
-        <span class="niv prof"><small>tempérament</small>${esc(maj(st.temperament_nom))}</span><span class="sep" aria-hidden="true">›</span>
+        <span class="niv prof"><small>tempérament</small>${esc(maj(st.temperament_nom))}</span>
         <span class="niv sous" style="--sous:${esc(M[st.second]?.couleur || "var(--ink)")}"><small>style</small>${esc(maj(st.nom))}</span></h1>
       <p class="date">Questionnaire du ${new Date(r.passe_le).toLocaleDateString("fr-FR")}.${autre ? "" : ' <a href="questionnaire.html">Le modifier ou le refaire</a>. <a href="rosace.html">Voir ma place sur la rosace</a>.'}</p>
     </div>
 
     <section><h2>Vos moteurs</h2><p class="question">Ce qui vous met en mouvement à la table, du plus fort au plus faible.</p>
       <div class="moteurs">${moteurs}</div></section>
-
-    <section><h2>${esc(dom.nom)}</h2><p class="question">Pourquoi je joue ? Votre moteur.</p>
-      <p class="devise">${esc(dom.devise)}${dom.citation ? ` · « ${esc(dom.citation)} »` : ""}</p>
-      <p>${esc(dom.texte)}</p>
-      ${dom.a_la_table ? `<span class="libelle">À la table, il peut</span>${puces(dom.a_la_table)}` : ""}</section>
 
     <section><h2>${esc(maj(tem.nom))}</h2><p class="question">Ce que je cherche, ce que je fuis : votre tempérament (${esc(dom.nom)}, fuit ${esc(M[tem.fuit].nom)}).</p>
       <p>${esc(tem.qui_il_est)}</p>
@@ -156,9 +157,16 @@ async function afficher(user){
       <p>${st.texte ? esc(st.texte) : `Style ${esc(st.code)} : ${esc(st.temperament_nom)}, avec ${esc(st.second_nom)} en second moteur.`}</p>
       <p><span class="libelle">Second moteur</span>${esc(st.second_nom)} : ${esc(M[st.second].devise)}.</p></section>
 
-    <section class="timeline"><h2>Votre moment</h2><p class="question">Où culmine votre intérêt au fil des parties ?</p>
-      ${frise(st, dom)}
-      <p class="note">Hypothèse de travail du modèle, pas encore validée sur des cas réels.</p></section>
+    <details class="repli"><summary>${esc(dom.nom)} <small>votre moteur dominant, en entier</small></summary>
+    <section><p class="question">Pourquoi je joue ? Votre tempérament en est une déclinaison.</p>
+      <p class="devise">${esc(dom.devise)}${dom.citation ? ` · « ${esc(dom.citation)} »` : ""}</p>
+      <p>${esc(dom.texte)}</p>
+      ${dom.a_la_table ? `<span class="libelle">À la table, il peut</span>${puces(dom.a_la_table)}` : ""}</section></details>
+
+    <details class="repli"><summary>Votre moment <small>où culmine chacun de vos moteurs, au fil des parties</small></summary>
+    <section class="timeline">
+      ${frise(ordre.map(c => M[c]))}
+      <p class="note">Épaisseur et intensité suivent le poids de chaque moteur dans votre profil (3, 1,5, 0,5, 0,5). Le moteur que vous fuyez ne culmine pas : il gêne, à partir du jalon indiqué. Hypothèse de travail du modèle, pas encore validée sur des cas réels.</p></section></details>
 
     <section id="vos-jeux"><h2>${autre ? "Ses jeux" : "Vos jeux"}</h2><p class="question">Les jeux évalués dans PRISME, vus par ${autre ? "ce" : "votre"} style de joueur.</p>
       <div id="vos-jeux-corps"><p class="pj-discret">Calcul en cours…</p></div></section>`;
@@ -171,26 +179,39 @@ async function afficherVosJeux(code, autre){
   box.innerHTML = tableJeuxHTML(L, d, autre ? "ce joueur" : "vous", false);
 }
 
-// frise des jalons 0 à 7+, avec la zone d'apogée du moteur dominant
-function frise(sp, m){
-  const W = 760, x = j => 30 + j * 90, y = 70;
-  const phases = [["Accès",1,2],["Expérimentations",3,4],["Aguerrissement",5,6],["Habitude",6,7]];
-  const demi = { "courte":0.5, "moyenne":0.9, "longue (étendue)":1.6 }[sp.duree_apogee] ?? 0.9;
-  let zone;
-  if (sp.climax_jalon == null){   // transversal : prolonge l'apogée des autres
-    zone = `<rect x="${x(1)}" y="${y-26}" width="${x(7.6)-x(1)}" height="26" rx="6" fill="${m.couleur}" opacity=".22"/>
-      <text x="${(x(1)+x(7.6))/2}" y="${y-36}" text-anchor="middle" font-size="15" font-weight="600" fill="currentColor">Transversal : vous prolongez l'apogée, quelle que soit la phase</text>`;
-  } else {
-    const c = Number(sp.climax_jalon);
-    zone = `<rect x="${x(c-demi)}" y="${y-26}" width="${x(c+demi)-x(c-demi)}" height="26" rx="6" fill="${m.couleur}" opacity=".3"/>
-      <circle cx="${x(c)}" cy="${y-13}" r="7" fill="${m.couleur}"/>
-      <text x="${x(c)}" y="${y-36}" text-anchor="middle" font-size="15" font-weight="600" fill="currentColor">${esc(sp.climax_phase)}, apogée ${esc(sp.duree_apogee)}</text>`;
-  }
-  const graduations = [0,1,2,3,4,5,6,7].map(j => `<line x1="${x(j)}" y1="${y}" x2="${x(j)}" y2="${y+7}" stroke="currentColor" opacity=".5"/>
-    <text x="${x(j)}" y="${y+24}" text-anchor="middle" font-size="12.5" fill="currentColor" opacity=".7">${j === 7 ? "7+" : j}</text>`).join("");
-  const noms = phases.map(([n,a,b]) => `<text x="${(x(a)+x(b))/2}" y="${y+44}" text-anchor="middle" font-size="12" fill="currentColor" opacity=".6">${n}</text>`).join("");
-  return `<svg viewBox="0 0 ${W} 122" role="img" aria-label="Frise des parties, de la découverte à l'exploitation">
-    ${zone}<line x1="${x(0)}" y1="${y}" x2="${x(7.6)}" y2="${y}" stroke="currentColor" stroke-width="1.5" opacity=".6"/>${graduations}${noms}</svg>`;
+// frise des jalons 0 à 7+ : une ligne par moteur, dans l'ordre du joueur ; apogée de chacun, gêne du moteur fui
+function frise(mots){
+  const W = 760, x = j => 150 + j * 76, H0 = 18, pas = 34, POIDS = [1, .5, 1 / 6, 1 / 6];
+  const demiDe = d => ({ "courte":0.5, "moyenne":0.9, "longue (étendue)":1.6 })[d] ?? 0.9;
+  const fin = x(7.6), H = H0 + pas * 5 + 52;
+  let g = "";
+  mots.forEach((m, i) => {
+    const y = H0 + i * pas + pas / 2, fui = i === 4;
+    g += `<text x="140" y="${y + 5}" text-anchor="end" font-size="14" font-weight="${i === 0 ? 600 : 400}" fill="currentColor">${esc(m.nom)}</text>
+      <line x1="${x(0)}" y1="${y}" x2="${fin}" y2="${y}" stroke="currentColor" opacity=".12"/>`;
+    if (fui){
+      const j = MOTEURS_JEU[m.code]?.rejet ?? 3;
+      g += `<rect x="${x(j)}" y="${y - 7}" width="${fin - x(j)}" height="14" rx="4" fill="url(#hachure)" stroke="${m.couleur}" stroke-opacity=".6"/>
+        <text x="${x(j) - 8}" y="${y + 5}" text-anchor="end" font-size="12.5" fill="currentColor" opacity=".75">gêne dès le jalon ${j}</text>`;
+      g += `<defs><pattern id="hachure" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" stroke="${m.couleur}" stroke-width="3" opacity=".55"/></pattern></defs>`;
+      return;
+    }
+    const k = POIDS[i], h = 6 + 14 * k, op = .25 + .65 * k;
+    if (m.climax_jalon == null){
+      g += `<rect x="${x(1)}" y="${y - h / 2}" width="${fin - x(1)}" height="${h}" rx="${h / 2}" fill="${m.couleur}" opacity="${op * .55}"/>
+        <text x="${(x(1) + fin) / 2}" y="${y + 4.5}" text-anchor="middle" font-size="12.5" fill="currentColor">transversal : prolonge l'apogée</text>`;
+    } else {
+      const c = Number(m.climax_jalon), d = demiDe(m.duree_apogee);
+      g += `<rect x="${x(Math.max(0, c - d))}" y="${y - h / 2}" width="${x(c + d) - x(Math.max(0, c - d))}" height="${h}" rx="${h / 2}" fill="${m.couleur}" opacity="${op}"/>
+        <circle cx="${x(c)}" cy="${y}" r="${4 + 3 * k}" fill="${m.couleur}"/><title>${esc(m.nom)} : ${esc(m.climax_phase)}, jalon ${String(c).replace(".", ",")}</title>`;
+    }
+  });
+  const yb = H0 + pas * 5 + 6;
+  const grad = [0,1,2,3,4,5,6,7].map(j => `<line x1="${x(j)}" y1="${H0}" x2="${x(j)}" y2="${yb}" stroke="currentColor" opacity=".08"/>
+    <text x="${x(j)}" y="${yb + 18}" text-anchor="middle" font-size="12.5" fill="currentColor" opacity=".7">${j === 7 ? "7+" : j}</text>`).join("");
+  const phases = [["Entrée",0,2],["Apprentissage",2,4],["Maîtrise",4,6],["Maturité",6,7.6]].map(([n,a,b]) =>
+    `<text x="${(x(a) + x(b)) / 2}" y="${yb + 38}" text-anchor="middle" font-size="12" fill="currentColor" opacity=".6">${n}</text>`).join("");
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Le moment de chacun de vos moteurs, de la découverte à la maturité">${grad}${g}${phases}</svg>`;
 }
 </script>
 <script src="entete.js?v=1.2"></script>
