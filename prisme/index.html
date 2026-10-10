@@ -14,7 +14,6 @@
 @media (prefers-color-scheme: dark){:root{--ink:#E6E9EE;--muted:#9AA4B2;--line:#2C3542;--paper:#11161D;--panel:#171D25;--accent:#C9B4D2;--err:#F2837A;--ok:#5CC98A}}
 *{box-sizing:border-box} html,body{margin:0} body{background:var(--paper);color:var(--ink);font:16px/1.6 var(--sans)}
 button,input{font:inherit;color:inherit} :focus-visible{outline:2px solid #3B6FE0;outline-offset:2px} .hidden{display:none!important}
-.barre .marque{font:600 19px/1 "Source Serif 4",Georgia,serif;letter-spacing:.08em;color:inherit;text-decoration:none}
 .barre .zone{margin-left:auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .barre{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px 20px;font-size:13px;color:var(--muted)}
 .btn{display:inline-block;border:1px solid var(--ink);background:var(--ink);color:var(--panel);padding:11px 20px;border-radius:7px;cursor:pointer;font-weight:500;text-decoration:none}
@@ -59,7 +58,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px} .field{display:block;margi
 </style>
 </head>
 <body>
-<div class="barre"><a href="index.html" class="marque" title="Accueil de PRISME">PRISME</a><span class="zone" data-entete-zone><span id="who"></span>
+<div class="barre"><span class="zone"><span id="who"></span>
   <a class="btn ghost petit" id="btn-login" href="../">Se connecter</a>
   <button class="btn ghost petit hidden" id="btn-logout" type="button">Se déconnecter</button></span></div>
 
@@ -97,7 +96,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 14px} .field{display:block;margi
 <footer><span>PRISME — l'Arpenteur <a class="contact" href="../?contact&amp;depuis=prisme">Écrire à l'Arpenteur</a></span><span id="version"></span></footer>
 
 <script>
-const VERSION = { numero:"1.10", date:"2026-10-10 19:34" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"1.11", date:"2026-10-10 21:07" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -150,6 +149,6 @@ async function afficherEspace(){
   $("#tuiles").innerHTML = t;
 }
 </script>
-<script src="entete.js?v=1.0"></script>
+<script src="entete.js?v=1.1"></script>
 </body>
 </html>
