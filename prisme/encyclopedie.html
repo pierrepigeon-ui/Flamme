@@ -28,7 +28,7 @@ header.titre h1{font:600 clamp(32px,5vw,46px)/1.05 var(--serif);margin:0}
 header.titre p{margin:4px 0 0;color:var(--muted);max-width:64ch}
 header.titre .actions{margin-left:auto;display:flex;gap:8px}
 
-nav#sommaire{position:sticky;top:12px;align-self:start;max-height:calc(100vh - 24px);overflow:auto;font-size:14px;padding:6px 0 20px}
+nav#sommaire{position:sticky;top:calc(var(--ent-h, 0px) + 12px);align-self:start;max-height:calc(100vh - var(--ent-h, 0px) - 24px);overflow:auto;font-size:14px;padding:6px 0 20px}
 nav#sommaire input{width:100%;padding:7px 10px;border:1px solid var(--line);border-radius:7px;background:var(--panel);margin-bottom:10px}
 nav#sommaire summary{display:none;font:600 15px var(--sans);cursor:pointer;padding:4px 2px}
 nav#sommaire li{position:relative} nav#sommaire li > a{margin-left:18px}
@@ -134,7 +134,7 @@ mark{background:#FFE58A;color:#1B2430;border-radius:2px}
 <script src="timeline.js?v=1.4"></script>
 <script src="totems.js?v=1"></script>
 <script>
-const VERSION = { numero:"2.1", date:"2026-10-11 00:20" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"2.2", date:"2026-10-11 00:50" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -535,6 +535,6 @@ $("#cherche").addEventListener("keydown", e => {
 });
 $("#cherche").addEventListener("input", e => { if (!e.target.value) effacer(); });
 </script>
-<script src="entete.js?v=1.2"></script>
+<script src="entete.js?v=1.3"></script>
 </body>
 </html>
