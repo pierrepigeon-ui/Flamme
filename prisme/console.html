@@ -220,7 +220,7 @@ dialog h2{font:600 22px var(--serif);margin:0 0 16px}
 
 <script>
 /* ================= configuration ================= */
-const VERSION = { numero:"1.14", date:"2026-10-10 21:07" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"1.15", date:"2026-10-10 21:16" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 
@@ -799,6 +799,8 @@ function exporterResultats(nomDe){
 const TABLES_SAUVEGARDE = ["prisme_player_moteurs","prisme_player_archetypes","prisme_player_profils","prisme_player_sous_profils",
                            "prisme_player_questions","prisme_player_resultats","prisme_chapitres","prisme_paires","prisme_axes","prisme_paliers","prisme_notes","prisme_jeux",
                            "prisme_exemples","prisme_textes","prisme_roles","prisme_evaluations","prisme_evaluation_valeurs"];
+// anciennes fiches archivées par le script 09 (lecture réservée au propriétaire) : sauvegardées si elles existent
+const TABLES_SAUVEGARDE_ARCHIVES = ["prisme_evaluations_archive","prisme_evaluation_valeurs_archive"];
 async function lireTout(table, filtre){
   const tout = [], pas = 1000;
   for (let debut = 0; ; debut += pas){
@@ -828,14 +830,16 @@ $("#backup").addEventListener("click", async () => {
   try {
     const donnees = {};
     for (const t of TABLES_SAUVEGARDE) donnees[t] = await lireTout(t);
+    const absentes = [];
+    for (const t of TABLES_SAUVEGARDE_ARCHIVES){ try { donnees[t] = await lireTout(t); } catch (e){ absentes.push(t); } }
     donnees.journal = await lireTout("forge_journal", q => q.like("table_nom", "prisme_%").order("id"));
     const maintenant = new Date();
     const horo = maintenant.toLocaleDateString("sv-SE") + "_" + maintenant.toTimeString().slice(0,5).replace(":","h");
     const comptes = Object.fromEntries(Object.keys(donnees).map(t => [t, donnees[t].length]));
-    telecharger(`prisme_sauvegarde_${horo}.json`, JSON.stringify({ meta:{ projet:"PRISME", format:1, console:VERSION.numero, date:maintenant.toISOString(), source:SUPABASE_URL, comptes }, ...donnees }, null, 1), "application/json");
+    telecharger(`prisme_sauvegarde_${horo}.json`, JSON.stringify({ meta:{ projet:"PRISME", format:1, console:VERSION.numero, date:maintenant.toISOString(), source:SUPABASE_URL, comptes, tables_absentes:absentes }, ...donnees }, null, 1), "application/json");
     try { localStorage.setItem("prisme_derniere_sauvegarde", maintenant.toISOString()); } catch(e){}
     infoSauvegarde();
-    alert(`Sauvegarde PRISME terminée : ${comptes.prisme_paires} paires, ${comptes.prisme_axes} axes, ${comptes.prisme_paliers} paliers, ${comptes.prisme_exemples} exemples, ${comptes.prisme_evaluations} fiches, ${comptes.journal} entrées de journal.\nRange le fichier avec tes sauvegardes.`);
+    alert(`Sauvegarde PRISME terminée : ${comptes.prisme_paires} paires, ${comptes.prisme_axes} axes, ${comptes.prisme_paliers} paliers, ${comptes.prisme_exemples} exemples, ${comptes.prisme_evaluations} fiches, ${comptes.prisme_evaluations_archive ?? 0} fiches archivées, ${comptes.journal} entrées de journal.${absentes.length ? "\nTables absentes (non sauvegardées) : " + absentes.join(", ") + "." : ""}\nRange le fichier avec tes sauvegardes.`);
   } catch (err){ alert("Sauvegarde interrompue, le fichier n'est pas complet : " + err.message); }
   b.textContent = "Sauvegarder PRISME"; b.disabled = false;
 });
