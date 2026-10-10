@@ -204,7 +204,7 @@ table.recap .aller{cursor:pointer;text-decoration:underline;text-decoration-colo
 
 <script src="timeline.js?v=1.3"></script>
 <script>
-const VERSION = { numero:"3.10", date:"2026-10-08 18:47" };   // à incrémenter à chaque livraison
+const VERSION = { numero:"3.11", date:"2026-10-10 19:34" };   // à incrémenter à chaque livraison
 const SUPABASE_URL = "https://gugdfpbkscudzkgysteb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_7aY8jgB45yEGd_M-R7VUDw_IQTNfg6P";   // clé publique : protégée par les droits de la base
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -797,5 +797,6 @@ $("#btn-export").addEventListener("click", () => {
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 2000);
 });
 </script>
+<script src="entete.js?v=1.0"></script>
 </body>
 </html>
